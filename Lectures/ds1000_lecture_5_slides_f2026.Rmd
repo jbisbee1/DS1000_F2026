@@ -4,7 +4,7 @@ subtitle: "DS 1000"
 author: "Prof. Bisbee"
 output:
   xaringan::moon_reader:
-    css: ["default", "metropolis", "metropolis-fonts"]
+    css: ["default", "metropolis-fonts", "css/ds1000.css"]
     nature:
       ratio: "16:9"
       highlightStyle: github
@@ -12,19 +12,38 @@ output:
       countIncrementalSlides: false
 ---
 
-```{r,include=F}
-set.seed(123)
-options(width=60)
-knitr::opts_chunk$set(fig.align='center',fig.width=9,fig.height=5,message=F,warning=F)
-library(tidyverse)
-df <- read_rds("https://github.com/jbisbee1/DS1000_F2024/raw/main/data/sc_debt.Rds")
-```
-
 <style>
 .big { font-size: 130%; }
 .huge { font-size: 180%; }
 .small { font-size: 80%; }
+.hero-image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 74vh;
+}
+.hero-image img {
+  max-width: 92%;
+  max-height: 74vh;
+  object-fit: contain;
+}
+
 </style>
+
+```{css,echo=FALSE}
+.small .remark-code { font-size: 85% !important; }
+.tiny .remark-code { font-size: 60% !important; }
+.big { font-size: 150%; }
+.huge { font-size: 200%; }
+```
+
+```{r setup, include=FALSE}
+set.seed(123)
+options(width=60)
+knitr::opts_chunk$set(fig.align='center',fig.width=9,fig.height=5,message=F,warning=F)
+library(tidyverse)
+df <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/main/data/sc_debt.Rds")
+```
 
 <!--
 LEARNING OBJECTIVES
@@ -153,11 +172,7 @@ df %>%
   geom_point()
 ```
 
-Each point represents one observation.
-
-In these data:
-
-> **one point = one college**
+Each point represents one observation. In these data **one point = one college**
 
 <!-- LO4: Connect visual mark to unit of analysis. -->
 
@@ -551,33 +566,29 @@ It does not automatically tell us what happens to an individual student who swit
 
 # Three Questions, Three Displays
 
-.big[
 **Are admissions rates related to earnings?**
 
 → continuous + continuous
 
 → scatterplot
-]
+
 
 --
 
-.big[
+
 **Do college types differ in earnings?**
 
 → categorical + continuous
 
 → compare distributions
-]
 
 --
 
-.big[
 **Does selectivity category differ by college type?**
 
 → categorical + categorical
 
 → compare counts/proportions
-]
 
 ---
 

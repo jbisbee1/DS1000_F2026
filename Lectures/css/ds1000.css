@@ -1,0 +1,78 @@
+/* =========================================================
+   DS1000 slide theme
+   ========================================================= */
+
+/* Main slide */
+.remark-slide-content {
+  background-color: #ffffff;
+  color: #222222;
+  font-size: 24px;
+  padding: 1em 2em;
+}
+
+
+/* ---------------------------------------------------------
+   Slide titles
+   --------------------------------------------------------- */
+
+.remark-slide-content h1 {
+  color: #222222;
+  font-size: 1.8em;
+  font-weight: 500;
+
+  margin-top: 0;
+  margin-bottom: 0.7em;
+
+  padding-bottom: 0.25em;
+
+  /* Vanderbilt gold */
+  border-bottom: 4px solid #CFAE70;
+}
+
+
+/* ---------------------------------------------------------
+   Inline code
+   --------------------------------------------------------- */
+
+.remark-slide-content code {
+  font-family: "Source Code Pro", Consolas, monospace;
+  color: #222222;
+  background-color: #f3f3f3;
+  padding: 0.05em 0.15em;
+  border-radius: 3px;
+}
+
+
+/* Code appearing inside titles */
+.remark-slide-content h1 code,
+.remark-slide-content h2 code,
+.remark-slide-content h3 code {
+  color: inherit;
+  background: transparent;
+  font-size: 0.9em;
+  font-weight: inherit;
+}
+
+
+/* ---------------------------------------------------------
+   Other headings
+   --------------------------------------------------------- */
+
+.remark-slide-content h2,
+.remark-slide-content h3 {
+  color: #222222;
+}
+
+
+/* ---------------------------------------------------------
+   Links
+   --------------------------------------------------------- */
+
+.remark-slide-content a,
+.remark-slide-content a:visited {
+  color: #866D4B;
+}
+
+.remark-slide-content * {
+  text-shadow: none !important;
+}

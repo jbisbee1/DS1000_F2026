@@ -2,22 +2,33 @@
 title: "Questions → Data"
 subtitle: "Teaching a computer what we mean"
 author: "Prof. Bisbee"
-institute: "Vanderbilt University"
-date: "Slides Updated: `r Sys.Date()`"
 output:
   xaringan::moon_reader:
-    chakra: libs/remark-latest.min.js
-    lib_dir: libs
-    css:
-      - default
-      - css/lexis.css
-      - css/lexis-fonts.css
+    css: ["default", "metropolis-fonts", "css/ds1000.css"]
     nature:
+      ratio: "16:9"
       highlightStyle: github
       highlightLines: true
       countIncrementalSlides: false
-      slideNumberFormat: "%current%"
 ---
+
+<style>
+.big { font-size: 130%; }
+.huge { font-size: 180%; }
+.small { font-size: 80%; }
+.hero-image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 74vh;
+}
+.hero-image img {
+  max-width: 92%;
+  max-height: 74vh;
+  object-fit: contain;
+}
+
+</style>
 
 ```{css,echo=FALSE}
 .small .remark-code { font-size: 85% !important; }
