@@ -1,0 +1,655 @@
+---
+title: "Prepare the Evidence"
+subtitle: "DS 1000"
+author: "Prof. Bisbee"
+output:
+  xaringan::moon_reader:
+    css: ["default", "metropolis", "metropolis-fonts"]
+    nature:
+      ratio: "16:9"
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+```{r,include=F}
+set.seed(123)
+options(width=60)
+knitr::opts_chunk$set(fig.align='center',fig.width=9,fig.height=5,message=F,warning=F)
+library(tidyverse)
+df <- read_rds("https://github.com/jbisbee1/DS1000_F2024/raw/main/data/sc_debt.Rds")
+```
+
+<style>
+.big { font-size: 130%; }
+.huge { font-size: 180%; }
+.small { font-size: 80%; }
+</style>
+
+<!--
+LEARNING OBJECTIVES
+LO1: Interrogate empirical claims.
+LO2: Translate questions into data problems.
+LO3: Select and justify analytical approaches.
+LO4: Conduct and evaluate data analyses.
+LO5: Critically use AI as an analytical tool.
+LO6: Communicate evidence responsibly.
+
+Lecture 4 primarily reinforces LO1, LO2, LO4, and LO5.
+-->
+
+# Prepare the Evidence
+
+.big[
+We have a question.
+
+We have variables.
+
+We have inspected their distributions.
+
+Now:
+
+> **What decisions are required before these data become trustworthy evidence?**
+]
+
+---
+
+# Where We Are
+
+.big[
+**Question → Concepts → Variables → Unit of analysis → Understand each variable → Prepare the evidence → Put variables together → Evaluate → Communicate**
+]
+
+Today:
+
+**Prepare the evidence**
+
+<!-- LO2: Adds data preparation explicitly to the decomposition workflow. -->
+
+---
+
+# Our Running Question
+
+.big[
+> **More selective colleges produce graduates who earn more.**
+]
+
+We identified:
+
+- `adm_rate`
+- `md_earn_wne_p6`
+
+But the raw College Scorecard contains many institutions and many variables.
+
+We need to decide what actually belongs in our analysis.
+
+---
+
+# Wrangling Is Judgment
+
+.big[
+**Data wrangling is the documented process of turning raw observations into the evidence required by a particular question.**
+]
+
+R executes the decisions.
+
+**We make the decisions.**
+
+<!-- LO4: Reframes wrangling as analytical judgment rather than syntax. -->
+
+---
+
+# Four Decisions
+
+.big[
+Before analysis, ask:
+
+1. **Who belongs?**
+2. **What is missing?**
+3. **What needs to change?**
+4. **Can someone reproduce what I did?**
+]
+
+These questions matter more than remembering function names.
+
+---
+
+# Who Belongs?
+
+Our claim sounds like it concerns "colleges."
+
+But the Scorecard contains different kinds of institutions.
+
+.big[
+**What population do we actually want to make claims about?**
+]
+
+Suppose we decide:
+
+> Bachelor's-degree institutions.
+
+That is a substantive decision.
+
+<!-- LO1: Population definition determines scope of inference. -->
+
+---
+
+# Filtering Changes the Claim
+
+If we remove institutions from the data, we are changing the population represented by the analysis.
+
+.big[
+`filter()` is not just a coding operation.
+
+It is an answer to:
+
+> **Which observations belong in my analysis?**
+]
+
+---
+
+# Tell R the Decision
+
+Suppose `preddeg == 3` identifies institutions where the predominant degree is a bachelor's degree.
+
+```{r}
+college <- df %>%
+  filter(preddeg == 3)
+```
+
+The important part is not the syntax.
+
+The important part is knowing **why** we made this restriction.
+
+<!-- LO4: Code implements a substantive population decision. -->
+
+---
+
+# Verify the Decision
+
+Never assume the code did what you intended.
+
+```{r}
+nrow(df)
+nrow(college)
+
+table(college$preddeg, useNA = "ifany")
+```
+
+.big[
+**Specification → execution → verification**
+]
+
+That workflow will recur throughout the course.
+
+<!-- LO5: Same verification workflow applies to AI-generated code. -->
+
+---
+
+# What Is Missing?
+
+Lecture 3 introduced `NA`.
+
+Now ask a harder question:
+
+.big[
+> **Which observations are missing the evidence we need?**
+]
+
+For our question, we need both:
+
+- admissions rate
+- graduate earnings
+
+---
+
+# Count Missingness
+
+```{r}
+college %>%
+  summarise(
+    missing_adm = sum(is.na(adm_rate)),
+    missing_earn = sum(is.na(md_earn_wne_p6))
+  )
+```
+
+You do not need to memorize this syntax.
+
+You do need to understand what is being counted.
+
+---
+
+# Dropping Is a Decision
+
+We could write:
+
+```{r}
+analysis_df <- college %>%
+  drop_na(adm_rate, md_earn_wne_p6)
+```
+
+But before doing so:
+
+.big[
+> **Who disappears?**
+]
+
+And:
+
+> **Could the missing institutions be systematically different?**
+
+<!-- LO1: Missing-data handling affects evidentiary claims. -->
+
+---
+
+# Compare Before and After
+
+```{r}
+nrow(college)
+nrow(analysis_df)
+```
+
+How many observations did we lose?
+
+That number is part of the analysis.
+
+.big[
+Deleting missing data should never be an invisible step.
+]
+
+---
+
+# Missingness Can Be Evidence
+
+Why might admissions rate be missing?
+
+Possibilities include:
+
+- open-admission institutions
+- non-reporting
+- measure not applicable
+- data collection problems
+
+.big[
+Missingness is sometimes telling us something about how the data were generated.
+]
+
+---
+
+# What Needs to Change?
+
+Sometimes the stored variable is correct but inconvenient.
+
+`adm_rate` is stored as a proportion:
+
+`0.25`
+
+Humans often communicate admissions rates as percentages:
+
+`25%`
+
+Same information.
+
+Different representation.
+
+---
+
+# Transform for Meaning
+
+```{r}
+analysis_df <- analysis_df %>%
+  mutate(adm_pct = adm_rate * 100)
+```
+
+.big[
+A transformation should have a reason.
+
+Here the reason is **interpretability**.
+]
+
+<!-- LO4: Transformation motivated by substantive communication. -->
+
+---
+
+# Transformations Can Mislead
+
+Imagine someone accidentally writes:
+
+```r
+mutate(adm_pct = adm_rate / 100)
+```
+
+The code runs.
+
+The result is wrong.
+
+.big[
+**Computational validity is not analytical validity.**
+]
+
+<!-- LO5: Students must audit transformations even if AI/code executes successfully. -->
+
+---
+
+# Keep What We Need
+
+Our question does not require every Scorecard variable.
+
+Suppose we retain:
+
+- institution name
+- state
+- admissions percentage
+- graduate earnings
+
+```{r}
+analysis_df <- analysis_df %>%
+  select(instnm, stabbr, adm_pct, md_earn_wne_p6)
+```
+
+---
+
+# Why Select Variables?
+
+Not because extra columns are inherently bad.
+
+.big[
+A focused analytical dataset makes our reasoning easier to inspect.
+]
+
+We should be able to explain why every retained variable matters.
+
+---
+
+# The Pipeline
+
+.big[
+**Raw data**
+
+↓
+
+Define the population
+
+↓
+
+Choose relevant variables
+
+↓
+
+Investigate missingness
+
+↓
+
+Make justified exclusions
+
+↓
+
+Transform when needed
+
+↓
+
+Verify
+
+↓
+
+**Analytical data**
+]
+
+---
+
+# Every Arrow Is a Choice
+
+.big[
+There is no neutral "cleaning" step.
+]
+
+Choices about:
+
+- inclusion
+- exclusion
+- missingness
+- coding
+- transformation
+
+can change the evidence we eventually see.
+
+<!-- LO1: Data preparation itself can shape factual claims. -->
+
+---
+
+# Reproducibility
+
+Imagine two workflows.
+
+**Workflow A**
+
+Open spreadsheet → delete rows → edit cells → save `FINAL_v2_REAL.csv`
+
+**Workflow B**
+
+Raw data → documented code → analytical data
+
+.big[
+Which one can another analyst inspect and reproduce?
+]
+
+---
+
+# Why We Use Code
+
+The advantage of code is not merely speed.
+
+.big[
+Code creates a record of the decisions that transformed the data.
+]
+
+Someone else can:
+
+- inspect them
+- question them
+- rerun them
+- change them
+
+That is part of trustworthy analysis.
+
+<!-- LO4 + LO6: Reproducibility supports evaluation and communication. -->
+
+---
+
+# AI Can Write the Pipeline
+
+Suppose we tell an AI assistant:
+
+> Keep bachelor's-degree institutions with observed admissions rates and earnings. Convert admissions rates to percentages. Retain institution name, state, admissions percentage, and earnings.
+
+AI can translate that specification into R.
+
+That is useful.
+
+---
+
+# But AI Does Not Own the Decisions
+
+The AI should not decide for us:
+
+- what population the claim concerns
+- which variable represents the concept
+- whether dropping missing observations is justified
+- whether a transformation preserves meaning
+
+.big[
+**AI can implement a specification. We remain responsible for the specification.**
+]
+
+<!-- LO5: Explicit division of labor between AI and student. -->
+
+---
+
+# Audit AI-Generated Code
+
+When AI gives you a wrangling pipeline, ask:
+
+1. Did it keep the intended population?
+2. Did it retain the intended variables?
+3. Did it handle missingness as instructed?
+4. Are transformations mathematically correct?
+5. Did it make an unstated decision?
+
+.big[
+Do not ask only: **Does it run?**
+]
+
+Ask: **Does it do what we intended?**
+
+---
+
+# A Plausible Mistake
+
+An AI assistant proposes:
+
+```r
+analysis_df <- df %>%
+  filter(preddeg == 3,
+         adm_rate > 0,
+         md_earn_wne_p6 > 0) %>%
+  mutate(adm_pct = adm_rate / 100) %>%
+  select(instnm, adm_pct, md_earn_wne_p6)
+```
+
+.big[
+The code runs.
+
+Is it correct?
+]
+
+---
+
+# Audit the Pipeline
+
+What should we inspect?
+
+- `adm_rate > 0` is not the same instruction as "observed admissions rate"
+- `md_earn_wne_p6 > 0` introduces an additional restriction
+- percentage conversion is backwards
+- state was omitted
+
+.big[
+Plausible code can silently change the analysis.
+]
+
+<!-- LO5: Concrete critique of AI-style plausible code. -->
+
+---
+
+# Explain the Analysis
+
+A competent analyst should be able to say:
+
+.big[
+> "I restricted the data to bachelor's-degree institutions, required observed admissions-rate and earnings data, converted admissions rates to percentages for interpretability, and retained the variables needed for the analysis."
+]
+
+That explanation is more important than reciting the R syntax.
+
+<!-- LO6: Communicate data preparation decisions clearly. -->
+
+---
+
+# A New Claim
+
+Consider:
+
+.big[
+> **Students at more expensive colleges graduate with more debt.**
+]
+
+Before analyzing it, specify:
+
+- population
+- concepts
+- variables
+- unit of analysis
+- missing-data requirements
+- transformations, if any
+
+Then write the computational instructions.
+
+<!-- LO2: Transfer to unfamiliar substantive claim. -->
+
+---
+
+# From Question to Evidence
+
+Our first unit now looks like this:
+
+.big[
+**What is the claim?**
+
+↓
+
+**What concepts does it involve?**
+
+↓
+
+**How are they measured?**
+
+↓
+
+**What does one row represent?**
+
+↓
+
+**What does each variable look like?**
+
+↓
+
+**What preparation decisions are required?**
+]
+
+---
+
+# What Quiz 1 Will Ask
+
+You will not need to reproduce long tidyverse pipelines from memory.
+
+You should be able to:
+
+- identify the unit of analysis
+- distinguish concepts from variables
+- evaluate an operationalization
+- choose an appropriate univariate visualization
+- interpret a distribution
+- reason about missingness
+- determine whether simple R code implements an analytical instruction
+
+<!-- Instructor note: This slide makes the assessment target transparent without giving exact questions. -->
+
+---
+
+# The Rule to Remember
+
+.huge[
+**Raw data are not evidence yet.**
+]
+
+.big[
+They become evidence through a series of choices.
+
+Those choices should be:
+
+**justified, visible, and reproducible.**
+]
+
+---
+
+# Next
+
+Homework 4 will ask you to rehearse the full workflow on a new problem.
+
+Then:
+
+.big[
+**Lab Quiz 1**
+]
+
+You will perform the reasoning independently.

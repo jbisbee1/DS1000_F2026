@@ -1,0 +1,249 @@
+---
+title: "DS-1000 Homework 2"
+subtitle: "From Questions to Data"
+author: "DS-1000: How Data Shape Our World"
+date: "Due before Lecture 3"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, error = TRUE)
+```
+
+# What is this homework for?
+
+In Homework 1, you started with a factual claim and asked what you would need to observe to evaluate it.
+
+Now we have data.
+
+The goal of Homework 2 is to practice translating a substantive question into a dataset:
+
+> **What does one row represent? Which variables measure the concepts we care about? Which observations and variables belong in our analysis?**
+
+You do **not** need to memorize `R` syntax. You may use your notes, the internet, classmates, and AI. When AI writes code for you, your job is to decide whether the code actually does what you intended.
+
+# Part I: Return to our claim
+
+We will continue with the claim from Homework 1:
+
+> **More selective colleges produce graduates who earn more money.**
+
+Load the tidyverse and College Scorecard data:
+
+```{r load-data}
+library(tidyverse)
+
+df <- read_rds("../data/sc_debt.Rds")
+```
+
+Take a quick look at the data:
+
+```{r inspect-data}
+glimpse(df)
+```
+
+Some relevant variables are:
+
+| Variable | Meaning |
+|---|---|
+| `instnm` | Institution name |
+| `stabbr` | State abbreviation |
+| `preddeg` | Predominant degree offered |
+| `adm_rate` | Proportion of applications accepted |
+| `sat_avg` | Average SAT score |
+| `md_earn_wne_p6` | Average earnings of recent graduates |
+| `grad_debt_mdn` | Median debt of graduates |
+| `ugds` | Number of undergraduates |
+
+## 1. What does one row represent?
+
+Complete the sentence:
+
+> **One row in this dataset represents ________________________________.**
+
+**Your answer:**
+
+
+
+## 2. Concepts versus variables
+
+Our claim contains two important concepts: **college selectivity** and **graduate earnings**.
+
+Which variable would you use to operationalize each concept?
+
+**Selectivity:**
+
+
+
+**Graduate earnings:**
+
+
+
+For each choice, explain briefly what the variable *actually measures*. Is that exactly the same thing as the broader concept?
+
+**Your answer:**
+
+
+
+# Part II: Build the data we need
+
+Suppose our immediate goal is:
+
+> Keep bachelor's-degree institutions with non-missing admissions-rate and earnings data. Retain only the institution name, state, admissions rate, and earnings variables.
+
+This is an analytical instruction written for a human. We now need to translate it into instructions R can execute.
+
+## 3. Ask AI to translate the instructions
+
+Use ChatGPT, Claude, or another AI assistant. Give it the analytical instruction above and ask it to write tidyverse code using `filter()` and `select()`.
+
+Paste the code it gives you into the chunk below and run it.
+
+```{r ai-code}
+# Paste the AI-generated code here.
+
+```
+
+If the code produces an error, use AI, your notes, or classmates to debug it until it runs.
+
+## 4. Explain what the code does
+
+In plain English, explain what each major step of the code is doing.
+
+Do not merely translate syntax word-for-word. Explain the analytical decision.
+
+**Your answer:**
+
+
+
+## 5. Verify the output
+
+Do not assume that code is correct because it runs.
+
+Use the following commands, or other checks you think are useful, to inspect the dataset produced by the AI code.
+
+```{r verify-output}
+# Replace college_analysis below if your AI gave the new dataset a different name.
+
+# glimpse(college_analysis)
+# nrow(college_analysis)
+# names(college_analysis)
+```
+
+Based on your inspection:
+
+**Does the resulting dataset contain the variables you intended to keep? How do you know?**
+
+
+
+**Does it appear to contain the observations you intended to keep? How do you know?**
+
+
+
+# Part III: Audit some plausible code
+
+An AI assistant proposes the following solution:
+
+```{r flawed-code, eval=FALSE}
+college_analysis <- df %>%
+  filter(adm_rate > 0) %>%
+  select(instnm, adm_rate, md_earn_wne_p6)
+```
+
+The code is valid R. It will run.
+
+## 6. Does running mean correct?
+
+Compare this code to the original instruction:
+
+> Keep bachelor's-degree institutions with non-missing admissions-rate and earnings data. Retain only the institution name, state, admissions rate, and earnings variables.
+
+Identify **at least two ways** the proposed code fails to implement the instruction correctly.
+
+**Your answer:**
+
+
+
+This distinction will recur throughout DS-1000:
+
+> **Code that runs is not necessarily code that answers the question you asked.**
+
+# Part IV: Transfer to a new claim
+
+Consider a second claim:
+
+> **Students at more expensive colleges graduate with more debt.**
+
+Do not analyze the relationship yet.
+
+## 7. Decompose the claim
+
+**What are the two main concepts?**
+
+
+
+**Which variables in the College Scorecard data could operationalize those concepts?**
+
+
+
+**What does each chosen variable actually measure?**
+
+
+
+**What is the unit of analysis?**
+
+
+
+## 8. Specify the analytical dataset
+
+In plain English, describe which observations and variables you would retain to begin investigating this claim.
+
+Do **not** write R code. Write instructions precise enough that another person—or an AI assistant—could translate them into code without guessing what you mean.
+
+**Your answer:**
+
+
+
+# Looking ahead
+
+At this point, we have learned how to move from:
+
+> **Question → concepts → variables → unit of analysis → analytical dataset**
+
+But we are still not ready to put our two variables together.
+
+Before asking whether two variables are related, we should understand each variable on its own.
+
+## 9. What should we inspect first?
+
+Suppose you are about to analyze admissions rates and graduate earnings.
+
+Before examining their relationship, what would you want to know about **each variable individually**?
+
+List two or three things you would want to inspect.
+
+**Your answer:**
+
+
+
+Lecture 3 will introduce tools for doing exactly this.
+
+# Before you submit
+
+- [ ] I can explain what one row in the College Scorecard data represents.
+- [ ] I can distinguish a concept from a variable used to measure it.
+- [ ] I can specify which observations and variables an analysis requires.
+- [ ] I used AI to translate an analytical instruction into R code.
+- [ ] I checked the resulting data rather than assuming the code was correct.
+- [ ] I can explain why code that runs may still be analytically wrong.
+
+## Connection to Lab Quiz 1
+
+You will not be expected to memorize complicated R syntax. You should be able to read simple tidyverse code and determine whether it implements a stated analytical task.
+
+You should also be prepared to independently identify:
+
+1. the unit of analysis;
+2. concepts and their operationalizations;
+3. the observations and variables needed for a question; and
+4. whether a proposed piece of code actually creates the intended analytical dataset.

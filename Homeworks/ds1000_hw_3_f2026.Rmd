@@ -1,0 +1,230 @@
+---
+title: "DS-1000 Homework 3"
+subtitle: "Know Your Variables"
+author: "DS-1000: How Data Shape Our World"
+date: "Due before Lecture 4"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, error = TRUE)
+library(tidyverse)
+df <- read_rds("../data/sc_debt.Rds")
+```
+
+# What is this homework for?
+
+In Homework 2, we translated a substantive question into an analytical dataset. We identified the unit of analysis, chose variables to represent our concepts, and used AI to help translate analytical instructions into R code.
+
+Now we are going to take the next step:
+
+> **Before asking how variables relate, understand each variable on its own.**
+
+This means inspecting distributions, checking unusual or missing values, and asking whether the variables actually measure what we think they measure.
+
+You may use your notes, the internet, classmates, and AI. When AI generates code or an interpretation, you are responsible for checking whether it is appropriate for the data and the question.
+
+# Part I: Admissions rate
+
+We will continue with our original claim:
+
+> **More selective colleges produce graduates who earn more money.**
+
+In Homework 2, we identified `adm_rate` as one possible measure of college selectivity.
+
+## 1. Remind yourself what this variable measures
+
+In one or two sentences, explain what `adm_rate` measures. Then explain one reason it might be an imperfect measure of the broader concept of **selectivity**.
+
+**Your answer:**
+
+
+
+## 2. What kind of variable is it?
+
+Is `adm_rate` continuous or categorical? Explain briefly why.
+
+**Your answer:**
+
+
+
+## 3. Visualize the distribution
+
+Ask an AI assistant to write tidyverse/ggplot2 code that creates an appropriate **univariate visualization** of `adm_rate`.
+
+Use the code it gives you in the chunk below.
+
+```{r adm-rate-plot}
+# Paste the AI-generated code here.
+
+```
+
+## 4. Audit the visualization
+
+Do not assume the plot is correct because the code runs.
+
+Answer the following:
+
+**Is this the appropriate kind of visualization for `adm_rate`? Why?**
+
+
+
+**Are the variable, axis, and labels represented correctly?**
+
+
+
+**Does anything about the plot make you question the data or the measurement?**
+
+
+
+If you changed anything about the AI-generated code, explain what you changed and why.
+
+**Your answer:**
+
+
+
+## 5. Describe the distribution
+
+Describe the distribution of admissions rates in substantive language. Focus on what a reader should learn from the data rather than simply describing the shape of the graph.
+
+Consider:
+
+- What values are common?
+- How much variation is there?
+- Is the distribution skewed or otherwise unusual?
+- Are there extreme observations?
+
+**Your answer:**
+
+
+
+# Part II: Graduate earnings
+
+Now repeat the same reasoning process for `md_earn_wne_p6`, our measure of graduate earnings.
+
+## 6. What does the variable measure?
+
+In one or two sentences, explain what `md_earn_wne_p6` measures. Then identify one reason it may not perfectly capture the broader concept of **economic outcomes after college**.
+
+**Your answer:**
+
+
+
+## 7. Choose and create a visualization
+
+What type of variable is `md_earn_wne_p6`? What univariate visualization should we use?
+
+**Your answer:**
+
+
+
+Now ask AI to write the appropriate `ggplot2` code and run it below.
+
+```{r earnings-plot}
+# Paste the AI-generated code here.
+
+```
+
+## 8. Audit and interpret
+
+**Is the visualization appropriate? How do you know?**
+
+
+
+**What does the distribution tell you about graduate earnings?**
+
+
+
+**Do you see any unusual values, suspicious observations, or features that deserve further investigation?**
+
+
+
+# Part III: Missingness is part of the evidence
+
+A visualization can tell us about observed values, but it cannot tell us about values we do not have.
+
+## 9. Check missingness
+
+Use R to determine how many observations have missing values for `adm_rate` and `md_earn_wne_p6`.
+
+```{r missingness}
+# Write or ask AI to help you write code that counts missing values
+# for adm_rate and md_earn_wne_p6.
+
+```
+
+Report the numbers you find:
+
+**Missing `adm_rate`:**
+
+
+
+**Missing `md_earn_wne_p6`:**
+
+
+
+## 10. Why might missingness matter?
+
+Why should we care that some colleges are missing admissions-rate or earnings information? Give one plausible reason why the missing observations might not be interchangeable with the observed observations.
+
+**Your answer:**
+
+
+
+# Part IV: A new variable
+
+Now try the workflow with a variable we have not discussed as much: `grad_debt_mdn`.
+
+## 11. Work independently, with AI as a helper
+
+Without following a step-by-step recipe, determine:
+
+1. What concept is `grad_debt_mdn` intended to measure?
+2. What does the variable actually measure?
+3. Is it continuous or categorical?
+4. What univariate visualization should you use?
+5. What does its distribution tell you?
+6. What unusual or missing observations would you want to investigate?
+
+You may use AI to generate code, but you should explain how you checked that the code and visualization were appropriate.
+
+**Your answer:**
+
+
+
+# Looking ahead
+
+We now understand each of these variables individually.
+
+But our original question is still waiting:
+
+> **Do more selective colleges have higher-earning graduates?**
+
+Before the next part of the course, stop and think about why we have not answered that question yet.
+
+## 12. What changes when we put two variables together?
+
+In one or two sentences, explain what additional question becomes possible once we put `adm_rate` and `md_earn_wne_p6` on the same graph.
+
+**Your answer:**
+
+
+
+> **Univariate analysis asks: What is each variable like?**
+>
+> **Multivariate analysis asks: How do variables relate?**
+
+# Before you submit
+
+- [ ] I can explain what each variable is intended to measure.
+- [ ] I can distinguish a variable's concept from its operationalization.
+- [ ] I can identify whether a variable is continuous or categorical.
+- [ ] I can choose an appropriate univariate visualization.
+- [ ] I can read a distribution and describe what it means substantively.
+- [ ] I can identify unusual values and missingness as potential evidence problems.
+- [ ] I can evaluate an AI-generated visualization rather than assuming it is correct.
+- [ ] I understand why we should inspect variables individually before examining their relationship.
+
+## Connection to Lab Quiz 1
+
+Homework 3 is practice for the reasoning you will demonstrate independently on Lab Quiz 1. You should be prepared to identify a variable's measurement, variable type, and appropriate univariate visualization, and to interpret what the resulting distribution does and does not tell you.

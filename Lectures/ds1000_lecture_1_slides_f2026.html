@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>How Do We Know What’s True?</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Prof. Bisbee" />
+    <script src="libs/header-attrs-2.30/header-attrs.js"></script>
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link rel="stylesheet" href="css/lexis.css" type="text/css" />
+    <link rel="stylesheet" href="css/lexis-fonts.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# How Do We Know What’s True?
+]
+.subtitle[
+## An introduction to data science
+]
+.author[
+### Prof. Bisbee
+]
+.institute[
+### Vanderbilt University
+]
+.date[
+### Slides Updated: 2026-08-16
+]
+
+---
+
+
+&lt;style type="text/css"&gt;
+.small .remark-code {
+  font-size: 85% !important;
+}
+.tiny .remark-code {
+  font-size: 50% !important;
+}
+.big {
+  font-size: 150%;
+}
+.huge {
+  font-size: 200%;
+}
+&lt;/style&gt;
+
+
+
+---
+
+# How do we know what's true?
+
+.big[Someone tells you something is true.]
+
+--
+
+What should you do next?
+
+---
+
+# A few claims
+
+&gt; **Claim 1:** YouTube puts users into political echo chambers.
+
+&gt; **Claim 2:** College is a good financial investment.
+
+&gt; **Claim 3:** An AI system is 95% accurate.
+
+--
+
+.big[What would you need to know before believing any of these?]
+
+---
+
+# The first habit of this course
+
+Don't start with:
+
+&gt; **"Is this true?"**
+
+Start with:
+
+&gt; **"What evidence would let me decide?"**
+
+--
+
+That question forces us to ask:
+
+- What exactly is the claim?
+- What would we observe if it were true?
+- What data would we need?
+- What comparisons would matter?
+- What else could produce the same pattern?
+
+---
+
+# This is what data science is for
+
+Data science is not one method, one software package, or one industry.
+
+It is a collection of tools for turning questions into evidence.
+
+--
+
+The tools include:
+
+- computing
+- data wrangling
+- visualization
+- statistics
+- modeling
+- prediction
+
+--
+
+But the goal is not the tool.
+
+**The goal is better judgment.**
+
+---
+
+# The recurring workflow
+
+.center[
+
+**Question**
+
+↓
+
+**Decompose**
+
+↓
+
+**Choose evidence / method**
+
+↓
+
+**Analyze**
+
+↓
+
+**Evaluate**
+
+↓
+
+**Communicate**
+
+]
+
+---
+
+# Where I come from
+
+My work uses data science to answer questions about:
+
+- YouTube + polarization
+- Twitter + misinformation
+- Telegram + extremist communities
+- Stocks + politicians
+
+--
+
+The common thread is simple:
+
+&gt; **Start with a claim or question. Build evidence that can bear on it. Decide what the evidence supports.**
+
+---
+
+# Why are you here?
+
+background-image: url(./figs/fight_ds_econ.PNG)
+background-size: contain
+
+---
+
+# Why are you here?
+
+background-image: url(./figs/fight_ds_ps.PNG)
+background-size: contain
+
+---
+
+# Why are you here?
+
+background-image: url(./figs/fight_ds_cs.PNG)
+background-size: contain
+
+---
+
+# Why are you here?
+
+background-image: url(./figs/fight_ds_stats.PNG)
+background-size: contain
+
+---
+
+# Why are you here?
+
+background-image: url(./figs/fight_ds_stem.PNG)
+background-size: contain
+
+---
+
+# Data science is broad
+
+There are many different questions that can be answered with data.
+
+--
+
+There are also many different ways to answer them.
+
+--
+
+That is why this course is a **menu, not the food**:
+
+&gt; We will sample many tools so you can recognize what they are good for and know where to go deeper.
+
+---
+
+# But data science is not a fad
+
+&lt;center&gt;&lt;img src="figs/datagrowth.png" width="75%"&gt;&lt;/center&gt;
+
+---
+
+# Still: hype exists
+
+&lt;center&gt;&lt;img src="figs/hype_cycle.png" width="75%"&gt;&lt;/center&gt;
+
+--
+
+The lesson for this course is not "believe data science."
+
+It is **evaluate claims about data science too.**
+
+---
+
+# Unknown Problem #1
+
+You are shown this claim:
+
+&gt; **"YouTube's recommendation system creates political echo chambers."**
+
+&lt;center&gt;&lt;img src="figs/echo_chamber.png" width="55%"&gt;&lt;/center&gt;
+
+--
+
+### Do not analyze yet.
+
+First: **What would have to be true for this claim to be correct?**
+
+---
+
+# Decompose the claim
+
+A single sentence hides several different questions.
+
+**What is an "echo chamber"?**
+
+**What does YouTube recommend?**
+
+**What political content are users starting from?**
+
+**What happens after several recommendations?**
+
+**What would count as evidence of an effect?**
+
+--
+
+This is **computational thinking**: breaking a messy problem into tractable parts.
+
+---
+
+# From observation to question
+
+&lt;center&gt;&lt;img src="figs/transparency_tube.png" width="95%"&gt;&lt;/center&gt;
+
+--
+
+Data can help us notice patterns we would not notice otherwise.
+
+But a pattern is not yet an answer.
+
+---
+
+# Observation → question
+
+&lt;center&gt;&lt;img src="figs/recs_example_1.png" width="95%"&gt;&lt;/center&gt;
+
+---
+
+# Observation → question
+
+&lt;center&gt;&lt;img src="figs/recs_example_2.png" width="95%"&gt;&lt;/center&gt;
+
+---
+
+# The substantive question
+
+&gt; **Does YouTube's algorithm put users into political echo chambers?**
+
+--
+
+That question is useful because it tells us what evidence we need.
+
+---
+
+# Theory and hypotheses
+
+Evidence does not interpret itself.
+
+A theory gives us an expectation about what we should observe if a mechanism is operating.
+
+--
+
+For this study:
+
+&gt; People often prefer information that fits with what they already believe.
+
+&gt; YouTube wants users to watch more videos.
+
+--
+
+A possible hypothesis follows:
+
+&gt; **Users should receive increasingly ideologically similar recommendations.**
+
+---
+
+# Two kinds of data-science questions
+
+### Inference / explanation
+
+&gt; **What is true? Why?**
+
+### Prediction
+
+&gt; **What is likely to happen?**
+
+--
+
+The same data can sometimes support both goals, but the questions and standards of success differ.
+
+---
+
+# The research workflow
+
+1. Observation
+2. Question
+3. Theory / expectations
+4. Data collection
+5. Analysis
+6. Results
+7. Conclusion
+
+--
+
+The point is not to memorize the sequence.
+
+The point is to understand **why each step exists**.
+
+---
+
+# Data collection is part of the argument
+
+&lt;center&gt;&lt;img src="figs/data_collection_1.png" width="85%"&gt;&lt;/center&gt;
+
+---
+
+# Data collection is part of the argument
+
+&lt;center&gt;&lt;img src="figs/data_collection_2.png" width="85%"&gt;&lt;/center&gt;
+
+---
+
+# Data collection is part of the argument
+
+&lt;center&gt;&lt;img src="figs/data_collection_3.png" width="85%"&gt;&lt;/center&gt;
+
+---
+
+# Data collection is part of the argument
+
+&lt;center&gt;&lt;img src="figs/data_collection_4.png" width="85%"&gt;&lt;/center&gt;
+
+---
+
+# Why does this matter?
+
+The analysis cannot rescue data that do not actually measure the thing we care about.
+
+--
+
+Ask:
+
+&gt; **What exactly was measured?**
+
+&gt; **Who or what is represented in the data?**
+
+&gt; **What is missing?**
+
+&gt; **Could the way we collected the data create the pattern we see?**
+
+---
+
+# Analysis is another set of choices
+
+Once we have data, we still have to decide:
+
+- which variables matter;
+- which comparisons answer the question;
+- which visualization is appropriate;
+- which statistical model, if any, is appropriate;
+- how uncertainty should be represented.
+
+--
+
+**There is no button labeled "analyze."**
+
+---
+
+# Results are not conclusions
+
+A statistical result is an input into reasoning, not the end of it.
+
+--
+
+Ask:
+
+&gt; What does the result actually establish?
+
+&gt; What does it not establish?
+
+&gt; How uncertain is it?
+
+&gt; What alternative explanation remains?
+
+---
+
+# The final step: communicate
+
+A good data scientist should be able to say:
+
+&gt; **Here is what we found.**
+
+&gt; **Here is how strongly the evidence supports it.**
+
+&gt; **Here is what we cannot conclude.**
+
+--
+
+This is part of the analysis, not decoration added at the end.
+
+---
+
+# A second version of the YouTube problem
+
+Instead of asking:
+
+&gt; **Does YouTube create echo chambers?**
+
+suppose we ask:
+
+&gt; **Can we predict the ideology of a YouTube video?**
+
+--
+
+Now the goal is different.
+
+---
+
+# Prediction
+
+&lt;center&gt;&lt;img src="figs/camps2.png" width="80%"&gt;&lt;/center&gt;
+
+--
+
+For prediction, we care about whether a model can make useful predictions on new observations.
+
+The question is less about **why** a particular observation occurs and more about **how accurately we can predict it**.
+
+---
+
+# Same broad toolkit, different question
+
+| Question | Goal | What counts as success? |
+|---|---|---|
+| **Inference / explanation** | Learn something about the world | Evidence supports a defensible conclusion |
+| **Prediction** | Forecast unseen outcomes | Predictions perform well on new data |
+
+--
+
+We will encounter both throughout this course.
+
+---
+
+# Now add AI
+
+Suppose you ask an AI assistant:
+
+&gt; "Does YouTube create political echo chambers? Analyze the evidence and give me a conclusion."
+
+--
+
+The model may give you:
+
+- a polished explanation;
+- R code;
+- visualizations;
+- statistical interpretations;
+- references;
+- a confident conclusion.
+
+---
+
+# Should you believe it?
+
+**Not automatically.**
+
+The same questions still apply:
+
+&gt; What is the claim?
+
+&gt; What evidence would answer it?
+
+&gt; Is the method appropriate?
+
+&gt; Is the analysis correct?
+
+&gt; What assumptions are being made?
+
+&gt; Does the conclusion actually follow?
+
+---
+
+# AI changes the division of labor
+
+AI can increasingly help with:
+
+- generating code;
+- summarizing information;
+- proposing analyses;
+- producing visualizations;
+- exploring alternatives.
+
+--
+
+Your job is increasingly to **evaluate and direct the work**.
+
+--
+
+That is why this course teaches both:
+
+**independent competence** and **critical AI use**.
+
+---
+
+# A useful rule for the semester
+
+&gt; **Never confuse an answer with evidence.**
+
+--
+
+That applies to answers produced by:
+
+- politicians
+- journalists
+- scientists
+- friends
+- software
+- AI
+- and me
+
+---
+
+# What you should be able to do by December
+
+1. **Interrogate empirical claims.**
+
+2. **Translate questions into data problems.**
+
+3. **Select and justify analytical approaches.**
+
+4. **Conduct and evaluate data analyses.**
+
+5. **Critically use AI as an analytical tool.**
+
+6. **Communicate evidence responsibly.**
+
+---
+
+# The dream outcome
+
+.huge[Become a principled skeptic.] 
+
+--
+
+When you encounter a claim, be able to ask:
+
+&gt; **What evidence would convince me?**
+
+And when you encounter a puzzle, be able to ask:
+
+&gt; **How can I break this into pieces that I can solve?**
+
+---
+
+# The course in one line
+
+.center[.huge[
+
+**Question → Decompose → Analyze → Evaluate → Communicate**
+
+]]
+
+--
+
+And keep asking:
+
+&gt; **Does the evidence actually support the claim?**
+
+---
+
+# What this means for the semester
+
+### Homework
+
+Practice the reasoning and technical skills before class. AI is encouraged.
+
+### Lab quizzes / exams
+
+Demonstrate what you can do independently. No AI or internet access.
+
+### Evidence Debates
+
+Adjudicate an unfamiliar claim using evidence and defend a verdict.
+
+### Project
+
+DIY data science. AI is encouraged.
+
+---
+
+# A note on the rest of the course
+
+This course is broad by design.
+
+You will learn enough about many tools to recognize:
+
+&gt; **What problem does this method solve?**
+
+&gt; **When is it appropriate?**
+
+&gt; **What can it tell me?**
+
+&gt; **What can it not tell me?**
+
+--
+
+The techniques change.
+
+**The reasoning process stays.**
+
+---
+
+# Logistics
+
+- Install `R` and `RStudio` before the next class.
+- Work through the first `.Rmd` homework before the next lecture.
+- AI is a required part of the ungraded workflow.
+- Read the syllabus for the course policies, grading, and assessment schedule.
+
+---
+
+# Before next class
+
+1. Work through `ds1000_hw_1.Rmd`.
+2. Complete Problem Set 0 on Brightspace.
+3. Create an account for an approved AI assistant.
+
+---
+
+# One last question
+
+.big[When someone tells you something is true...]
+
+--
+
+.huge[**What do you do next?**]
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="libs/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+  "highlightStyle": "github",
+  "highlightLines": true,
+  "countIncrementalSlides": false,
+  "slideNumberFormat": "%current%"
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

@@ -1,0 +1,798 @@
+---
+title: "Describe the Relationship"
+subtitle: "DS 1000"
+author: "Prof. Bisbee"
+output:
+  xaringan::moon_reader:
+    css: ["default", "metropolis", "metropolis-fonts"]
+    nature:
+      ratio: "16:9"
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+```{r,include=F}
+set.seed(123)
+options(width=60)
+knitr::opts_chunk$set(fig.align='center',fig.width=9,fig.height=5,message=F,warning=F)
+library(tidyverse)
+df <- read_rds("https://github.com/jbisbee1/DS1000_F2024/raw/main/data/sc_debt.Rds")
+
+# Small synthetic datasets used only to illustrate relationship shapes.
+n <- 120
+x_demo <- seq(-3, 3, length.out = n)
+
+demo_positive <- tibble(
+  x = x_demo,
+  y = 1.2 * x_demo + rnorm(n, 0, 1.1)
+)
+
+demo_negative <- tibble(
+  x = x_demo,
+  y = -1.2 * x_demo + rnorm(n, 0, 1.1)
+)
+
+demo_curved <- tibble(
+  x = x_demo,
+  y = x_demo^2 + rnorm(n, 0, 0.7)
+)
+
+demo_outlier <- demo_positive
+demo_outlier$y[n] <- demo_outlier$y[n] - 10
+
+demo_weak <- tibble(
+  x = x_demo,
+  y = 0.4 * x_demo + rnorm(n, 0, 2.5)
+)
+
+demo_strong <- tibble(
+  x = x_demo,
+  y = 1.2 * x_demo + rnorm(n, 0, 0.45)
+)
+```
+
+<style>
+.big { font-size: 130%; }
+.huge { font-size: 180%; }
+.small { font-size: 80%; }
+</style>
+
+<!--
+LEARNING OBJECTIVES
+
+LO1: Interrogate empirical claims.
+LO3: Select and justify analytical approaches.
+LO4: Conduct and evaluate data analyses.
+LO5: Critically use AI as an analytical tool.
+LO6: Communicate evidence responsibly.
+
+Lecture 6 advances Test 2 competencies:
+- characterize an observed relationship;
+- interpret correlation;
+- recognize limitations of correlation;
+- describe categorical-continuous group differences.
+
+INSTRUCTOR NOTE:
+Do not introduce formal sampling uncertainty here.
+Do not move into confounding except as a teaser at the end.
+Lecture 7 owns alternative explanations and subgroup structure.
+-->
+
+# Describe the Relationship
+
+.big[
+Last class:
+
+> **How should I put X and Y together?**
+
+Today:
+
+> **Once I can see the relationship, what should I say about it?**
+]
+
+---
+
+# Where We Are
+
+.big[
+**Question → trustworthy variables → appropriate comparison → describe the relationship → explain/evaluate → communicate**
+]
+
+Today:
+
+**Describe the relationship**
+
+---
+
+# Back to Our Claim
+
+.big[
+> **More selective colleges produce graduates who earn more.**
+]
+
+We decided that admissions rate and earnings are both continuous.
+
+So we started with a scatterplot.
+
+---
+
+# See the Relationship
+
+```{r}
+df %>%
+  ggplot(aes(x = adm_rate, y = md_earn_wne_p6)) +
+  geom_point(alpha = .5)
+```
+
+.big[
+Now what?
+]
+
+<!-- LO4: Interpretation follows appropriate representation. -->
+
+---
+
+# Four Questions
+
+For a relationship between two continuous variables, ask:
+
+.big[
+**Direction:** Which way does it go?
+
+**Form:** What shape does it take?
+
+**Strength:** How closely do points follow the pattern?
+
+**Unusual observations:** What does not fit?
+]
+
+This is our descriptive checklist.
+
+---
+
+# Direction
+
+A relationship can be:
+
+.big[
+**Positive:** larger X tends to accompany larger Y.
+
+**Negative:** larger X tends to accompany smaller Y.
+
+**No clear direction:** neither pattern is apparent.
+]
+
+---
+
+# Positive Direction
+
+```{r, echo=FALSE}
+demo_positive %>%
+  ggplot(aes(x, y)) +
+  geom_point()
+```
+
+.big[
+As X increases, Y tends to increase.
+]
+
+---
+
+# Negative Direction
+
+```{r, echo=FALSE}
+demo_negative %>%
+  ggplot(aes(x, y)) +
+  geom_point()
+```
+
+.big[
+As X increases, Y tends to decrease.
+]
+
+---
+
+# Statistical vs. Substantive Direction
+
+For admissions rate:
+
+> Higher `adm_rate` = **less selective**
+
+Suppose admissions rate and earnings have a negative relationship.
+
+Statistically:
+
+> Higher admissions rates accompany lower earnings.
+
+Substantively:
+
+.big[
+> **More selective colleges tend to have higher earnings.**
+]
+
+<!-- LO6: Always translate statistical direction back to substantive meaning. -->
+
+---
+
+# Form
+
+Not every relationship is a straight line.
+
+Ask:
+
+.big[
+> **What shape does the relationship take?**
+]
+
+Common possibilities:
+
+- approximately linear
+- curved
+- clustered
+- no obvious form
+
+---
+
+# A Curved Relationship
+
+```{r, echo=FALSE}
+demo_curved %>%
+  ggplot(aes(x, y)) +
+  geom_point()
+```
+
+.big[
+There is a clear relationship.
+
+But it is not linear.
+]
+
+---
+
+# Why Form Matters
+
+Suppose someone says:
+
+> "There is no linear relationship."
+
+That does **not** necessarily mean:
+
+> "There is no relationship."
+
+.big[
+The shape of the data matters.
+]
+
+---
+
+# Strength
+
+Compare two relationships.
+
+.big[
+Which one follows its overall pattern more closely?
+]
+
+---
+
+# A Weaker Pattern
+
+```{r, echo=FALSE}
+demo_weak %>%
+  ggplot(aes(x, y)) +
+  geom_point()
+```
+
+---
+
+# A Stronger Pattern
+
+```{r, echo=FALSE}
+demo_strong %>%
+  ggplot(aes(x, y)) +
+  geom_point()
+```
+
+.big[
+Strength is about how tightly observations follow the pattern.
+]
+
+---
+
+# Unusual Observations
+
+```{r, echo=FALSE}
+demo_outlier %>%
+  ggplot(aes(x, y)) +
+  geom_point()
+```
+
+.big[
+One observation can matter a lot.
+
+Do not automatically delete it.
+]
+
+Ask what it represents.
+
+<!-- LO1: Unusual observations are analytical questions, not automatic cleaning targets. -->
+
+---
+
+# Describe Before Explaining
+
+A good first description might be:
+
+> "X and Y have a moderately strong negative, approximately linear relationship, with one unusual observation."
+
+Notice what is missing:
+
+.big[
+**No causal explanation.**
+]
+
+First describe what the evidence shows.
+
+Then ask why.
+
+---
+
+# Can One Number Help?
+
+A scatterplot contains a lot of information.
+
+Sometimes we want a compact numerical summary.
+
+For two continuous variables, one common summary is:
+
+.huge[
+**correlation**
+]
+
+---
+
+# Correlation
+
+The correlation coefficient is usually written:
+
+.huge[
+**r**
+]
+
+It ranges from:
+
+.big[
+**-1 to +1**
+]
+
+Its sign summarizes **direction**.
+
+Its magnitude summarizes the **strength of a linear relationship**.
+
+---
+
+# Reading Correlation
+
+.big[
+**r > 0** → positive linear relationship
+
+**r < 0** → negative linear relationship
+
+**r ≈ 0** → little **linear** relationship
+
+`|r|` closer to 1 → stronger linear relationship
+]
+
+The word **linear** matters.
+
+---
+
+# Calculate It
+
+```{r}
+df %>%
+  summarise(
+    correlation = cor(
+      adm_rate,
+      md_earn_wne_p6,
+      use = "complete.obs"
+    )
+  )
+```
+
+.big[
+The number summarizes part of what we saw in the scatterplot.
+]
+
+<!-- Instructor note: Students need to interpret cor(), not memorize its syntax. -->
+
+---
+
+# What Correlation Does Well
+
+Correlation gives us a compact answer to:
+
+.big[
+> **How strongly and in what direction do two continuous variables move together linearly?**
+]
+
+Useful.
+
+But incomplete.
+
+---
+
+# What Correlation Throws Away
+
+A single number cannot show:
+
+- the shape of the relationship
+- unusual observations
+- clusters
+- subgroup structure
+- the substantive meaning of X and Y
+
+.big[
+**Summaries compress information.**
+]
+
+Compression always loses something.
+
+<!-- LO1 + LO4: Numerical summaries should not replace inspection of evidence. -->
+
+---
+
+# A Relationship With Low Correlation
+
+```{r, echo=FALSE}
+demo_curved %>%
+  ggplot(aes(x, y)) +
+  geom_point()
+```
+
+```{r, echo=FALSE}
+cor(demo_curved$x, demo_curved$y)
+```
+
+.big[
+A low correlation does not imply "nothing is happening."
+]
+
+The relationship may simply not be linear.
+
+---
+
+# Outliers Can Move r
+
+Compare:
+
+```{r, echo=FALSE}
+cor(demo_positive$x, demo_positive$y)
+```
+
+with:
+
+```{r, echo=FALSE}
+cor(demo_outlier$x, demo_outlier$y)
+```
+
+.big[
+One unusual observation can substantially change a numerical summary.
+]
+
+---
+
+# Plot First
+
+.huge[
+**Never interpret correlation without looking at the data.**
+]
+
+The graph shows the structure.
+
+The correlation summarizes one aspect of it.
+
+Use both.
+
+---
+
+# AI Loves Summaries
+
+Ask an AI assistant:
+
+> "The correlation between X and Y is -0.62. Interpret it."
+
+It can produce fluent prose instantly.
+
+But without seeing the data, neither you nor the AI knows whether:
+
+- the relationship is curved
+- one outlier drives it
+- important groups are hidden
+
+<!-- LO5: AI can verbalize a statistic but cannot recover information omitted from the prompt. -->
+
+---
+
+# Audit the Interpretation
+
+If AI says:
+
+> "There is a strong negative relationship between X and Y."
+
+Ask:
+
+.big[
+**Linear?**
+
+**What does the scatterplot show?**
+
+**Are there unusual observations?**
+
+**What do X and Y actually measure?**
+]
+
+A number is not a complete analysis.
+
+---
+
+# What About Groups?
+
+Not every relationship is continuous + continuous.
+
+Suppose we ask:
+
+> **Do public and private colleges differ in earnings?**
+
+Now:
+
+**X:** categorical
+
+**Y:** continuous
+
+---
+
+# Compare Distributions
+
+For categorical + continuous relationships, describe:
+
+.big[
+**Typical values**
+
+**Spread**
+
+**Overlap**
+
+**Unusual observations**
+]
+
+The question is:
+
+> How does the distribution of Y differ across groups of X?
+
+---
+
+# Group Differences
+
+Suppose one group has a higher median earnings level.
+
+That supports:
+
+> "Typical earnings are higher in this group in these data."
+
+It does **not** automatically support:
+
+> "Being in this group causes higher earnings."
+
+.big[
+Description first. Explanation later.
+]
+
+---
+
+# Overlap Matters
+
+Imagine two groups with different typical values but substantial overlap.
+
+.big[
+A difference in groups does not mean every member of one group exceeds every member of the other.
+]
+
+Good communication describes both:
+
+- the difference
+- the variation
+
+<!-- LO6: Avoid deterministic interpretation of group differences. -->
+
+---
+
+# Averages Can Hide Variation
+
+Suppose:
+
+> Group A average = $60,000
+
+> Group B average = $50,000
+
+That tells us something.
+
+But not:
+
+- how spread out each group is
+- whether distributions overlap
+- whether outliers drive the means
+
+.big[
+**A summary is not the distribution.**
+]
+
+---
+
+# The Same Principle
+
+For continuous + continuous:
+
+> correlation is not the scatterplot.
+
+For categorical + continuous:
+
+> the group mean is not the group distribution.
+
+.huge[
+**Never let the summary replace the evidence.**
+]
+
+---
+
+# Practice
+
+Suppose a scatterplot shows:
+
+- Y generally decreases as X increases
+- the points follow an approximately straight-line pattern
+- observations are fairly tightly clustered around that pattern
+- one point sits far from the others
+
+A good description is:
+
+.big[
+**strong, negative, approximately linear relationship with one unusual observation**
+]
+
+---
+
+# Practice With r
+
+Suppose:
+
+**r = 0.08**
+
+What can we safely say?
+
+.big[
+There is little **linear** association between X and Y.
+]
+
+What can we not safely say?
+
+> There is no relationship of any kind.
+
+---
+
+# Practice With Groups
+
+Suppose median earnings are higher at private colleges than public colleges, but the distributions overlap substantially.
+
+A calibrated description:
+
+.big[
+> "Private colleges have higher typical earnings in these data, although there is substantial variation and overlap between the groups."
+]
+
+---
+
+# Return to the Claim
+
+We began with:
+
+> **More selective colleges produce graduates who earn more.**
+
+After today's analysis, we might be able to say:
+
+.big[
+> "Selectivity and graduate earnings are associated in the College Scorecard data."
+]
+
+We are still not entitled to the word:
+
+.huge[
+**produce**
+]
+
+---
+
+# Why Not?
+
+A relationship tells us:
+
+> X and Y move together.
+
+It does not yet tell us:
+
+> **why** they move together.
+
+Maybe X affects Y.
+
+Maybe Y affects X.
+
+Maybe something else affects both.
+
+That is our next problem.
+
+---
+
+# Next Class
+
+.huge[
+**What Else Could Explain It?**
+]
+
+We move from:
+
+> **What relationship do I see?**
+
+to:
+
+> **Why might I see that relationship?**
+
+---
+
+# Before You Leave
+
+For a continuous–continuous relationship, ask:
+
+1. What is the direction?
+2. What is the form?
+3. How strong is the pattern?
+4. Are there unusual observations?
+5. What does correlation add?
+6. What might correlation hide?
+
+For group comparisons, ask:
+
+1. How do typical values differ?
+2. How much variation is there?
+3. How much overlap is there?
+4. Are unusual observations important?
+
+---
+
+# The Rule to Remember
+
+.huge[
+**Describe before you explain.**
+]
+
+.big[
+And never let a numerical summary replace the data it summarizes.
+]
+
+---
+
+# Homework 6
+
+You will practice:
+
+- describing direction, form, strength, and unusual observations;
+- calculating and interpreting correlation;
+- comparing correlations with scatterplots;
+- identifying information a numerical summary hides;
+- describing group differences without overclaiming.
+
+Next:
+
+.big[
+**What Else Could Explain It?**
+]

@@ -1,0 +1,312 @@
+---
+title: "DS-1000 Homework 1"
+subtitle: "Getting Set Up + Learning to Think Like a Data Scientist"
+author: "DS-1000: How Data Shape Our World"
+date: "Due before Lecture 2"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, error = TRUE)
+```
+
+# What is this homework for?
+
+This homework has two purposes.
+
+First, make sure your computer is ready for DS-1000. Before the next class, you should have **R**, **RStudio**, and the **tidyverse** working, and you should be able to run and **Knit** an `.Rmd` file.
+
+Second, begin practicing the central habit of the course:
+
+> **When someone makes a factual claim, what would we need to observe to decide whether it is true?**
+
+The first part is technical preparation. The second part is preparation for Lab Quiz 1.
+
+This homework is a low-stakes preview of the quiz. You may use your notes, the internet, classmates, and AI. The goal is practice, not independent certification.
+
+## Part I: Get your computer ready
+
+### 1. Install R
+
+R is the programming language we will use throughout the course. Download and install the current version from:
+
+<https://cran.r-project.org/>
+
+You only need to do this once.
+
+### 2. Install RStudio
+
+RStudio is the development environment we will use to work with R and `.Rmd` files. Download the free desktop version from:
+
+<https://posit.co/download/rstudio-desktop/>
+
+You need **both R and RStudio**. RStudio is not a replacement for R; it is the interface we use to work with R.
+
+### 3. Create a DS-1000 project folder
+
+Create a folder on your computer for this course. Keep your course materials organized there rather than leaving them in your Downloads folder.
+
+A reasonable structure is:
+
+```text
+DS1000_F2026/
+├── Homeworks/
+├── Lectures/
+├── Psets/
+├── data/
+└── figs/
+```
+
+You do not need to create all of these folders by hand if you have already downloaded the course repository. The important thing is that you know where your files are.
+
+### 4. Open this homework in RStudio
+
+Open this `.Rmd` file in RStudio. You should see text, R code, and code chunks.
+
+An `.Rmd` file combines:
+
+1. text written for humans;
+2. R code that can be executed; and
+3. output produced by that code.
+
+Throughout this course, `.Rmd` files will be the main format for lecture notes and homework.
+
+### 5. Install and load tidyverse
+
+A package is a collection of R functions. We will use the **tidyverse** extensively in this course.
+
+If you have never installed it, run the first line below once:
+
+```{r install-tidyverse, eval=FALSE}
+install.packages("tidyverse")
+```
+
+Then load it in your current R session:
+
+```{r load-tidyverse}
+library(tidyverse)
+```
+
+If `library(tidyverse)` runs without an error, tidyverse is working.
+
+### 6. Run a small diagnostic
+
+Run the following code. You should get a small table and a mean of 10.
+
+```{r diagnostic}
+diagnostic_data <- tibble(
+  student = c("Ada", "Grace", "R"),
+  score = c(10, 9, 11)
+)
+
+diagnostic_data
+
+diagnostic_data %>%
+  summarise(mean_score = mean(score))
+```
+
+**Checkpoint:** If this code runs, your basic R/tidyverse environment is working.
+
+### 7. Knit this document
+
+Click the **Knit** button in RStudio and create an HTML version of this homework.
+
+Your document should Knit successfully before the next class. You are encouraged to use AI to diagnose installation or knitting problems. In this course, using AI to help debug your tools is part of learning to use the tools well.
+
+**Checkpoint:** A successful Knit is part of completing Homework 1.
+
+# Part II: Think Like a Data Scientist
+
+We are not ready to do sophisticated statistical analysis yet. That is the point.
+
+Data science starts with a question or claim and asks what evidence would allow us to evaluate it. Before learning particular methods, practice breaking a claim into the pieces that an analysis would need.
+
+## Claim 1: College selectivity and earnings
+
+Consider this claim:
+
+> **More selective colleges produce graduates who earn more money.**
+
+Do not start by trying to prove or disprove it. Instead, figure out what we would need to know in order to evaluate it.
+
+### 1. What exactly is being claimed?
+
+Rewrite the claim in your own words. What are the two things that are supposed to be related?
+
+**Your answer:**
+
+
+
+### 2. What would we need to observe?
+
+What would we need to measure for each college, student, graduate, or other unit of observation in order to investigate the claim?
+
+List the most important quantities or characteristics.
+
+**Your answer:**
+
+
+
+### 3. What data would we need?
+
+Suppose you had a dataset containing information about colleges. What variables would you want in that dataset?
+
+**Your answer:**
+
+
+
+### 4. What comparison would be informative?
+
+Suppose we found that graduates from more selective colleges earn more. What comparison would you want to make to determine whether the observed pattern is meaningful?
+
+**Your answer:**
+
+
+
+### 5. What else could produce the same pattern?
+
+Suppose selective-college graduates really do earn more. Give at least one plausible alternative explanation that does **not** require college selectivity itself to cause higher earnings.
+
+**Your answer:**
+
+
+
+### 6. What would count as evidence against the claim?
+
+Describe a pattern in the data that would make you skeptical of the claim.
+
+**Your answer:**
+
+
+
+## A real dataset
+
+The course repository contains a small version of the College Scorecard data in `data/sc_debt.Rds`. Download or use the copy that came with the course materials.
+
+Load the data below:
+
+```{r load-college-data}
+df <- read_rds("../data/sc_debt.Rds")
+```
+
+Look at the variable names:
+
+```{r}
+names(df)
+```
+
+Here are some variables you may find useful for the claim above:
+
+| Variable | Meaning |
+|---|---|
+| `instnm` | Institution name |
+| `adm_rate` | Admissions rate: proportion of applications accepted |
+| `sat_avg` | Average SAT score |
+| `md_earn_wne_p6` | Average earnings of recent graduates |
+| `costt4a` | Average cost of attendance |
+| `grad_debt_mdn` | Median debt of graduates |
+| `ugds` | Number of undergraduates |
+| `stabbr` | State abbreviation |
+
+These variables do not automatically answer the question. They simply give us some of the information we might use.
+
+### 7. Which variables matter?
+
+From the variables above, identify the **two most important variables** for evaluating the claim and explain why.
+
+**Your answer:**
+
+
+
+### 8. Does the dataset settle the question?
+
+In one or two sentences, explain why having variables that measure selectivity and earnings is **not by itself** enough to establish that selective colleges cause higher earnings.
+
+**Your answer:**
+
+
+
+# Claim 2: AI and academic performance
+
+Now consider a different claim:
+
+> **Students who use AI to study earn higher grades.**
+
+You do not need to collect any data. Practice the same reasoning process.
+
+### 9. Decompose the claim
+
+Answer the following:
+
+**What would we need to measure?**
+
+
+
+**What comparison would be informative?**
+
+
+
+**What alternative explanation might produce the same pattern?**
+
+
+
+**What evidence would make you more skeptical of the claim?**
+
+
+
+# Part III: Use AI as a critic, not an answer machine
+
+For this part, use an AI assistant such as ChatGPT or Claude.
+
+Choose **one** of the two claims above. Ask the AI assistant to critique your reasoning. A useful prompt would be:
+
+> "Here is my analysis of this factual claim. Identify one important variable, comparison, assumption, or alternative explanation that I may have overlooked. Do not simply rewrite my answer."
+
+Paste the AI's response below.
+
+**AI response:**
+
+
+
+### Evaluate the AI's criticism
+
+Now decide whether the AI's criticism is useful.
+
+1. What did the AI identify?
+2. Was the criticism correct or useful?
+3. Will you change your reasoning because of it? Why or why not?
+
+**Your answer:**
+
+
+
+The important part of this exercise is not whether the AI gave you a clever answer. The important part is whether **you can judge the quality of the answer it gave you**.
+
+# Before you submit
+
+Check all of the following:
+
+- [ ] R is installed.
+- [ ] RStudio is installed.
+- [ ] `tidyverse` is installed and `library(tidyverse)` runs without an error.
+- [ ] The diagnostic code runs successfully.
+- [ ] This `.Rmd` document Knits successfully to HTML.
+- [ ] I completed the claim analysis rather than asking AI to do it for me.
+- [ ] I evaluated the AI criticism rather than simply accepting it.
+
+## Connection to Lab Quiz 1
+
+The Lab Quiz will use a **new factual claim** that you have not seen in this homework. You will not be asked to reproduce these exact answers.
+
+You should be prepared to independently:
+
+1. identify what a claim is actually asserting;
+2. identify what evidence would bear on the claim;
+3. decompose the question into measurable pieces;
+4. identify an informative comparison;
+5. recognize a plausible alternative explanation; and
+6. evaluate whether a proposed conclusion goes beyond the evidence.
+
+That is the beginning of the DS-1000 workflow:
+
+> **Question → Decompose → Choose evidence/method → Analyze → Evaluate → Communicate**

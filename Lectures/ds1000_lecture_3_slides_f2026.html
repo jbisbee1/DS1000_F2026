@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Lecture 3: Know Your Variables</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Prof. Bisbee" />
+    <script src="libs/header-attrs-2.30/header-attrs.js"></script>
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link rel="stylesheet" href="css/lexis.css" type="text/css" />
+    <link rel="stylesheet" href="css/lexis-fonts.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# Lecture 3: Know Your Variables
+]
+.subtitle[
+## Looking at a single variable
+]
+.author[
+### Prof. Bisbee
+]
+.institute[
+### Vanderbilt University
+]
+.date[
+### Slides Updated: 2026-08-16
+]
+
+---
+
+
+
+
+&lt;!--
+LEARNING OBJECTIVES
+LO1: Interrogate empirical claims.
+LO2: Translate questions into data problems.
+LO3: Select and justify analytical approaches.
+LO4: Conduct and evaluate data analyses.
+LO5: Critically use AI as an analytical tool.
+LO6: Communicate evidence responsibly.
+
+Lecture 3 primarily introduces LO1, LO3, and LO4, while reinforcing LO2 and LO5.
+--&gt;
+
+
+# Know Your Variables
+
+**Before asking how variables relate, understand each variable on its own.**
+
+Today:
+
+- What does a variable actually measure?
+- What kind of variable is it?
+- What does its distribution look like?
+- Does the distribution make sense?
+- What might the data be hiding?
+
+&lt;!--
+LO2: This is the next step after Lecture 2's question -&gt; concepts -&gt; variables -&gt; unit of analysis workflow.
+--&gt;
+
+
+---
+
+# Where We Are
+
+**Question → Concepts → Variables → Unit of analysis → Understand each variable → Put variables together → Evaluate → Communicate**
+
+We are here:
+
+**Understand each variable**
+
+&lt;!--
+LO2: Reinforces decomposition.
+LO4: Sets up univariate analysis as a core analytical step.
+--&gt;
+
+
+---
+
+# Our Running Question
+
+&gt; **More selective colleges produce graduates who earn more.**
+
+In Lecture 2, we identified possible variables:
+
+- `adm_rate`
+- `md_earn_wne_p6`
+
+Now we have to decide whether these variables are good evidence.
+
+&lt;!--
+LO1: Returns to empirical claim.
+--&gt;
+
+
+---
+
+# Concept or Variable?
+
+**Concept:** selectivity
+
+**Variable:** admissions rate
+
+A concept is an idea we care about.
+
+A variable is how we represent that idea in data.
+
+&lt;!--
+LO2: Distinguish substantive concept from observed variable.
+--&gt;
+
+
+---
+
+# What Does `adm_rate` Measure?
+
+`adm_rate` is the proportion of applications that a college accepts.
+
+That is not identical to:
+
+- "How selective is this college?"
+- "How difficult is it to get into this college?"
+- "How good is this college?"
+
+Those are related concepts, but they are not the same measurement.
+
+&lt;!--
+LO1: Encourages skepticism about operationalizations.
+LO2: Connects concepts to variables.
+--&gt;
+
+
+---
+
+# Construct Validity
+
+**Construct validity:** How well does a variable capture the concept we actually care about?
+
+For admissions rate:
+
+**Concept:** selectivity
+
+**Measurement:** proportion of applicants admitted
+
+Potential mismatch:
+
+A college's admissions rate depends partly on **who applies**.
+
+&lt;!--
+LO1: First explicit introduction of construct validity as a skeptical habit.
+--&gt;
+
+
+---
+
+# What About Earnings?
+
+**Concept:** economic outcomes after college
+
+**Variable:** `md_earn_wne_p6`
+
+Ask:
+
+&gt; What exactly does this variable measure?
+
+It is not simply "how much a graduate earns."
+
+Before interpreting a number, understand what generated it.
+
+&lt;!--
+LO1: Measurement skepticism.
+LO4: Interpretation begins with understanding the variable.
+--&gt;
+
+
+---
+
+# Variable Types
+
+For today's purposes, we need two broad types.
+
+**Continuous:** values represent quantities.
+
+Examples:
+
+`adm_rate`  
+`md_earn_wne_p6`
+
+**Categorical:** values identify groups.
+
+Examples:
+
+`stabbr`  
+`preddeg`
+
+&lt;!--
+LO3: Variable type determines appropriate visualization.
+--&gt;
+
+
+---
+
+# Variable Type Matters
+
+Different variables require different ways of looking at them.
+
+**One continuous variable → histogram**
+
+**One categorical variable → bar chart**
+
+Today we will focus only on these two.
+
+Scatterplots and boxplots come later, when we put variables together.
+
+&lt;!--
+LO3: Explicit method-selection rule.
+--&gt;
+
+
+---
+
+# Start With a Distribution
+
+Suppose we want to understand `adm_rate`.
+
+Before asking whether selectivity is related to earnings, ask:
+
+&gt; **What does admissions rate look like across colleges?**
+
+A histogram gives us a first answer.
+
+&lt;!--
+LO4: Univariate analysis as first inspection.
+--&gt;
+
+
+---
+
+# A Histogram
+
+
+``` r
+library(tidyverse)
+
+df %&gt;%
+  ggplot(aes(x = adm_rate)) +
+  geom_histogram()
+```
+
+&lt;img src="ds1000_lecture_3_slides_f2026_files/figure-html/unnamed-chunk-1-1.png" style="display: block; margin: auto;" /&gt;
+
+&lt;!--
+LO4: Basic visualization.
+--&gt;
+
+
+---
+
+# What Did We Learn?
+
+The histogram can tell us about:
+
+- typical values
+- variation
+- shape
+- extreme observations
+- possible problems
+
+It cannot, by itself, tell us whether selective colleges have higher earnings.
+
+&lt;!--
+LO4: Distinguish description from relationship.
+LO6: Sets up limits of an individual visualization.
+--&gt;
+
+
+---
+
+# Read the Distribution
+
+When you see a continuous variable, ask:
+
+**Center:** What values are typical?
+
+**Spread:** How much do values vary?
+
+**Shape:** Symmetric? Skewed? Multiple peaks?
+
+**Extremes:** Are there unusual observations?
+
+&lt;!--
+LO4: Concrete interpretation framework.
+--&gt;
+
+
+---
+
+# Read the Distribution
+
+Also ask:
+
+**Bounds:** Are any values impossible?
+
+**Missingness:** Which observations have no value?
+
+**Meaning:** Does the distribution make sense given what this variable measures?
+
+A graph is not just a picture.
+
+It is an **audit of our evidence**.
+
+&lt;!--
+LO1: Data skepticism.
+LO4: Visualization as analysis and audit.
+--&gt;
+
+
+---
+
+# Data That Make No Sense
+
+Suppose admissions rate contains:
+
+- `-0.2`
+- `1.4`
+
+Those values might be perfectly valid R numbers.
+
+They are not valid admissions rates.
+
+**Code can run even when the data are wrong.**
+
+&lt;!--
+LO4: Computational correctness is not substantive correctness.
+LO5: Same distinction applied to AI-generated code/data handling.
+--&gt;
+
+
+---
+
+# Missing Is Not Zero
+
+An `NA` does not mean:
+
+- zero
+- none
+- below average
+
+It means we do not have an observed value.
+
+But the important question is:
+
+&gt; **Why is it missing?**
+
+Who is missing?
+
+Why?
+
+Could missingness change what we conclude?
+
+&lt;!--
+LO1: Missingness as evidence problem.
+LO4: Data quality and interpretation.
+--&gt;
+
+
+---
+
+# Categorical Variables
+
+Now consider `preddeg`.
+
+It tells us the predominant degree offered by an institution.
+
+For a categorical variable, ask:
+
+- What categories exist?
+- How common is each?
+- Are categories missing?
+- Do the categories capture the concept we care about?
+
+&lt;!--
+LO3: Categorical-variable reasoning.
+--&gt;
+
+
+---
+
+# A Bar Chart
+
+
+``` r
+df %&gt;%
+  ggplot(aes(x = preddeg)) +
+  geom_bar()
+```
+
+&lt;img src="ds1000_lecture_3_slides_f2026_files/figure-html/unnamed-chunk-2-1.png" style="display: block; margin: auto;" /&gt;
+
+&lt;!--
+LO4: Appropriate univariate visualization.
+--&gt;
+
+
+---
+
+# Counts Can Mislead Too
+
+A bar chart shows how common categories are in the dataset.
+
+But ask:
+
+&gt; What population does this dataset contain?
+
+If the data contain mostly one type of institution, the graph describes the **dataset**.
+
+It does not automatically describe **all colleges**.
+
+&lt;!--
+LO1: Generalization and evidence.
+LO4: Interpretation of descriptive data.
+--&gt;
+
+
+---
+
+# AI Can Make the Plot
+
+Suppose we ask an AI assistant:
+
+&gt; "I have a numeric variable called `adm_rate` containing college admissions rates. Write ggplot2 code to visualize its distribution and explain what the plot shows."
+
+AI can produce the code quickly.
+
+But that is not the end of the task.
+
+&lt;!--
+LO5: Introduces AI as implementation tool.
+--&gt;
+
+
+---
+
+# Our Job Is to Evaluate It
+
+Check:
+
+1. Did it choose an appropriate plot?
+2. Is the variable mapped correctly?
+3. Are the labels and scales sensible?
+4. Does the interpretation match the graph?
+5. Did it ignore anything important about the data?
+
+**A plausible visualization is not necessarily a good visualization.**
+
+&lt;!--
+LO5: Direct evaluative judgment.
+LO3: Method selection.
+LO4: Interpretation.
+--&gt;
+
+
+---
+
+# The Human Skill
+
+AI can generate:
+
+- code
+- plots
+- summaries
+- interpretations
+
+You still need to decide:
+
+&gt; **Is this actually an appropriate analysis of the question and the data?**
+
+That judgment is part of being a data scientist.
+
+&lt;!--
+LO5: Core AI literacy outcome.
+--&gt;
+
+
+---
+
+# Now Inspect Earnings
+
+Repeat the process for:
+
+`md_earn_wne_p6`
+
+Before plotting, predict:
+
+- What type of variable is it?
+- What would a sensible distribution look like?
+- What would surprise you?
+- What would make you question the measurement?
+
+&lt;!--
+LO3 + LO4: Transfer the workflow to a second variable.
+--&gt;
+
+
+---
+
+# An Earnings Distribution
+
+
+``` r
+df %&gt;%
+  ggplot(aes(x = md_earn_wne_p6)) +
+  geom_histogram()
+```
+
+&lt;img src="ds1000_lecture_3_slides_f2026_files/figure-html/unnamed-chunk-3-1.png" style="display: block; margin: auto;" /&gt;
+
+&lt;!--
+LO4: Interpretation of a second continuous variable.
+--&gt;
+
+
+---
+
+# What Should We Notice?
+
+Do not just describe the shape.
+
+Ask:
+
+- What does a typical value represent?
+- Why might the distribution be skewed?
+- Who is included?
+- Who is missing?
+- What does an extreme observation represent?
+- Is this a sensible measure of "economic outcomes"?
+
+&lt;!--
+LO1: Measurement and sample skepticism.
+LO4: Distributional interpretation.
+--&gt;
+
+
+---
+
+# We Have Learned Two Variables
+
+We now understand:
+
+**Admissions rate**
+
+and
+
+**Graduate earnings**
+
+better than we did before.
+
+But we still have not answered our original question.
+
+&lt;!--
+LO6: Separates description from substantive conclusion.
+--&gt;
+
+
+---
+
+# The Temptation
+
+&gt; **So, do more selective colleges have higher-earning graduates?**
+
+We are tempted to put the two variables together immediately.
+
+But first we needed to understand what each variable was telling us.
+
+&lt;!--
+LO2: Complete the decomposition step.
+LO3: Prepares transition to multivariate methods.
+--&gt;
+
+
+---
+
+# Next Step
+
+**Univariate analysis**
+
+&gt; What is each variable like?
+
+**Multivariate analysis**
+
+&gt; How do variables relate?
+
+Next we move from:
+
+**understanding the evidence**
+
+to
+
+**using the evidence to answer the question.**
+
+&lt;!--
+LO3: Transition to multivariate method selection.
+LO4: Analytical progression.
+--&gt;
+
+
+---
+
+# Before You Leave
+
+For any important variable, you should be able to answer:
+
+1. What concept is this variable supposed to measure?
+2. What does it actually measure?
+3. What is its type?
+4. What does its distribution look like?
+5. What unusual or missing observations should I investigate?
+6. Does the distribution make sense?
+
+&lt;!--
+LO1 + LO4: Reusable skepticism checklist.
+--&gt;
+
+
+---
+
+# The Rule to Remember
+
+&gt; **Before asking how variables relate, ask what each variable is.**
+
+And:
+
+&gt; **Before asking what a variable does, ask what it measures.**
+
+&lt;!--
+LO1: Core course habit.
+LO4: Core analytical habit.
+--&gt;
+
+
+---
+
+# Homework 3
+
+Use the same workflow on `adm_rate` and `md_earn_wne_p6`.
+
+You will:
+
+- identify the concept and operationalization;
+- choose an appropriate univariate visualization;
+- use AI to help generate R code;
+- verify that the visualization is appropriate;
+- interpret the distributions;
+- investigate missingness or unusual values.
+
+Then we will be ready to put the variables together.
+
+&lt;!--
+LO5: AI-assisted analysis with evaluation.
+LO6: Communication of descriptive evidence.
+--&gt;
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="libs/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+  "highlightStyle": "github",
+  "highlightLines": true,
+  "countIncrementalSlides": false,
+  "slideNumberFormat": "%current%"
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

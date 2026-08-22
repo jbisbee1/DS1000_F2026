@@ -1,0 +1,302 @@
+---
+title: "From Claim to Evidence"
+subtitle: "Homework 4"
+author: "Prof. Bisbee"
+institute: "Vanderbilt University"
+date: "Due before Test 1"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, error = TRUE, warning = FALSE, message = FALSE)
+```
+
+## Purpose
+
+This homework is a rehearsal for **Unit Test 1**.
+
+You may use your notes, classmates, the internet, and AI tools. The point is not to memorize R syntax. The point is to practice the reasoning process that you will need to perform independently on the test:
+
+> **Claim → concepts → variables → unit of analysis → understand each variable → prepare the evidence → verify**
+
+For this homework, you will actually use R and AI to help implement your decisions. On Test 1, you will instead be given analytical artifacts and asked to evaluate them.
+
+## The Data
+
+We will use data on NBA players who were active during the 2018–19 season. These are adapted from a dataset used in a previous version of DS-1000.
+
+```{r}
+library(tidyverse)
+
+nba <- read_rds("https://github.com/jbisbee1/DS1000_F2024/raw/main/data/nba_players_2018.Rds")
+```
+
+Some variables that may be useful are:
+
+| Variable | Definition |
+|---|---|
+| `namePlayer` | Player name |
+| `slugTeam` | Team abbreviation |
+| `gp` | Games played |
+| `gs` | Games started |
+| `fgm` | Field goals made |
+| `fga` | Field goals attempted |
+| `pctFG` | Field-goal percentage |
+| `pctFT` | Free-throw percentage |
+| `agePlayer` | Player age |
+| `minutes` | Minutes played |
+| `pts` | Total points |
+| `isRookie` | Whether the player is a rookie |
+| `numberPlayerSeason` | Which NBA season this is for the player |
+
+Start by inspecting the data.
+
+```{r}
+glimpse(nba)
+```
+
+## The Claim
+
+An NBA commentator says:
+
+> **"More experienced NBA players are more productive scorers."**
+
+Your job is **not** to determine whether this claim is true yet.
+
+Your job is to determine whether these data can provide trustworthy evidence for evaluating it.
+
+## 1. Decompose the Claim
+
+What are the two main concepts in the claim?
+
+**Your answer:**
+
+
+
+Which variables in the dataset could operationalize those concepts?
+
+**Your answer:**
+
+
+
+For each variable you chose, explain briefly what it actually measures and one way it may be an imperfect measure of the broader concept.
+
+**Your answer:**
+
+
+
+## 2. Identify the Unit of Analysis
+
+Complete the sentence:
+
+> **One row in this dataset represents ________________________________.**
+
+Why does knowing this matter for evaluating the claim?
+
+**Your answer:**
+
+
+
+## 3. Understand the Experience Variable
+
+Before putting variables together, inspect your proposed measure of **experience** on its own.
+
+What type of variable is it?
+
+**Your answer:**
+
+
+
+Use an appropriate univariate visualization. You may write the code yourself or ask an AI assistant to generate it.
+
+```{r}
+# Create an appropriate univariate visualization here.
+
+```
+
+Describe the distribution. Address at least two useful features such as typical values, spread, shape, unusual values, bounds, or missingness.
+
+**Your answer:**
+
+
+
+Does anything about the distribution make you reconsider whether this variable is a good operationalization of "experience"?
+
+**Your answer:**
+
+
+
+## 4. Understand the Scoring Variable
+
+Now inspect your proposed measure of **scoring productivity** on its own.
+
+What type of variable is it?
+
+**Your answer:**
+
+
+
+Create an appropriate univariate visualization.
+
+```{r}
+# Create an appropriate univariate visualization here.
+
+```
+
+Describe the distribution and identify anything that might matter before using this variable as evidence.
+
+**Your answer:**
+
+
+
+Now reconsider the measurement itself.
+
+For example, would `pts` measure **productivity**, **opportunity to play**, or some combination of both? Would points per game or points per minute represent the concept differently?
+
+You do not need to change your variable. Explain the tradeoff.
+
+**Your answer:**
+
+
+
+## 5. Investigate Missingness
+
+Use R to determine whether either of your two proposed variables has missing values.
+
+You may ask AI to help write the code.
+
+```{r}
+# Check missingness here.
+
+```
+
+Report what you found.
+
+**Your answer:**
+
+
+
+If observations were missing, would you automatically delete them? Explain what you would want to know before making that decision.
+
+**Your answer:**
+
+
+
+## 6. Define the Analytical Sample
+
+Suppose we decide that a player should have played at least one game to belong in the analysis.
+
+In plain English, write a precise specification for the analytical dataset you want R to create.
+
+Your specification should state:
+
+- which observations should remain;
+- which variables should remain;
+- how missingness should be handled;
+- whether any transformation is needed.
+
+**Do not write R code yet.**
+
+**Your specification:**
+
+
+
+## 7. Let AI Implement Your Specification
+
+Give your specification from Question 6 to ChatGPT, Claude, or another AI assistant.
+
+Ask it to write tidyverse code that creates the analytical dataset.
+
+Paste the code below and run it.
+
+```{r}
+# Paste and run the AI-generated code here.
+
+```
+
+## 8. Verify the Result
+
+Do not assume the pipeline is correct because it runs.
+
+Use commands such as `glimpse()`, `nrow()`, `names()`, `summary()`, or other checks that you think are useful.
+
+```{r}
+# Verify the resulting analytical dataset here.
+
+```
+
+Answer each question:
+
+**Did the intended observations remain? What evidence tells you that?**
+
+
+
+**Did the intended variables remain? What evidence tells you that?**
+
+
+
+**Were missing values handled as you specified? What evidence tells you that?**
+
+
+
+**Did the AI make any consequential decision that you did not explicitly request?**
+
+
+
+## 9. Audit Another Analyst's Pipeline
+
+Another analyst proposes:
+
+```{r, eval=FALSE}
+analysis_df <- nba %>%
+  filter(numberPlayerSeason > 1,
+         pts > 0) %>%
+  mutate(pts = pts * 100) %>%
+  select(namePlayer, numberPlayerSeason, pts)
+```
+
+The code will run.
+
+Identify **at least two analytical problems** with this pipeline.
+
+For each problem, explain why it matters for evaluating the original claim.
+
+**Your answer:**
+
+
+
+## 10. Are We Ready?
+
+You now have:
+
+- a defined empirical claim;
+- operationalizations of its concepts;
+- a known unit of analysis;
+- inspected univariate distributions;
+- a defined analytical sample;
+- and a verified preparation pipeline.
+
+What is the **next analytical question** we would need to answer in order to evaluate the original claim?
+
+Do not perform that analysis yet.
+
+**Your answer:**
+
+
+
+## Before Test 1
+
+You should now be able to do the following without AI:
+
+- identify the concepts in an empirical claim;
+- distinguish a concept from its operationalization;
+- identify the unit of analysis;
+- choose an appropriate univariate visualization;
+- interpret important features of a distribution;
+- reason about missingness and sample restrictions;
+- explain why data-preparation choices matter;
+- read simple R code and determine whether it implements an analytical instruction;
+- distinguish code that **runs** from code that is **analytically appropriate**;
+- explain what evidence would be needed next without claiming more than the current analysis supports.
+
+The specific NBA context will **not** be on Test 1. The test will ask you to transfer this reasoning to a new empirical problem.

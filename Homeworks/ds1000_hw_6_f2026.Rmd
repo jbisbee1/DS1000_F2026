@@ -1,0 +1,378 @@
+---
+title: "DS-1000 Homework 6"
+subtitle: "Describe the Relationship"
+author: "DS-1000: How Data Shape Our World"
+date: "Due before Lecture 7"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, error = TRUE)
+
+library(tidyverse)
+library(scales)
+
+polls <- read_rds("https://github.com/jbisbee1/DS1000_F2024/raw/main/data/Pres2020_PV.Rds") %>%
+  mutate(
+    Trump = Trump / 100,
+    Biden = Biden / 100,
+    margin = Biden - Trump,
+    election_day = as.Date("11/3/2020", "%m/%d/%Y"),
+    EndDate = as.Date(EndDate, "%m/%d/%Y"),
+    DaysToED = as.numeric(election_day - EndDate)
+  )
+```
+
+# What is this homework for?
+
+In Homework 5, you practiced choosing a visualization that makes the relationship in a question visible.
+
+Now the graph is in front of you.
+
+The next task is to decide what it actually shows.
+
+For a relationship between two continuous variables, use this checklist:
+
+> **Direction → Form → Strength → Unusual observations**
+
+Then ask whether a numerical summary such as **correlation** helps—and what information that summary leaves behind.
+
+You may use AI, your notes, classmates, and the internet. AI can help generate code and propose interpretations. Your responsibility is to inspect the evidence and determine whether the interpretation is warranted.
+
+# Part I: Describe Before You Summarize
+
+We will continue using the 2020 presidential polling data from Homework 5.
+
+Each row represents one national poll.
+
+Consider the question:
+
+> **Did Biden's polling margin change as Election Day approached?**
+
+The relevant variables are:
+
+- `DaysToED`: number of days between the poll's end date and Election Day;
+- `margin`: Biden support minus Trump support.
+
+## 1. See the Relationship
+
+Create a scatterplot showing `DaysToED` on the x-axis and `margin` on the y-axis.
+
+You may ask AI to generate the `ggplot2` code.
+
+```{r margin-time}
+# Create the scatterplot here.
+
+```
+
+Before calculating any summary statistic, describe what you see.
+
+**Direction:**
+
+
+
+**Form:**
+
+
+
+**Strength:**
+
+
+
+**Unusual observations or other important features:**
+
+
+
+Now write one sentence that combines those observations into a substantive description of the relationship.
+
+**Your answer:**
+
+
+
+# Part II: Compress the Relationship
+
+## 2. Calculate Correlation
+
+Ask AI to show you how to calculate the correlation between `DaysToED` and `margin`.
+
+Paste and run the code below.
+
+```{r correlation-time}
+# Calculate the correlation here.
+
+```
+
+Report the correlation:
+
+**r =**
+
+
+
+Interpret its **sign** and **magnitude** in plain English.
+
+**Your answer:**
+
+
+
+## 3. What Did the Number Lose?
+
+Compare your correlation with the scatterplot.
+
+Name **two features of the data** that you can see in the plot but that are not contained in the correlation coefficient itself.
+
+**Your answer:**
+
+
+
+Complete the statement:
+
+> The correlation is useful because ________________________________________, but it is incomplete because ________________________________________.
+
+# Part III: Correlation Can Miss a Relationship
+
+A correlation summarizes the strength and direction of a **linear** relationship.
+
+That last word matters.
+
+Run the following code to create a small artificial dataset.
+
+```{r curved-data}
+set.seed(1000)
+
+curved <- tibble(
+  x = seq(-3, 3, length.out = 120),
+  y = x^2 + rnorm(120, 0, 0.7)
+)
+```
+
+## 4. Look First
+
+Create a scatterplot of `x` and `y`.
+
+```{r curved-plot}
+# Create the scatterplot here.
+
+```
+
+Does there appear to be a relationship between X and Y?
+
+Describe its form.
+
+**Your answer:**
+
+
+
+Now calculate the correlation.
+
+```{r curved-correlation}
+# Calculate the correlation here.
+
+```
+
+What is the value?
+
+**r =**
+
+
+
+Suppose an AI assistant saw only this correlation and concluded:
+
+> **"There is essentially no relationship between X and Y."**
+
+Why is that interpretation wrong?
+
+**Your answer:**
+
+
+
+# Part IV: An Unusual Observation
+
+Run the following code.
+
+```{r outlier-data}
+set.seed(123)
+
+outlier_demo <- tibble(
+  x = seq(-3, 3, length.out = 60),
+  y = 1.2 * x + rnorm(60, 0, 0.8)
+)
+
+outlier_demo$y[60] <- outlier_demo$y[60] - 10
+```
+
+## 5. Plot and Summarize
+
+Create a scatterplot.
+
+```{r outlier-plot}
+# Create the scatterplot here.
+
+```
+
+Calculate the correlation for all observations.
+
+```{r outlier-cor}
+# Calculate the correlation here.
+
+```
+
+Now calculate it again after removing the final observation **only for purposes of comparison**.
+
+```{r outlier-cor-compare}
+# Hint: you can use slice(1:59), filter(), or ask AI for another approach.
+
+```
+
+How much did the correlation change?
+
+**Your answer:**
+
+
+
+What does this demonstrate about relying on a single numerical summary?
+
+**Your answer:**
+
+
+
+Should an analyst automatically delete the unusual observation?
+
+Explain.
+
+**Your answer:**
+
+
+
+# Part V: Group Differences
+
+Consider a different question:
+
+> **Did polls using different interview modes produce different estimates of Trump support?**
+
+Here:
+
+- `Mode` is categorical;
+- `Trump` is continuous.
+
+## 6. Compare the Groups
+
+Create a visualization that compares the distribution of Trump support across polling modes.
+
+You may reuse ideas from Homework 5 or ask AI for code.
+
+```{r mode-groups}
+# Create the group comparison here.
+
+```
+
+Describe the comparison using the same general habits from Lecture 6.
+
+Address:
+
+- typical values;
+- variation within groups;
+- overlap across groups;
+- unusual observations, if relevant.
+
+**Your answer:**
+
+
+
+## 7. Averages Are Not Distributions
+
+Ask AI to calculate the mean Trump support for each polling mode.
+
+```{r mode-means}
+# Calculate group means here.
+
+```
+
+Do the group means tell the entire story visible in your visualization?
+
+Explain what information the means leave out.
+
+**Your answer:**
+
+
+
+# Part VI: Audit an AI Interpretation
+
+Suppose an AI assistant receives the following information:
+
+> Correlation between X and Y: **r = -0.61**
+
+It responds:
+
+> **"There is a strong negative relationship between X and Y. Increasing X causes Y to decrease."**
+
+## 8. What Is Wrong?
+
+Identify **two separate problems** with the AI's interpretation.
+
+**Problem 1:**
+
+
+
+**Problem 2:**
+
+
+
+What additional evidence would you want before giving a more complete description of the relationship?
+
+**Your answer:**
+
+
+
+# Part VII: Communicate the Evidence
+
+## 9. Write a Calibrated Description
+
+Return to the relationship between `DaysToED` and polling `margin`.
+
+Write **two sentences** for a non-statistical audience.
+
+Your description should:
+
+- describe the visible relationship;
+- use the correlation if it is informative;
+- avoid causal language;
+- avoid claiming that correlation contains more information than it does.
+
+**Your answer:**
+
+
+
+# Looking Ahead
+
+So far, we have learned to ask:
+
+> **What relationship do I see?**
+
+But even a strong, clear relationship leaves a harder question unanswered:
+
+> **Why do X and Y move together?**
+
+A relationship could exist because:
+
+- X affects Y;
+- Y affects X;
+- something else affects both;
+- the relationship differs across groups.
+
+That is the problem we take up in Lecture 7.
+
+# Before Quiz 5
+
+You should be able to do the following without AI:
+
+- describe the direction, form, and strength of a continuous–continuous relationship;
+- identify unusual observations;
+- interpret the sign and magnitude of a correlation;
+- explain that correlation summarizes **linear** association;
+- recognize that a low correlation does not imply no relationship of any kind;
+- explain why a scatterplot can reveal information hidden by correlation;
+- explain why group averages do not replace group distributions;
+- describe group differences without making a causal claim;
+- critique an AI interpretation that overstates what a correlation establishes.
+
+> **Describe before you explain.**

@@ -1,0 +1,341 @@
+---
+title: "From Association to Explanation"
+subtitle: "Homework 7"
+author: "DS-1000: How Data Shape Our World"
+date: "Due before Evidence Debate 1"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, error = TRUE, warning = FALSE, message = FALSE)
+
+library(tidyverse)
+
+df <- read_csv("ds1000_hw7_icecream_drownings.csv", show_col_types = FALSE)
+```
+
+# What is this homework for?
+
+In Homework 6, you learned to describe a relationship.
+
+Now we take the next skeptical step:
+
+> **We observe a relationship. What else could explain it?**
+
+This homework uses a deliberately simple example to introduce a powerful idea:
+
+> **The relationship you see in the full dataset can differ from the relationships you see within relevant subgroups.**
+
+We will discover a version of **Simpson's paradox** using ice-cream sales, drownings, and temperature.
+
+You may use AI, your notes, classmates, and the internet. AI can help you write code and propose explanations. Your job is to decide whether the explanations are supported by the evidence.
+
+# The Data
+
+Each row represents one day.
+
+| Variable | Meaning |
+|---|---|
+| `day` | Observation identifier |
+| `temperature` | Daily high temperature, in °F |
+| `ice_cream_sales` | Ice-cream sales (teaching measure) |
+| `drownings` | Drowning incidents observed that day |
+| `temperature_group` | Cool, moderate, or hot |
+
+The dataset is deliberately constructed for this exercise.
+
+That is useful because it lets us focus on the reasoning rather than on messy real-world measurement problems.
+
+# Part I: The Relationship You See
+
+Consider the claim:
+
+> **Days with more ice-cream sales have more drownings.**
+
+## 1. Look First
+
+Create a scatterplot of ice-cream sales and drownings.
+
+```{r pooled-plot}
+# Ask AI for code if helpful.
+
+```
+
+Describe the relationship.
+
+**Direction:**
+
+
+
+**Strength:**
+
+
+
+**Other important features:**
+
+
+
+Calculate the correlation.
+
+```{r pooled-correlation}
+# Calculate the correlation here.
+
+```
+
+What does the correlation suggest about the relationship?
+
+**Your answer:**
+
+
+
+## 2. What Would You Be Tempted to Conclude?
+
+Suppose a news story reported:
+
+> **"Days with more ice-cream sales have more drownings."**
+
+What causal conclusion might a careless reader make?
+
+**Your answer:**
+
+
+
+Why would that conclusion be too strong?
+
+**Your answer:**
+
+
+
+# Part II: Look for Another Explanation
+
+## 3. Generate Alternatives
+
+Give two plausible explanations for the positive relationship between ice-cream sales and drownings.
+
+At least one should involve a third variable.
+
+**Explanation 1:**
+
+
+
+**Explanation 2:**
+
+
+
+Which third variable seems especially plausible here?
+
+**Your answer:**
+
+
+
+# Part III: Enter Temperature
+
+Temperature is a natural candidate because it could be related to both ice-cream sales and drownings.
+
+## 4. Examine Temperature and Ice-Cream Sales
+
+Create a visualization of temperature and ice-cream sales.
+
+```{r temp-sales}
+# Create the visualization here.
+
+```
+
+Describe the relationship.
+
+**Your answer:**
+
+
+
+## 5. Examine Temperature and Drownings
+
+Create a visualization of temperature and drownings.
+
+```{r temp-drownings}
+# Create the visualization here.
+
+```
+
+Describe the relationship.
+
+**Your answer:**
+
+
+
+Complete this diagram:
+
+```text
+Temperature → ice-cream sales
+Temperature → drownings
+```
+
+What does this suggest about the original ice-cream/drowning relationship?
+
+**Your answer:**
+
+
+
+# Part IV: The Surprise
+
+Now color the original scatterplot by temperature group.
+
+```{r grouped-plot}
+# Create the grouped scatterplot here.
+
+```
+
+## 6. Look Again
+
+First, describe the **overall** relationship.
+
+**Overall relationship:**
+
+
+
+Now describe the relationship **within each temperature group**.
+
+**Cool days:**
+
+
+
+**Moderate days:**
+
+
+
+**Hot days:**
+
+
+
+What do you notice?
+
+**Your answer:**
+
+
+
+## 7. How Can Both Be True?
+
+The pooled data show one direction, while the within-group relationships show the opposite direction.
+
+Explain in your own words how that can happen.
+
+**Your answer:**
+
+
+
+The key idea is that the temperature groups occupy different parts of the graph:
+
+- hotter days have more ice-cream sales;
+- hotter days also have more drownings;
+- within a temperature group, the relationship goes the other way.
+
+Why can the first two facts overwhelm the third when we pool all the observations together?
+
+**Your answer:**
+
+
+
+# Part V: Name the Phenomenon
+
+What you have just observed is a version of:
+
+> **Simpson's paradox**
+
+In this setting, an aggregate relationship can differ from the relationships observed within relevant subgroups.
+
+The name is less important than the habit of mind:
+
+> **When a relationship looks surprising, ask whether another variable changes the comparison.**
+
+## 8. Pooled vs. Conditional Evidence
+
+Complete the table.
+
+| Comparison | What does it show? |
+|---|---|
+| Ice-cream sales vs. drownings, all days pooled | |
+| Ice-cream sales vs. drownings, within temperature groups | |
+
+Why is it dangerous to look only at the pooled comparison?
+
+**Your answer:**
+
+
+
+# Part VI: Audit an AI Explanation
+
+Suppose an AI assistant is shown only the pooled data and says:
+
+> **"The strong positive relationship proves that ice-cream sales increase drowning risk."**
+
+## 9. Audit the Claim
+
+Identify two problems.
+
+**Problem 1:**
+
+
+
+**Problem 2:**
+
+
+
+Now suppose the AI assistant sees the grouped plot and says:
+
+> **"Temperature completely proves that ice-cream sales have a protective effect against drowning."**
+
+Is this conclusion justified? Explain.
+
+**Your answer:**
+
+
+
+# Part VII: Calibrated Communication
+
+## 10. Write the Conclusion
+
+Write two or three sentences for a non-statistical audience.
+
+Your conclusion should:
+
+- describe the positive pooled association;
+- explain the role of temperature;
+- mention the within-group pattern;
+- avoid claiming that these data establish a causal effect of ice-cream sales on drowning.
+
+**Your answer:**
+
+
+
+# The Skeptic's Workflow
+
+Complete these statements:
+
+> **I see an association between X and Y. Before interpreting it causally, I should ________________________________.**
+
+
+
+> **A plausible confounder is a variable that ________________________________.**
+
+
+
+> **Looking within groups of Z can help because ________________________________.**
+
+
+
+> **If the pooled relationship differs from the within-group relationships, I should ________________________________.**
+
+
+
+# Before the Evidence Debate
+
+You should now be able to:
+
+- distinguish a pooled relationship from a conditional relationship;
+- identify a plausible third variable;
+- explain how confounding can change an observed relationship;
+- recognize Simpson's paradox as a case where aggregate and subgroup relationships differ;
+- use subgroup analysis to interrogate an association;
+- identify overconfident causal interpretations;
+- communicate what the evidence shows without claiming more than it can establish.
+
+> **Association is evidence. Explanation must be earned.**

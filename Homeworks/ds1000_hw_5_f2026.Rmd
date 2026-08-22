@@ -1,0 +1,300 @@
+---
+title: "DS-1000 Homework 5"
+subtitle: "Variables Together"
+author: "DS-1000: How Data Shape Our World"
+date: "Due before Lecture 6"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, error = TRUE)
+library(tidyverse)
+library(scales)
+
+polls <- read_rds("https://github.com/jbisbee1/DS1000_F2024/raw/main/data/Pres2020_PV.Rds") %>%
+  mutate(
+    Trump = Trump / 100,
+    Biden = Biden / 100
+  )
+```
+
+# What is this homework for?
+
+In Unit 1, you learned to understand variables **one at a time**.
+
+Lecture 5 added the next step:
+
+> **How should we put X and Y together so that the comparison required by the question is visible?**
+
+The central rule is:
+
+- continuous + continuous → scatterplot;
+- categorical + continuous → compare distributions across groups;
+- categorical + categorical → compare counts or proportions.
+
+You may use your notes, classmates, the internet, and AI. You are not being asked to memorize `ggplot2` syntax. Your responsibility is to decide **what comparison the question requires**, determine whether the visualization is appropriate, and verify that generated code actually implements that decision.
+
+This homework uses polling data from the 2020 U.S. presidential election. Each row represents a poll.
+
+# Part I: Start With the Question
+
+Consider the claim:
+
+> **Polls conducted using different interview methods produced different estimates of Trump's support.**
+
+Some variables that may be useful are:
+
+| Variable | Meaning |
+|---|---|
+| `Trump` | Poll estimate of support for Donald Trump |
+| `Biden` | Poll estimate of support for Joe Biden |
+| `Mode` | Method used to contact/interview respondents |
+| `SampleSize` | Number of respondents in the poll |
+| `RepCertVote` | Certified Republican vote share |
+| `DemCertVote` | Certified Democratic vote share |
+
+## 1. Identify X and Y
+
+For the claim above:
+
+**What is X?**
+
+
+
+**What type of variable is X?**
+
+
+
+**What is Y?**
+
+
+
+**What type of variable is Y?**
+
+
+
+## 2. Choose the Comparison
+
+Given those variable types, what kind of visualization should we use first?
+
+Explain why it makes the comparison in the claim visible.
+
+**Your answer:**
+
+
+
+# Part II: Ask AI to Implement the Choice
+
+## 3. Generate the Visualization
+
+Ask an AI assistant to write `ggplot2` code that compares the distribution of Trump support across polling modes.
+
+Tell it that:
+
+- `Mode` is categorical;
+- `Trump` is continuous;
+- you want to compare the distribution of Trump support across polling modes;
+- unreadable or clearly invalid mode categories may be removed if necessary, but it should explain any exclusions.
+
+Paste and run the code below.
+
+```{r mode-trump}
+# Paste the AI-generated code here.
+
+```
+
+## 4. Audit the Visualization
+
+Do not assume that the visualization is appropriate because the code runs.
+
+Answer each question.
+
+**Does the visualization match the variable types? Why?**
+
+
+
+**Does it actually make differences across polling modes visible?**
+
+
+
+**Did the AI filter, transform, reorder, or otherwise change the data? If so, was that choice justified?**
+
+
+
+**What does one observation represented in this visualization correspond to?**
+
+
+
+# Part III: Same Data, Different Question
+
+Now consider:
+
+> **Polls with larger samples were more accurate in estimating Trump's vote share.**
+
+We can define polling error as the difference between the poll's estimate of Trump support and Trump's certified vote share.
+
+```{r create-error}
+polls <- polls %>%
+  mutate(TrumpError = Trump - RepCertVote / 100)
+```
+
+## 5. Identify the Variables
+
+For this new question:
+
+**What is X, and what type of variable is it?**
+
+
+
+**What is Y, and what type of variable is it?**
+
+
+
+**What visualization follows from those variable types?**
+
+
+
+## 6. Generate and Check the Plot
+
+Ask AI to generate an appropriate visualization of the relationship between sample size and Trump polling error.
+
+Paste and run the code below.
+
+```{r sample-error}
+# Paste the AI-generated code here.
+
+```
+
+Before interpreting it, check:
+
+**Does the plot use the variables on sensible axes?**
+
+
+
+**Does one mark correspond to one poll?**
+
+
+
+**Did AI make any filtering or transformation decisions that you did not request?**
+
+
+
+# Part IV: A Technically Valid but Unhelpful Plot
+
+Suppose another analyst wants to evaluate:
+
+> **Polls conducted using different interview methods produced different estimates of Trump's support.**
+
+They make this plot:
+
+```{r wrong-question}
+polls %>%
+  ggplot(aes(x = Trump)) +
+  geom_histogram()
+```
+
+## 7. Audit the Analysis
+
+The code is valid and the histogram is an appropriate **univariate** visualization of `Trump`.
+
+Why does it nevertheless fail to answer the research question?
+
+**Your answer:**
+
+
+
+Describe the comparison that the visualization needs to make visible instead.
+
+**Your answer:**
+
+
+
+# Part V: Categorical + Categorical
+
+Suppose we create a simple variable indicating whether each poll overestimated or underestimated Trump's certified vote share.
+
+```{r error-direction}
+polls <- polls %>%
+  mutate(
+    ErrorDirection = ifelse(
+      TrumpError > 0,
+      "Overestimated Trump",
+      "Underestimated Trump"
+    )
+  )
+```
+
+Now ask:
+
+> **Was the direction of polling error different across interview modes?**
+
+## 8. Choose the Representation
+
+What type of variable is `Mode`?
+
+
+
+What type of variable is `ErrorDirection`?
+
+
+
+What kind of comparison is appropriate for these two variables?
+
+**Your answer:**
+
+
+
+Ask AI to generate a visualization that compares **proportions** rather than only raw counts across polling modes.
+
+```{r categorical-categorical}
+# Paste the AI-generated code here.
+
+```
+
+Why might proportions be more informative than raw counts in this case?
+
+**Your answer:**
+
+
+
+# Part VI: What Can We Say?
+
+## 9. Describe, Don't Explain
+
+Choose **one** of the multivariate visualizations you created above.
+
+In two or three sentences, describe the visible pattern in substantive language.
+
+At this stage, do **not** explain why the relationship exists and do **not** make a causal claim.
+
+**Your answer:**
+
+
+
+## 10. The Rule
+
+Complete this statement in your own words:
+
+> **Do not choose the graph first. Instead, ________________________________.**
+
+**Your answer:**
+
+
+
+# Before Quiz 4
+
+You should be able to do the following without AI:
+
+- identify X and Y from a substantive question;
+- determine whether each variable is continuous or categorical;
+- choose a visualization that matches the variable types and the comparison;
+- recognize when a technically valid graph fails to answer the research question;
+- explain what one observation or mark represents;
+- evaluate whether AI-generated visualization code actually implements the intended comparison;
+- describe the visible pattern without claiming why it exists.
+
+You do **not** need to memorize long `ggplot2` commands.
+
+Lecture 6 will ask the next question:
+
+> **Once we can see a relationship, how should we describe and summarize it?**

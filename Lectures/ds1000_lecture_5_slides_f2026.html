@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Variables Together</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Prof. Bisbee" />
+    <script src="ds1000_lecture_5_slides_f2026_files/header-attrs-2.30/header-attrs.js"></script>
+    <link href="ds1000_lecture_5_slides_f2026_files/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="ds1000_lecture_5_slides_f2026_files/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
+    <link href="ds1000_lecture_5_slides_f2026_files/remark-css-0.0.1/metropolis-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# Variables Together
+]
+.subtitle[
+## DS 1000
+]
+.author[
+### Prof. Bisbee
+]
+
+---
+
+
+
+
+&lt;style&gt;
+.big { font-size: 130%; }
+.huge { font-size: 180%; }
+.small { font-size: 80%; }
+&lt;/style&gt;
+
+&lt;!--
+LEARNING OBJECTIVES
+
+LO1: Interrogate empirical claims.
+LO2: Translate questions into data problems.
+LO3: Select and justify analytical approaches.
+LO4: Conduct and evaluate data analyses.
+LO5: Critically use AI as an analytical tool.
+LO6: Communicate evidence responsibly.
+
+Lecture 5 begins Unit 2. It primarily advances LO3 and LO4 while reinforcing LO1, LO2, LO5, and LO6.
+
+INSTRUCTOR NOTE:
+Keep the conceptual focus on choosing representations from the variable types and substantive question.
+Do not turn this into a catalogue of ggplot geoms.
+Correlation, strength/form, confounding, and causal interpretation belong primarily to Lectures 6–7.
+--&gt;
+
+# Variables Together
+
+.big[
+For four classes, we have deliberately avoided answering our original question.
+
+Now we finally put the variables together.
+]
+
+---
+
+# Our Question
+
+.big[
+&gt; **More selective colleges produce graduates who earn more.**
+]
+
+We have already asked:
+
+- What does "selectivity" mean?
+- How will we measure it?
+- What does one row represent?
+- What does admissions rate look like?
+- What does earnings look like?
+- Which observations belong in our analysis?
+
+Now:
+
+.huge[
+**How do X and Y relate?**
+]
+
+&lt;!-- LO2: The multivariate step follows the earlier decomposition rather than replacing it. --&gt;
+
+---
+
+# Where We Are
+
+.big[
+**Question → Concepts → Variables → Unit of analysis → Understand each variable → Prepare the evidence → Put variables together → Evaluate → Communicate**
+]
+
+Today:
+
+**Put variables together**
+
+---
+
+# One Variable vs. Two
+
+In Unit 1:
+
+&gt; What is **X** like?
+
+or
+
+&gt; What is **Y** like?
+
+Now:
+
+&gt; What happens to **Y** as **X** changes?
+
+.big[
+That is a **multivariate** question.
+]
+
+---
+
+# Start With the Question
+
+Before choosing a graph, identify:
+
+.big[
+**What is X?**
+
+**What is Y?**
+
+**What type is each variable?**
+]
+
+The types of X and Y determine which representations make sense.
+
+&lt;!-- LO3: Method selection follows the data structure. --&gt;
+
+---
+
+# Two Continuous Variables
+
+Suppose:
+
+**X:** admissions rate
+
+**Y:** graduate earnings
+
+Both are continuous.
+
+.big[
+**Continuous + continuous → scatterplot**
+]
+
+---
+
+# A Scatterplot
+
+
+``` r
+df %&gt;%
+  ggplot(aes(x = adm_rate, y = md_earn_wne_p6)) +
+  geom_point()
+```
+
+&lt;img src="ds1000_lecture_5_slides_f2026_files/figure-html/unnamed-chunk-2-1.png" style="display: block; margin: auto;" /&gt;
+
+Each point represents one observation.
+
+In these data:
+
+&gt; **one point = one college**
+
+&lt;!-- LO4: Connect visual mark to unit of analysis. --&gt;
+
+---
+
+# Read the Axes First
+
+Before interpreting the cloud of points:
+
+.big[
+**What does the x-axis measure?**
+
+**What does the y-axis measure?**
+]
+
+A graph cannot rescue a bad operationalization.
+
+The measurement questions from Unit 1 still apply.
+
+&lt;!-- LO1: Multivariate analysis does not erase construct-validity concerns. --&gt;
+
+---
+
+# What Can We Ask?
+
+From this plot we can begin asking:
+
+- Do higher values of X tend to accompany higher or lower values of Y?
+- Is there an obvious pattern?
+- Are some observations unusual?
+- Does the relationship look simple or complicated?
+
+.big[
+Today we learn to **see the relationship**.
+
+Next class we learn to describe it more precisely.
+]
+
+---
+
+# Direction
+
+Look again at the College Scorecard plot.
+
+.big[
+As admissions rate increases, what appears to happen to earnings?
+]
+
+Remember:
+
+Lower admissions rate = more selective.
+
+So interpretation requires understanding what the variable means, not merely whether the dots slope up or down.
+
+&lt;!-- LO4 + LO6: Translate graphical direction back into substantive meaning. --&gt;
+
+---
+
+# X and Y Have Roles
+
+A useful convention:
+
+**X** = explanatory / predictor variable
+
+**Y** = outcome / response variable
+
+For our question:
+
+**X:** admissions rate
+
+**Y:** earnings
+
+.big[
+But putting X on the horizontal axis does **not** prove X causes Y.
+]
+
+&lt;!-- LO1: Early guardrail against causal interpretation. --&gt;
+
+---
+
+# The Plot Is Evidence
+
+A scatterplot is not decoration.
+
+It is one way to ask:
+
+.big[
+&gt; **What pattern is present in these observations?**
+]
+
+But it does not automatically tell us:
+
+&gt; Why does that pattern exist?
+
+That distinction will become central later in this unit.
+
+---
+
+# Continuous + Categorical
+
+Now consider a different question:
+
+&gt; **Do public and private colleges have different graduate earnings?**
+
+Suppose:
+
+**X:** college type — categorical
+
+**Y:** earnings — continuous
+
+.big[
+**Categorical + continuous → compare distributions across groups**
+]
+
+---
+
+# Compare Groups
+
+A boxplot is one useful representation.
+
+
+``` r
+df %&gt;%
+  filter(!is.na(control), !is.na(md_earn_wne_p6)) %&gt;%
+  ggplot(aes(x = factor(control), y = md_earn_wne_p6)) +
+  geom_boxplot()
+```
+
+&lt;img src="ds1000_lecture_5_slides_f2026_files/figure-html/unnamed-chunk-3-1.png" style="display: block; margin: auto;" /&gt;
+
+&lt;!-- Instructor note: If `control` is not available in the current Scorecard file, substitute a categorical variable that is. --&gt;
+
+---
+
+# What Is the Comparison?
+
+The question is no longer:
+
+&gt; What does earnings look like?
+
+It is:
+
+.big[
+&gt; **How does the distribution of earnings differ across categories of X?**
+]
+
+Look for differences in:
+
+- typical values
+- spread
+- unusual observations
+
+---
+
+# Same Variable, New Question
+
+Notice what changed.
+
+In Lecture 3:
+
+&gt; What does `md_earn_wne_p6` look like?
+
+Today:
+
+&gt; Does `md_earn_wne_p6` look different across groups?
+
+.big[
+The visualization changes because the **question changed**.
+]
+
+&lt;!-- LO3: Reinforces that visualization choice is question-dependent. --&gt;
+
+---
+
+# Categorical + Categorical
+
+Consider:
+
+&gt; **Are private colleges more likely to be highly selective?**
+
+Suppose both variables are categorical.
+
+.big[
+**Categorical + categorical → compare counts or proportions across groups**
+]
+
+This is different from comparing two continuous quantities.
+
+---
+
+# Counts or Proportions?
+
+Suppose one group contains 5,000 colleges and another contains 500.
+
+Raw counts may be difficult to compare.
+
+.big[
+Sometimes the relevant question is not:
+
+**How many?**
+
+but:
+
+**What proportion?**
+]
+
+&lt;!-- LO3: Choice of summary depends on substantive comparison. --&gt;
+
+---
+
+# The Decision Rule
+
+.huge[
+**Continuous + continuous → scatterplot**
+
+**Categorical + continuous → compare distributions**
+
+**Categorical + categorical → compare counts/proportions**
+]
+
+This is a starting rule, not a law of nature.
+
+---
+
+# What About X and Y?
+
+The variable types tell us which displays are possible.
+
+The substantive question tells us which variables play which roles.
+
+.big[
+Do not start with:
+
+&gt; "I want to make a scatterplot."
+
+Start with:
+
+&gt; **"What relationship am I trying to see?"**
+]
+
+&lt;!-- LO3: Analytical method follows question. --&gt;
+
+---
+
+# A Common Mistake
+
+Suppose someone asks:
+
+&gt; "Do public and private colleges differ in earnings?"
+
+An AI assistant generates a histogram of earnings for all colleges.
+
+Does the graph show earnings?
+
+Yes.
+
+Does it answer the question?
+
+.huge[
+**No.**
+]
+
+---
+
+# Correct Code, Wrong Analysis
+
+.big[
+A graph can be:
+
+- valid R
+- attractive
+- correctly labeled
+
+and still fail to answer the research question.
+]
+
+This is the multivariate version of a lesson from Unit 1:
+
+&gt; **Code that runs is not necessarily analysis that answers the question.**
+
+&lt;!-- LO5: Evaluate AI-generated implementation against analytical intent. --&gt;
+
+---
+
+# AI Can Choose Too
+
+You can ask an AI assistant:
+
+&gt; "I have a continuous outcome Y and a categorical explanatory variable X. What visualization should I use?"
+
+It will usually give you a plausible answer.
+
+Your responsibility is to ask:
+
+.big[
+**Does that representation actually match my variables and my question?**
+]
+
+&lt;!-- LO5: AI as proposer; student as evaluator. --&gt;
+
+---
+
+# Audit the AI
+
+When AI proposes a visualization, check:
+
+1. What is X?
+2. What is Y?
+3. What type is each?
+4. What does one mark on the graph represent?
+5. Does the graph display the comparison the question asks about?
+
+If you cannot answer those questions, the visualization is not yet evidence you understand.
+
+---
+
+# Back to Selectivity
+
+Our running question asks about:
+
+**X:** admissions rate
+
+**Y:** graduate earnings
+
+Both continuous.
+
+So the appropriate first representation is:
+
+.big[
+**a scatterplot**
+]
+
+Now we can finally see whether the two variables move together.
+
+---
+
+# But Read Carefully
+
+Suppose the points generally slope downward.
+
+Because admissions rate is our X:
+
+&gt; Higher admissions rates accompany lower earnings.
+
+But substantively:
+
+&gt; **More selective colleges tend to have higher earnings.**
+
+.big[
+Statistical interpretation must return to the meaning of the variables.
+]
+
+&lt;!-- LO6: Translate statistical representation into substantive language. --&gt;
+
+---
+
+# An Observed Pattern
+
+Suppose we see a relationship.
+
+What can we say today?
+
+.big[
+&gt; **These variables appear to be associated in these data.**
+]
+
+What can we **not** yet say?
+
+&gt; Why the relationship exists.
+
+&gt; Whether it is causal.
+
+&gt; How much confidence we should place in it beyond these observations.
+
+---
+
+# Keep the Units Straight
+
+A point on the plot represents a **college**.
+
+The variables describe characteristics of colleges.
+
+Therefore the relationship is:
+
+.big[
+**between colleges**
+]
+
+It does not automatically tell us what happens to an individual student who switches colleges.
+
+&lt;!-- LO1: Guards against ecological/level-of-analysis slippage without requiring formal terminology yet. --&gt;
+
+---
+
+# Three Questions, Three Displays
+
+.big[
+**Are admissions rates related to earnings?**
+
+→ continuous + continuous
+
+→ scatterplot
+]
+
+--
+
+.big[
+**Do college types differ in earnings?**
+
+→ categorical + continuous
+
+→ compare distributions
+]
+
+--
+
+.big[
+**Does selectivity category differ by college type?**
+
+→ categorical + categorical
+
+→ compare counts/proportions
+]
+
+---
+
+# Practice: Choose the Display
+
+Claim:
+
+&gt; **Older NBA players score more points.**
+
+Variables:
+
+- age: continuous
+- points: continuous
+
+What should we use first?
+
+.huge[
+**Scatterplot**
+]
+
+&lt;!-- LO3: Transfer beyond College Scorecard. --&gt;
+
+---
+
+# Practice: Choose the Display
+
+Claim:
+
+&gt; **Rookies score fewer points than veteran players.**
+
+Variables:
+
+- rookie status: categorical
+- points: continuous
+
+What should we use first?
+
+.huge[
+**Compare the distributions across groups**
+]
+
+---
+
+# Practice: Choose the Display
+
+Claim:
+
+&gt; **Rookies are more likely to play for Western Conference teams.**
+
+Variables:
+
+- rookie status: categorical
+- conference: categorical
+
+What should we use first?
+
+.huge[
+**Compare counts or proportions**
+]
+
+---
+
+# A Visualization Is an Argument
+
+Choosing a graph means choosing what comparison to make visible.
+
+.big[
+A good visualization makes the relevant comparison easy to see.
+
+A bad visualization can obscure the comparison even when every number is correct.
+]
+
+&lt;!-- LO6: Visualization as communication of evidence. --&gt;
+
+---
+
+# What We Have Added
+
+Unit 1 taught us to ask:
+
+&gt; **Can I trust these variables as evidence?**
+
+Today adds:
+
+&gt; **How should I put the variables together so I can see the relationship I care about?**
+
+---
+
+# The Next Question
+
+Once we have the right visualization, we still need to ask:
+
+.huge[
+**How should we describe the relationship?**
+]
+
+Direction?
+
+Strength?
+
+Form?
+
+Unusual observations?
+
+Can one number summarize it?
+
+That is Lecture 6.
+
+---
+
+# Before You Leave
+
+Given any two-variable question, you should be able to answer:
+
+1. What is X?
+2. What is Y?
+3. What type is each variable?
+4. What does one observation represent?
+5. What comparison does the question require?
+6. What visualization makes that comparison visible?
+7. What pattern can you describe without overclaiming?
+
+&lt;!-- LO3 + LO4 + LO6: Reusable multivariate checklist. --&gt;
+
+---
+
+# The Rule to Remember
+
+.huge[
+**Do not choose the graph first.**
+]
+
+.big[
+Choose the comparison first.
+
+Then let the question and variable types determine the graph.
+]
+
+---
+
+# Homework 5
+
+In Homework 5, you will practice:
+
+- identifying X and Y;
+- classifying their variable types;
+- choosing an appropriate multivariate representation;
+- using AI to generate visualization code;
+- checking whether the visualization actually answers the question;
+- describing the visible pattern without explaining it away.
+
+Next class:
+
+.big[
+**Describe the Relationship**
+]
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+  "ratio": "16:9",
+  "highlightStyle": "github",
+  "highlightLines": true,
+  "countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

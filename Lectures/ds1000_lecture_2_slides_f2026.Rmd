@@ -1,0 +1,762 @@
+---
+title: "Questions → Data"
+subtitle: "Teaching a computer what we mean"
+author: "Prof. Bisbee"
+institute: "Vanderbilt University"
+date: "Slides Updated: `r Sys.Date()`"
+output:
+  xaringan::moon_reader:
+    chakra: libs/remark-latest.min.js
+    lib_dir: libs
+    css:
+      - default
+      - css/lexis.css
+      - css/lexis-fonts.css
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+      slideNumberFormat: "%current%"
+---
+
+```{css,echo=FALSE}
+.small .remark-code { font-size: 85% !important; }
+.tiny .remark-code { font-size: 60% !important; }
+.big { font-size: 150%; }
+.huge { font-size: 200%; }
+```
+
+```{r,include=FALSE}
+set.seed(123)
+options(width=60)
+knitr::opts_chunk$set(fig.align='center',fig.width=9,fig.height=5,message=FALSE,warning=FALSE)
+library(tidyverse)
+
+df <- tryCatch(
+  read_rds("../data/sc_debt.Rds"),
+  error = function(e) tryCatch(
+    read_rds("data/sc_debt.Rds"),
+    error = function(e2) NULL
+  )
+)
+```
+
+# Last time
+
+We started with a claim:
+
+> **Someone tells you something is true. What evidence would let you decide?**
+
+--
+
+And we broke research problems into pieces:
+
+**Question → Concepts → Variables → Unit of analysis → Understand variables → Put variables together → Evaluate → Communicate**
+
+---
+
+# Today
+
+.big[How do the things we care about become **data**?]
+
+--
+
+By the end of class, you should be able to:
+
+1. identify the **unit of analysis** in a dataset;
+2. connect substantive **concepts** to measured **variables**;
+3. read a simple tabular dataset;
+4. read simple R/tidyverse instructions;
+5. decide whether code actually implements the analytical task we intended.
+
+<!-- INSTRUCTOR NOTE — LO2 is primary today; LO4 and LO5 begin at a basic level. -->
+
+---
+
+# Our running claim
+
+> **More selective colleges produce graduates who earn more.**
+
+--
+
+Before touching R:
+
+- What concepts are in this claim?
+- What would we need to measure?
+- What would one observation represent?
+
+--
+
+Homework 1 asked you to begin answering these questions.
+
+---
+
+# Concept ≠ variable
+
+### Concept
+
+An abstract idea we care about.
+
+Examples:
+
+- college selectivity
+- graduate earnings
+- political ideology
+- health
+
+--
+
+### Variable
+
+A recorded measurement intended to capture some aspect of a concept.
+
+---
+
+# The measurement problem
+
+Suppose we care about:
+
+.big[**College selectivity**]
+
+--
+
+How might we measure it?
+
+- admissions rate?
+- average SAT score?
+- applicant qualifications?
+- institutional ranking?
+
+--
+
+These are related ideas.
+
+They are **not the same thing**.
+
+---
+
+# First principle
+
+.center[.huge[
+**The computer only sees the variable.**
+]]
+
+--
+
+It does not know what you *meant* by the variable.
+
+--
+
+That judgment belongs to you.
+
+<!-- INSTRUCTOR NOTE — Early construct-validity preview. Lecture 3 will develop this much more fully. -->
+
+---
+
+# From the world to a table
+
+A dataset is a structured representation of observations.
+
+--
+
+In the kind of tabular data we will use most often:
+
+> **Rows are observations.**
+
+> **Columns are variables.**
+
+---
+
+# The most important question in a dataset
+
+.center[.huge[
+**What does one row represent?**
+]]
+
+--
+
+A person?
+
+A college?
+
+A country?
+
+A tweet?
+
+A person on a particular day?
+
+--
+
+This is the **unit of analysis**.
+
+---
+
+# Why the unit of analysis matters
+
+Imagine a dataset with:
+
+- `student_id`
+- `college`
+- `earnings`
+
+--
+
+If one row is a **student**, we can ask about differences among people.
+
+--
+
+If one row is a **college**, we can ask about differences among institutions.
+
+--
+
+Same topic. Different evidence.
+
+---
+
+# College Scorecard data
+
+For our running example, we will use a subset of the U.S. College Scorecard.
+
+--
+
+.big[What should one row represent?]
+
+--
+
+**One college / institution.**
+
+---
+
+# Now open RStudio
+
+Today R is not the subject.
+
+.big[R is how we inspect and manipulate the evidence.]
+
+--
+
+You need enough R to:
+
+- understand what an instruction is doing;
+- modify simple instructions;
+- recognize when an instruction does the wrong thing;
+- ask AI for help without surrendering judgment.
+
+---
+
+# The minimum R vocabulary
+
+**Object:** Something we have given a name.
+
+**Function:** An instruction that does something.
+
+**Argument:** Information we give the function.
+
+**Pipe (`%>%`):** Take what we have and do something next.
+
+---
+
+# Objects: giving something a name
+
+```{r}
+claim <- "More selective colleges produce graduates who earn more"
+claim
+```
+
+--
+
+`<-` means:
+
+> **Store the thing on the right under the name on the left.**
+
+--
+
+You do not need to love the syntax.
+
+You need to be able to read the instruction.
+
+---
+
+# Functions: giving an instruction
+
+```{r}
+mean(c(2, 4, 6))
+```
+
+--
+
+Read it as:
+
+> Use the function `mean()` on the values 2, 4, and 6.
+
+--
+
+Functions are verbs.
+
+Arguments tell the verb what to act on or how to act.
+
+---
+
+# Load the data
+
+```{r,eval=FALSE}
+df <- read_rds("data/sc_debt.Rds")
+```
+
+--
+
+Read this in English:
+
+> Read the College Scorecard file and store it as an object called `df`.
+
+--
+
+That is enough for now.
+
+---
+
+# Inspect before manipulating
+
+```{r,eval=!is.null(df)}
+df
+```
+
+---
+
+# Inspect before manipulating
+
+Do not immediately start changing the data.
+
+First ask:
+
+1. What does one row represent?
+2. What variables are available?
+3. Which variables might bear on our question?
+
+---
+
+# What variables are available?
+
+```{r,eval=!is.null(df)}
+names(df)
+```
+
+--
+
+Names are not meanings.
+
+--
+
+We need a **data dictionary**.
+
+---
+
+# A few College Scorecard variables
+
+| Variable | Recorded meaning |
+|---|---|
+| `instnm` | Institution name |
+| `adm_rate` | Proportion of applicants admitted |
+| `sat_avg` | Average SAT score |
+| `md_earn_wne_p6` | Earnings of recent graduates |
+| `grad_debt_mdn` | Median graduate debt |
+| `ugds` | Number of undergraduates |
+| `stabbr` | State |
+
+--
+
+.big[Which variables bear most directly on our claim?]
+
+---
+
+# Operationalizing the claim
+
+> **More selective colleges produce graduates who earn more.**
+
+--
+
+Possible operationalization:
+
+**Selectivity** → `adm_rate`
+
+**Graduate earnings** → `md_earn_wne_p6`
+
+--
+
+But notice what just happened.
+
+We made **substantive choices** before writing analytical code.
+
+---
+
+# Does `adm_rate` measure selectivity?
+
+It measures:
+
+> the proportion of applicants who are admitted.
+
+--
+
+That seems useful.
+
+But ask:
+
+- Who applies in the first place?
+- Are application pools comparable across colleges?
+- Could two schools with the same admissions rate differ in meaningful ways?
+
+--
+
+.big[Variables are evidence about concepts, not the concepts themselves.]
+
+---
+
+# Does the earnings variable mean "college value"?
+
+Not necessarily.
+
+Graduate earnings may reflect:
+
+- what the college did;
+- who enrolled;
+- field of study;
+- geography;
+- family background;
+- labor-market conditions;
+- many other things.
+
+--
+
+This is why good analysis begins **before** the model.
+
+---
+
+# Which observations belong in the analysis?
+
+Suppose we want to look only at Vanderbilt.
+
+Substantive instruction:
+
+> Keep the observation whose institution name is Vanderbilt University.
+
+--
+
+R instruction:
+
+```{r,eval=!is.null(df)}
+df %>%
+  filter(instnm == "Vanderbilt University")
+```
+
+---
+
+# `filter()` answers a substantive question
+
+.center[.huge[
+**Which observations do I want?**
+]]
+
+--
+
+`filter()` keeps **rows** that satisfy a condition.
+
+--
+
+The important decision is not remembering the word `filter`.
+
+The important decision is knowing **which observations belong in the analysis and why**.
+
+---
+
+# Which variables belong in the analysis?
+
+Suppose we want only the pieces most relevant to the claim.
+
+`select()` keeps **columns**.
+
+
+```{r,eval=!is.null(df)}
+df %>%
+  select(instnm, adm_rate, md_earn_wne_p6)
+```
+
+
+---
+
+# `select()` answers another substantive question
+
+.center[.huge[
+**Which variables do I need?**
+]]
+
+--
+
+Again, the syntax is secondary.
+
+The analytical judgment comes first.
+
+---
+
+# The pipe
+
+```{r,eval=!is.null(df)}
+df %>%
+  filter(stabbr == "TN") %>%
+  select(instnm, adm_rate, md_earn_wne_p6)
+```
+
+---
+
+# The pipe
+
+Read `%>%` as:
+
+> **and then...**
+
+--
+
+Start with `df`
+
+**and then** keep Tennessee colleges
+
+**and then** keep these variables.
+
+---
+
+# Computational thinking
+
+The code is just a translation of a sequence of decisions:
+
+1. Start with the College Scorecard data.
+2. Decide which observations matter.
+3. Decide which variables matter.
+4. Keep those pieces.
+
+--
+
+.big[The hard part is specifying the task clearly.]
+
+---
+
+# AI can write this code
+
+Suppose you tell an AI assistant:
+
+> "Using `df`, keep only Tennessee colleges and retain institution name, admissions rate, and graduate earnings. Use tidyverse."
+
+--
+
+It might produce:
+
+```{r,eval=FALSE}
+df %>%
+  filter(stabbr == "TN") %>%
+  select(instnm, adm_rate, md_earn_wne_p6)
+```
+
+--
+
+That is useful.
+
+But who decided what `TN`, `adm_rate`, and `md_earn_wne_p6` meant?
+
+---
+
+# AI can also be confidently wrong
+
+Imagine AI returns:
+
+```{r,eval=FALSE}
+df %>%
+  filter(instnm == "TN") %>%
+  select(stabbr, sat_avg, grad_debt_mdn)
+```
+
+--
+
+.big[What is wrong?]
+
+--
+
+The code is valid R.
+
+It is a bad implementation of the analytical task.
+
+<!-- INSTRUCTOR NOTE — LO5. Distinguish syntactic validity from substantive validity. -->
+
+---
+
+# The standard for AI-generated code
+
+Do not ask only:
+
+> **Does the code run?**
+
+--
+
+Ask:
+
+> **Does the code do what I intended?**
+
+> **Do the variables mean what I think they mean?**
+
+> **Did it keep the observations I intended to study?**
+
+--
+
+A program can run perfectly and answer the wrong question.
+
+---
+
+# How do we verify code?
+
+Use simple checks.
+
+If we asked for Tennessee colleges:
+
+```{r,eval=!is.null(df)}
+df %>%
+  filter(stabbr == "TN") %>%
+  select(instnm, stabbr) %>%
+  head()
+```
+
+--
+
+Verification means comparing the output against the task we specified.
+
+---
+
+# A quick practice problem
+
+Claim:
+
+> **Students at larger colleges graduate with more debt.**
+
+Available variables include:
+
+- `ugds`: number of undergraduates
+- `grad_debt_mdn`: median graduate debt
+- `adm_rate`: admissions rate
+- `stabbr`: state
+
+--
+
+Before writing code:
+
+1. What are the concepts?
+2. What is the unit of analysis?
+3. Which variables would you retain?
+
+---
+
+# Now evaluate the instruction
+
+An AI assistant proposes:
+
+```{r,eval=FALSE}
+df %>%
+  select(instnm, ugds, grad_debt_mdn)
+```
+
+--
+
+Is this a reasonable **first step**?
+
+--
+
+Yes.
+
+But it has not answered the research question.
+
+It has only prepared relevant evidence for inspection.
+
+---
+
+# What should happen next?
+
+We now have candidate variables:
+
+- `ugds`
+- `grad_debt_mdn`
+
+--
+
+Should we immediately put them together?
+
+--
+
+.center[.huge[
+**No.**
+]]
+
+---
+
+# Before asking how variables relate...
+
+.center[.huge[
+**Understand each variable.**
+]]
+
+--
+
+For each one, ask:
+
+- What does it measure?
+- What type of variable is it?
+- What values does it take?
+- What does its distribution look like?
+- Is anything missing or strange?
+
+--
+
+That is where we go next.
+
+---
+
+# The course roadmap
+
+**Question**
+
+↓
+
+**Concepts → Variables → Unit of analysis**  ← *today*
+
+↓
+
+**Understand each variable**  ← *next*
+
+↓
+
+**Put variables together**
+
+↓
+
+**Evaluate → Communicate**
+
+---
+
+# What you should take away
+
+1. A dataset is a representation of the world, not the world itself.
+2. One row has to represent something specific.
+3. Variables operationalize concepts imperfectly.
+4. `filter()` means choosing observations; `select()` means choosing variables.
+5. AI can translate clear analytical instructions into code.
+6. **You remain responsible for whether those instructions and that code make sense.**
+
+---
+
+# Before next class
+
+Work through `ds1000_hw_2.Rmd`.
+
+--
+
+You will return to the College Scorecard claim with the actual data.
+
+--
+
+The goal is not to memorize R syntax.
+
+.big[The goal is to learn how questions become data.]

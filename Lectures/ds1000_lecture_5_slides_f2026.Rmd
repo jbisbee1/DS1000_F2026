@@ -1,0 +1,736 @@
+---
+title: "Variables Together"
+subtitle: "DS 1000"
+author: "Prof. Bisbee"
+output:
+  xaringan::moon_reader:
+    css: ["default", "metropolis", "metropolis-fonts"]
+    nature:
+      ratio: "16:9"
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+```{r,include=F}
+set.seed(123)
+options(width=60)
+knitr::opts_chunk$set(fig.align='center',fig.width=9,fig.height=5,message=F,warning=F)
+library(tidyverse)
+df <- read_rds("https://github.com/jbisbee1/DS1000_F2024/raw/main/data/sc_debt.Rds")
+```
+
+<style>
+.big { font-size: 130%; }
+.huge { font-size: 180%; }
+.small { font-size: 80%; }
+</style>
+
+<!--
+LEARNING OBJECTIVES
+
+LO1: Interrogate empirical claims.
+LO2: Translate questions into data problems.
+LO3: Select and justify analytical approaches.
+LO4: Conduct and evaluate data analyses.
+LO5: Critically use AI as an analytical tool.
+LO6: Communicate evidence responsibly.
+
+Lecture 5 begins Unit 2. It primarily advances LO3 and LO4 while reinforcing LO1, LO2, LO5, and LO6.
+
+INSTRUCTOR NOTE:
+Keep the conceptual focus on choosing representations from the variable types and substantive question.
+Do not turn this into a catalogue of ggplot geoms.
+Correlation, strength/form, confounding, and causal interpretation belong primarily to Lectures 6–7.
+-->
+
+# Variables Together
+
+.big[
+For four classes, we have deliberately avoided answering our original question.
+
+Now we finally put the variables together.
+]
+
+---
+
+# Our Question
+
+.big[
+> **More selective colleges produce graduates who earn more.**
+]
+
+We have already asked:
+
+- What does "selectivity" mean?
+- How will we measure it?
+- What does one row represent?
+- What does admissions rate look like?
+- What does earnings look like?
+- Which observations belong in our analysis?
+
+Now:
+
+.huge[
+**How do X and Y relate?**
+]
+
+<!-- LO2: The multivariate step follows the earlier decomposition rather than replacing it. -->
+
+---
+
+# Where We Are
+
+.big[
+**Question → Concepts → Variables → Unit of analysis → Understand each variable → Prepare the evidence → Put variables together → Evaluate → Communicate**
+]
+
+Today:
+
+**Put variables together**
+
+---
+
+# One Variable vs. Two
+
+In Unit 1:
+
+> What is **X** like?
+
+or
+
+> What is **Y** like?
+
+Now:
+
+> What happens to **Y** as **X** changes?
+
+.big[
+That is a **multivariate** question.
+]
+
+---
+
+# Start With the Question
+
+Before choosing a graph, identify:
+
+.big[
+**What is X?**
+
+**What is Y?**
+
+**What type is each variable?**
+]
+
+The types of X and Y determine which representations make sense.
+
+<!-- LO3: Method selection follows the data structure. -->
+
+---
+
+# Two Continuous Variables
+
+Suppose:
+
+**X:** admissions rate
+
+**Y:** graduate earnings
+
+Both are continuous.
+
+.big[
+**Continuous + continuous → scatterplot**
+]
+
+---
+
+# A Scatterplot
+
+```{r}
+df %>%
+  ggplot(aes(x = adm_rate, y = md_earn_wne_p6)) +
+  geom_point()
+```
+
+Each point represents one observation.
+
+In these data:
+
+> **one point = one college**
+
+<!-- LO4: Connect visual mark to unit of analysis. -->
+
+---
+
+# Read the Axes First
+
+Before interpreting the cloud of points:
+
+.big[
+**What does the x-axis measure?**
+
+**What does the y-axis measure?**
+]
+
+A graph cannot rescue a bad operationalization.
+
+The measurement questions from Unit 1 still apply.
+
+<!-- LO1: Multivariate analysis does not erase construct-validity concerns. -->
+
+---
+
+# What Can We Ask?
+
+From this plot we can begin asking:
+
+- Do higher values of X tend to accompany higher or lower values of Y?
+- Is there an obvious pattern?
+- Are some observations unusual?
+- Does the relationship look simple or complicated?
+
+.big[
+Today we learn to **see the relationship**.
+
+Next class we learn to describe it more precisely.
+]
+
+---
+
+# Direction
+
+Look again at the College Scorecard plot.
+
+.big[
+As admissions rate increases, what appears to happen to earnings?
+]
+
+Remember:
+
+Lower admissions rate = more selective.
+
+So interpretation requires understanding what the variable means, not merely whether the dots slope up or down.
+
+<!-- LO4 + LO6: Translate graphical direction back into substantive meaning. -->
+
+---
+
+# X and Y Have Roles
+
+A useful convention:
+
+**X** = explanatory / predictor variable
+
+**Y** = outcome / response variable
+
+For our question:
+
+**X:** admissions rate
+
+**Y:** earnings
+
+.big[
+But putting X on the horizontal axis does **not** prove X causes Y.
+]
+
+<!-- LO1: Early guardrail against causal interpretation. -->
+
+---
+
+# The Plot Is Evidence
+
+A scatterplot is not decoration.
+
+It is one way to ask:
+
+.big[
+> **What pattern is present in these observations?**
+]
+
+But it does not automatically tell us:
+
+> Why does that pattern exist?
+
+That distinction will become central later in this unit.
+
+---
+
+# Continuous + Categorical
+
+Now consider a different question:
+
+> **Do public and private colleges have different graduate earnings?**
+
+Suppose:
+
+**X:** college type — categorical
+
+**Y:** earnings — continuous
+
+.big[
+**Categorical + continuous → compare distributions across groups**
+]
+
+---
+
+# Compare Groups
+
+A boxplot is one useful representation.
+
+```{r}
+df %>%
+  filter(!is.na(control), !is.na(md_earn_wne_p6)) %>%
+  ggplot(aes(x = factor(control), y = md_earn_wne_p6)) +
+  geom_boxplot()
+```
+
+<!-- Instructor note: If `control` is not available in the current Scorecard file, substitute a categorical variable that is. -->
+
+---
+
+# What Is the Comparison?
+
+The question is no longer:
+
+> What does earnings look like?
+
+It is:
+
+.big[
+> **How does the distribution of earnings differ across categories of X?**
+]
+
+Look for differences in:
+
+- typical values
+- spread
+- unusual observations
+
+---
+
+# Same Variable, New Question
+
+Notice what changed.
+
+In Lecture 3:
+
+> What does `md_earn_wne_p6` look like?
+
+Today:
+
+> Does `md_earn_wne_p6` look different across groups?
+
+.big[
+The visualization changes because the **question changed**.
+]
+
+<!-- LO3: Reinforces that visualization choice is question-dependent. -->
+
+---
+
+# Categorical + Categorical
+
+Consider:
+
+> **Are private colleges more likely to be highly selective?**
+
+Suppose both variables are categorical.
+
+.big[
+**Categorical + categorical → compare counts or proportions across groups**
+]
+
+This is different from comparing two continuous quantities.
+
+---
+
+# Counts or Proportions?
+
+Suppose one group contains 5,000 colleges and another contains 500.
+
+Raw counts may be difficult to compare.
+
+.big[
+Sometimes the relevant question is not:
+
+**How many?**
+
+but:
+
+**What proportion?**
+]
+
+<!-- LO3: Choice of summary depends on substantive comparison. -->
+
+---
+
+# The Decision Rule
+
+.huge[
+**Continuous + continuous → scatterplot**
+
+**Categorical + continuous → compare distributions**
+
+**Categorical + categorical → compare counts/proportions**
+]
+
+This is a starting rule, not a law of nature.
+
+---
+
+# What About X and Y?
+
+The variable types tell us which displays are possible.
+
+The substantive question tells us which variables play which roles.
+
+.big[
+Do not start with:
+
+> "I want to make a scatterplot."
+
+Start with:
+
+> **"What relationship am I trying to see?"**
+]
+
+<!-- LO3: Analytical method follows question. -->
+
+---
+
+# A Common Mistake
+
+Suppose someone asks:
+
+> "Do public and private colleges differ in earnings?"
+
+An AI assistant generates a histogram of earnings for all colleges.
+
+Does the graph show earnings?
+
+Yes.
+
+Does it answer the question?
+
+.huge[
+**No.**
+]
+
+---
+
+# Correct Code, Wrong Analysis
+
+.big[
+A graph can be:
+
+- valid R
+- attractive
+- correctly labeled
+
+and still fail to answer the research question.
+]
+
+This is the multivariate version of a lesson from Unit 1:
+
+> **Code that runs is not necessarily analysis that answers the question.**
+
+<!-- LO5: Evaluate AI-generated implementation against analytical intent. -->
+
+---
+
+# AI Can Choose Too
+
+You can ask an AI assistant:
+
+> "I have a continuous outcome Y and a categorical explanatory variable X. What visualization should I use?"
+
+It will usually give you a plausible answer.
+
+Your responsibility is to ask:
+
+.big[
+**Does that representation actually match my variables and my question?**
+]
+
+<!-- LO5: AI as proposer; student as evaluator. -->
+
+---
+
+# Audit the AI
+
+When AI proposes a visualization, check:
+
+1. What is X?
+2. What is Y?
+3. What type is each?
+4. What does one mark on the graph represent?
+5. Does the graph display the comparison the question asks about?
+
+If you cannot answer those questions, the visualization is not yet evidence you understand.
+
+---
+
+# Back to Selectivity
+
+Our running question asks about:
+
+**X:** admissions rate
+
+**Y:** graduate earnings
+
+Both continuous.
+
+So the appropriate first representation is:
+
+.big[
+**a scatterplot**
+]
+
+Now we can finally see whether the two variables move together.
+
+---
+
+# But Read Carefully
+
+Suppose the points generally slope downward.
+
+Because admissions rate is our X:
+
+> Higher admissions rates accompany lower earnings.
+
+But substantively:
+
+> **More selective colleges tend to have higher earnings.**
+
+.big[
+Statistical interpretation must return to the meaning of the variables.
+]
+
+<!-- LO6: Translate statistical representation into substantive language. -->
+
+---
+
+# An Observed Pattern
+
+Suppose we see a relationship.
+
+What can we say today?
+
+.big[
+> **These variables appear to be associated in these data.**
+]
+
+What can we **not** yet say?
+
+> Why the relationship exists.
+
+> Whether it is causal.
+
+> How much confidence we should place in it beyond these observations.
+
+---
+
+# Keep the Units Straight
+
+A point on the plot represents a **college**.
+
+The variables describe characteristics of colleges.
+
+Therefore the relationship is:
+
+.big[
+**between colleges**
+]
+
+It does not automatically tell us what happens to an individual student who switches colleges.
+
+<!-- LO1: Guards against ecological/level-of-analysis slippage without requiring formal terminology yet. -->
+
+---
+
+# Three Questions, Three Displays
+
+.big[
+**Are admissions rates related to earnings?**
+
+→ continuous + continuous
+
+→ scatterplot
+]
+
+--
+
+.big[
+**Do college types differ in earnings?**
+
+→ categorical + continuous
+
+→ compare distributions
+]
+
+--
+
+.big[
+**Does selectivity category differ by college type?**
+
+→ categorical + categorical
+
+→ compare counts/proportions
+]
+
+---
+
+# Practice: Choose the Display
+
+Claim:
+
+> **Older NBA players score more points.**
+
+Variables:
+
+- age: continuous
+- points: continuous
+
+What should we use first?
+
+.huge[
+**Scatterplot**
+]
+
+<!-- LO3: Transfer beyond College Scorecard. -->
+
+---
+
+# Practice: Choose the Display
+
+Claim:
+
+> **Rookies score fewer points than veteran players.**
+
+Variables:
+
+- rookie status: categorical
+- points: continuous
+
+What should we use first?
+
+.huge[
+**Compare the distributions across groups**
+]
+
+---
+
+# Practice: Choose the Display
+
+Claim:
+
+> **Rookies are more likely to play for Western Conference teams.**
+
+Variables:
+
+- rookie status: categorical
+- conference: categorical
+
+What should we use first?
+
+.huge[
+**Compare counts or proportions**
+]
+
+---
+
+# A Visualization Is an Argument
+
+Choosing a graph means choosing what comparison to make visible.
+
+.big[
+A good visualization makes the relevant comparison easy to see.
+
+A bad visualization can obscure the comparison even when every number is correct.
+]
+
+<!-- LO6: Visualization as communication of evidence. -->
+
+---
+
+# What We Have Added
+
+Unit 1 taught us to ask:
+
+> **Can I trust these variables as evidence?**
+
+Today adds:
+
+> **How should I put the variables together so I can see the relationship I care about?**
+
+---
+
+# The Next Question
+
+Once we have the right visualization, we still need to ask:
+
+.huge[
+**How should we describe the relationship?**
+]
+
+Direction?
+
+Strength?
+
+Form?
+
+Unusual observations?
+
+Can one number summarize it?
+
+That is Lecture 6.
+
+---
+
+# Before You Leave
+
+Given any two-variable question, you should be able to answer:
+
+1. What is X?
+2. What is Y?
+3. What type is each variable?
+4. What does one observation represent?
+5. What comparison does the question require?
+6. What visualization makes that comparison visible?
+7. What pattern can you describe without overclaiming?
+
+<!-- LO3 + LO4 + LO6: Reusable multivariate checklist. -->
+
+---
+
+# The Rule to Remember
+
+.huge[
+**Do not choose the graph first.**
+]
+
+.big[
+Choose the comparison first.
+
+Then let the question and variable types determine the graph.
+]
+
+---
+
+# Homework 5
+
+In Homework 5, you will practice:
+
+- identifying X and Y;
+- classifying their variable types;
+- choosing an appropriate multivariate representation;
+- using AI to generate visualization code;
+- checking whether the visualization actually answers the question;
+- describing the visible pattern without explaining it away.
+
+Next class:
+
+.big[
+**Describe the Relationship**
+]

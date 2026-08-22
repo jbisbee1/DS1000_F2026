@@ -1,0 +1,845 @@
+---
+title: "What Else Could Explain It?"
+subtitle: "DS 1000"
+author: "Prof. Bisbee"
+output:
+  xaringan::moon_reader:
+    css: ["default", "metropolis", "metropolis-fonts"]
+    nature:
+      ratio: "16:9"
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+```{r,include=F}
+set.seed(123)
+options(width=60)
+knitr::opts_chunk$set(fig.align='center',fig.width=9,fig.height=5,message=F,warning=F)
+
+library(tidyverse)
+
+df <- read_rds("https://github.com/jbisbee1/DS1000_F2024/raw/main/data/sc_debt.Rds")
+
+mi_ep <- read_rds(
+  "https://github.com/jbisbee1/DS1000_F2024/raw/main/data/MI2020_ExitPoll_small.rds"
+)
+
+mi_final <- mi_ep %>%
+  filter(
+    preschoice == "Donald Trump, the Republican" |
+      preschoice == "Joe Biden, the Democrat"
+  ) %>%
+  mutate(
+    BidenVoter = ifelse(preschoice == "Joe Biden, the Democrat", 1, 0),
+    TrumpVoter = 1 - BidenVoter,
+    AGE10 = ifelse(AGE10 == 99, NA, AGE10)
+  )
+
+# Synthetic Simpson's-paradox example.
+# Within each preparation group, more practice is associated with higher scores,
+# while the pooled relationship goes in the opposite direction because the groups
+# occupy different parts of the X/Y space.
+simpson <- bind_rows(
+  tibble(
+    group = "Advanced course",
+    practice = seq(1, 5, length.out = 35),
+    score = 82 + 2.2 * practice + rnorm(35, 0, 1.8)
+  ),
+  tibble(
+    group = "Intro course",
+    practice = seq(5, 9, length.out = 35),
+    score = 60 + 2.2 * practice + rnorm(35, 0, 1.8)
+  )
+)
+```
+
+<style>
+.big { font-size: 130%; }
+.huge { font-size: 180%; }
+.small { font-size: 80%; }
+</style>
+
+<!--
+LEARNING OBJECTIVES
+
+LO1: Interrogate empirical claims.
+LO3: Select and justify analytical approaches.
+LO4: Conduct and evaluate data analyses.
+LO5: Critically use AI as an analytical tool.
+LO6: Communicate evidence responsibly.
+
+Lecture 7 completes the core instructional content for Unit 2.
+
+Primary Test 2 competencies:
+- identify plausible alternative explanations / confounders;
+- reason about subgroup patterns;
+- distinguish association from causation;
+- communicate a calibrated conclusion.
+
+INSTRUCTOR NOTE:
+Keep historical/source-development notes invisible to students. The student-facing
+deck should read as one coherent argument built from concepts they have already
+encountered in this semester.
+-->
+
+# What Else Could Explain It?
+
+.big[
+Last class:
+
+> **What relationship do I see?**
+
+Today:
+
+> **Why might I see that relationship?**
+]
+
+---
+
+# Where We Are
+
+.big[
+**Question → trustworthy variables → appropriate comparison → describe the relationship → interrogate explanations → communicate**
+]
+
+Today:
+
+**Interrogate explanations**
+
+---
+
+# Our Running Claim
+
+.huge[
+> **More selective colleges produce graduates who earn more.**
+]
+
+We have spent weeks earning the ability to evaluate this sentence.
+
+---
+
+# What We Have Established
+
+Using admissions rate and graduate earnings, we can ask whether:
+
+.big[
+**selectivity and earnings are associated**
+]
+
+in the College Scorecard data.
+
+Suppose they are.
+
+What word in the original claim still causes trouble?
+
+---
+
+# The Dangerous Word
+
+.huge[
+**produce**
+]
+
+"Selective colleges **produce** graduates who earn more."
+
+That is a causal claim.
+
+.big[
+An association is not yet a causal explanation.
+]
+
+<!-- LO1: Make the inferential gap explicit. -->
+
+---
+
+# Three Stories
+
+Suppose X and Y move together.
+
+At least three broad stories are possible:
+
+.big[
+**1. X → Y**
+
+**2. Y → X**
+
+**3. Z → X and Z → Y**
+]
+
+The observed X–Y relationship alone does not tell us which story generated it.
+
+---
+
+# Story 1: X Causes Y
+
+For our college claim:
+
+.big[
+**Selectivity → graduate earnings**
+]
+
+Possible story:
+
+Selective colleges provide resources, networks, instruction, or credentials that increase later earnings.
+
+This is the story implied by the word **produce**.
+
+---
+
+# Story 2: Reverse Direction
+
+Sometimes the direction we tell ourselves is backwards.
+
+.big[
+**Y → X**
+]
+
+This is called **reverse causality**.
+
+Putting X on the horizontal axis does not make X the cause.
+
+<!-- Instructor note: reinforce the distinction between axis placement and causal direction. -->
+
+---
+
+# Reverse Causality Example
+
+Suppose we observe:
+
+> People who exercise more report better health.
+
+Possible story:
+
+**Exercise → health**
+
+But also:
+
+.big[
+**Health → ability to exercise**
+]
+
+The observed relationship alone does not separate these stories.
+
+---
+
+# Story 3: Something Else
+
+Return to colleges.
+
+Suppose selective colleges have higher-earning graduates.
+
+What else might differ across colleges?
+
+.big[
+**Who enrolls?**
+
+**What students study?**
+
+**Where the college is located?**
+
+**Which labor markets graduates enter?**
+]
+
+---
+
+# We Already Saw This
+
+Earlier in the course, we noted that graduate earnings may reflect:
+
+- what the college did;
+- who enrolled;
+- field of study;
+- geography;
+- family background;
+- labor-market conditions.
+
+.big[
+Those were not side notes.
+
+They are now central to the causal question.
+]
+
+<!-- Instructor note: reconnect explicitly to the measurement cautions introduced earlier in the course. -->
+
+---
+
+# A Third Variable
+
+Call another relevant variable:
+
+.huge[
+**Z**
+]
+
+Suppose Z is related to both:
+
+**X: selectivity**
+
+and
+
+**Y: graduate earnings**
+
+Then some of the X–Y relationship may reflect Z.
+
+---
+
+# Confounding
+
+.big[
+A **confounder** is a variable related to both the explanatory variable and the outcome that can provide an alternative explanation for their observed relationship.
+]
+
+For example:
+
+**Z:** characteristics of students before college
+
+Those characteristics may affect:
+
+- which colleges students attend;
+- how much they later earn.
+
+<!-- LO1: Introduce confounding intuitively rather than formally. -->
+
+---
+
+# Another Familiar Pattern
+
+Suppose we observe:
+
+.big[
+**More education → higher wages**
+]
+
+It is tempting to conclude that education itself produced the entire difference.
+
+But education and wages may both reflect:
+
+> family resources, prior preparation, ability, geography, or other opportunities.
+
+.big[
+The observed relationship may combine several processes.
+]
+
+---
+
+# "Spurious" Does Not Mean Fake
+
+A spurious relationship can be:
+
+- real in the dataset;
+- strong;
+- reproducible;
+
+and still fail to represent the causal story we first imagined.
+
+.big[
+The pattern can be real while the explanation is wrong.
+]
+
+---
+
+# A Skeptic's Question
+
+Whenever X and Y move together, ask:
+
+.huge[
+> **What else moves with both?**
+]
+
+This is one of the most useful habits in empirical reasoning.
+
+---
+
+# How Can We Investigate Z?
+
+One simple strategy:
+
+.big[
+**Look at the X–Y relationship within relevant groups of Z.**
+]
+
+This is **conditional analysis**:
+
+> How does the relationship look **depending on** another variable?
+
+.big[
+Instead of asking only "Are X and Y related?", we ask whether that relationship changes when Z changes.
+]
+
+---
+
+# Add a Third Variable
+
+Consider a different relationship:
+
+> **Did men and women differ in support for Trump in Michigan in 2020?**
+
+We can first compare men and women overall.
+
+Then ask:
+
+.big[
+> **Does that gender difference look the same at different ages?**
+]
+
+Age becomes our third variable, Z.
+
+---
+
+# First: The Overall Gender Gap
+
+```{r}
+mi_final %>%
+  filter(!is.na(SEX)) %>%
+  group_by(SEX) %>%
+  summarise(
+    TrumpSupport = mean(TrumpVoter),
+    .groups = "drop"
+  )
+```
+
+.big[
+This gives us an overall relationship between gender and vote choice.
+]
+
+---
+
+# Then Condition on Age
+
+```{r}
+mi_final %>%
+  filter(!is.na(SEX), !is.na(AGE10)) %>%
+  group_by(SEX, AGE10) %>%
+  summarise(
+    TrumpSupport = mean(TrumpVoter),
+    .groups = "drop"
+  )
+```
+
+Now ask:
+
+.big[
+> **Is the gender gap similar within each age group?**
+]
+
+<!-- Instructor note: use this as a concrete transition from an overall comparison to a conditional comparison. -->
+
+---
+
+# Why Look Within Groups?
+
+Because an aggregate relationship may combine:
+
+- differences **within** groups;
+- differences **between** groups;
+- unequal group composition.
+
+.big[
+The pooled pattern can hide important structure.
+]
+
+---
+
+# A More Dramatic Example
+
+Sometimes the aggregate relationship can even point in a different direction from the relationships within groups.
+
+This is known as:
+
+.huge[
+**Simpson's paradox**
+]
+
+---
+
+# The Pooled Data
+
+```{r, echo=FALSE}
+simpson %>%
+  ggplot(aes(x = practice, y = score)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE)
+```
+
+.big[
+Looking only at the pooled data, what relationship do you see?
+]
+
+---
+
+# Now Reveal the Groups
+
+```{r, echo=FALSE}
+simpson %>%
+  ggplot(aes(x = practice, y = score, shape = group)) +
+  geom_point() +
+  geom_smooth(aes(group = group), method = "lm", se = FALSE)
+```
+
+.big[
+Within each course, more practice accompanies higher scores.
+
+The pooled relationship tells a different story.
+]
+
+---
+
+# What Happened?
+
+Students in the two courses differ in:
+
+- typical practice time;
+- typical scores.
+
+The group variable is related to both X and Y.
+
+.big[
+Ignoring the group changed the apparent relationship.
+]
+
+---
+
+# The Lesson Is Not "Always Control"
+
+A third variable can:
+
+- explain part of a relationship;
+- reveal heterogeneity;
+- clarify a comparison;
+
+but conditioning on variables is itself a substantive decision.
+
+.big[
+Do not add variables mechanically.
+
+Ask why Z belongs in the explanation.
+]
+
+<!-- Important guardrail before later regression instruction. -->
+
+---
+
+# Not Every Z Is a Confounder
+
+Suppose X affects Z, and Z then affects Y.
+
+.big[
+**X → Z → Y**
+]
+
+Z is now part of the pathway through which X may affect Y.
+
+Conditioning on it answers a different question.
+
+We will return to these distinctions later.
+
+---
+
+# The Core Habit
+
+Before interpreting an association causally:
+
+.big[
+1. Name the causal story you are tempted to tell.
+
+2. Generate plausible alternative stories.
+
+3. Ask what evidence would distinguish them.
+]
+
+That is principled skepticism.
+
+---
+
+# AI Will Happily Explain
+
+Suppose you tell an AI assistant:
+
+> "College selectivity and graduate earnings have a strong negative correlation because lower admissions rates lead to better career outcomes."
+
+It may produce an eloquent explanation involving:
+
+- networks;
+- signaling;
+- resources;
+- peers.
+
+.huge[
+Fluency is not evidence.
+]
+
+<!-- LO5: AI can elaborate a causal story without evidence that identifies it. -->
+
+---
+
+# Audit the AI's Story
+
+Ask:
+
+.big[
+**What evidence supports this mechanism?**
+
+**What alternative explanations were ignored?**
+
+**Could student selection explain the pattern?**
+
+**Could geography or field of study matter?**
+
+**What evidence would distinguish these stories?**
+]
+
+AI can generate hypotheses.
+
+It cannot turn an association into identified causation by explaining it confidently.
+
+---
+
+# Association Language
+
+When the evidence is observational and bivariate:
+
+Good:
+
+> "Selectivity and earnings are associated."
+
+> "More selective colleges tend to have higher-earning graduates."
+
+> "The pattern is consistent with the claim."
+
+---
+
+# Causal Language
+
+Stronger statements require stronger evidence:
+
+> "Selectivity increases earnings."
+
+> "Attending a selective college causes higher earnings."
+
+> "Selective colleges produce higher-earning graduates."
+
+.big[
+Those statements require us to rule out credible alternative explanations.
+]
+
+---
+
+# "Consistent With" Is Useful
+
+.big[
+**Results can be consistent with a theory without proving the theory.**
+]
+
+This is useful language when the evidence fits an explanation but does not uniquely establish it.
+
+Evidence can increase or decrease our confidence without uniquely identifying one explanation.
+
+---
+
+# What Would Stronger Evidence Look Like?
+
+To make a stronger causal claim, we would want evidence that helps separate:
+
+.big[
+**what the college does**
+
+from
+
+**who attends the college**
+]
+
+Possible strategies might compare more similar students or exploit research designs that make exposure to different colleges less confounded.
+
+We are not solving that problem today.
+
+---
+
+# Our Goal Today
+
+You do not need to master causal inference.
+
+You need to develop the reflex:
+
+.huge[
+**Association observed. Explanation not yet earned.**
+]
+
+---
+
+# Practice
+
+Claim:
+
+> **Students who use AI to study earn higher grades.**
+
+Suppose the association is real.
+
+Name a plausible Z.
+
+--
+
+Examples might include:
+
+- prior academic preparation;
+- motivation;
+- course difficulty;
+- access to resources.
+
+.big[
+Which variables could affect both AI use and grades?
+]
+
+---
+
+# Practice
+
+Claim:
+
+> **Neighborhoods with more police are safer.**
+
+Possible stories:
+
+.big[
+Police → safety
+
+Safety → policing decisions
+
+Third variables → both policing and safety
+]
+
+What third variables might matter?
+
+---
+
+# Practice
+
+Claim:
+
+> **Older NBA players score more points.**
+
+What else might affect both:
+
+- player age / experience;
+- total points?
+
+.big[
+Playing time?
+
+Career selection?
+
+Player quality?
+
+Role on the team?
+]
+
+---
+
+# A Better Conclusion
+
+Return to our original claim.
+
+Instead of:
+
+> "Selective colleges produce graduates who earn more."
+
+A calibrated conclusion is:
+
+.big[
+> **More selective colleges tend to have higher graduate earnings in these data, but this association alone does not establish that selectivity causes higher earnings.**
+]
+
+---
+
+# Why This Matters
+
+The world is full of claims that move silently from:
+
+.big[
+**X and Y are related**
+]
+
+to:
+
+.huge[
+**X causes Y**
+]
+
+Politicians do it.
+
+News stories do it.
+
+Peers do it.
+
+AI does it.
+
+Data scientists should notice the jump.
+
+---
+
+# The Unit 2 Workflow
+
+.big[
+**Choose the comparison**
+
+↓
+
+**See the relationship**
+
+↓
+
+**Describe the relationship**
+
+↓
+
+**Ask what else could explain it**
+
+↓
+
+**Calibrate the conclusion**
+]
+
+That is the reasoning Test 2 asks you to transfer.
+
+---
+
+# Before You Leave
+
+When you see an association, ask:
+
+1. What is the observed X–Y relationship?
+2. What causal story am I tempted to tell?
+3. Could Y affect X?
+4. What Z might affect both?
+5. Does the relationship differ across relevant groups?
+6. What evidence would distinguish the explanations?
+7. What language does the evidence actually justify?
+
+---
+
+# The Rule to Remember
+
+.huge[
+**Association is evidence.**
+
+**Explanation must be earned.**
+]
+
+---
+
+# Next
+
+Homework 7 and Quiz 6 will practice:
+
+- generating alternative explanations;
+- identifying plausible confounders;
+- reasoning about subgroup patterns;
+- recognizing Simpson's paradox;
+- auditing causal interpretations from AI;
+- writing calibrated conclusions.
+
+Then:
+
+.huge[
+**Evidence Debate 1**
+]
