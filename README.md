@@ -48,15 +48,11 @@ Here is the list of channels you should see upon joining the Campuswire workspac
 - **Grades**: A space for grades (**NOT USED. VISIT BRIGHTSPACE INSTEAD.**)
 
 ### GitHub
-I have created a [`GitHub`](https://github.com/jbisbee1/DS1000_F2026) repository to prepare and share all course-related content. This very syllabus is available as the repository's README and all links below are connected to the appropriate folders, sub-folders, and files in this repository.
+The course [`GitHub`](https://github.com/jbisbee1/DS1000_F2026) repository is the public home for course materials. It contains this syllabus, lecture slides, homework assignments, datasets, and other resources used throughout the semester.
 
-You are expected to adopt the following workflow for this class:
+You do **not** need to know how to use Git or GitHub to succeed in this course. Links to the materials you need will also be provided through Brightspace.
 
-1. Prior to each lecture, download the appropriate `.Rmd` file, open it in `RStudio`, and read through it. **This is your primary (ungraded) homework assignment!** As you work through it, try to tweak some of the code and answer the toy examples where provided -- use your LLM of choice freely here to explain concepts, debug code, or explore extensions. Each time you make a change, click the `knit` button in `RStudio` to see if everything still loads.
-
-2. During each lecture, create a new `.Rmd` file to take notes in. As with the homework, you should be tweaking and adjusting things on your own, extending your learning beyond what is covered in lecture.
-
-3. After each lecture, tweak the notes `.Rmd` file further to test out new ideas that you come up with which were not covered in class. Each lecture's slides will be made available as `PDF` for you use to help you review.
+Lecture slides are posted as webpages so that you can review them in your browser. Source files are also available for students who want to inspect or modify the R code used to produce the examples.
 
 *[Back to ToC](#table-of-contents)*
 
@@ -64,14 +60,37 @@ You are expected to adopt the following workflow for this class:
 
 The assessment structure distinguishes **practice**, **component mastery**, **integration**, and **authentic application**. Homework is low-stakes and AI-enabled; Daily Quizzes and Unit Tests are completed independently in class under Respondus LockDown Browser; Evidence Debates and the Project Defense assess judgment, communication, and transfer.
 
-The working grading architecture for the redesigned course is:
+The course grade is based on the following components:
 
-- **Weekly Homework (5 pts):** Short, low-stakes preparation for the next independent assessment. AI use is expected and often explicitly required. Homework emphasizes specification, verification, and practice rather than unaided code production.
-- **Daily Quizzes (15 pts):** Very short, in-class checks at the beginning of most instructional meetings. These assess the component skill from the preceding lecture/homework and are completed without AI or internet access.
-- **Unit Tests (40 pts):** Five in-class, case-based assessments (8 pts each) that ask you to integrate several skills on an unfamiliar empirical problem. Unit Tests emphasize reasoning from claims to evidence rather than memorizing R syntax.
-- **Evidence Debates (10 pts):** Two structured evidence-adjudication exercises. Small groups temporarily defend competing interpretations of a factual claim; each student then submits an independent verdict about what the evidence actually supports.
+- **Homework (5 pts):** Approximately 15 short, low-stakes assignments provide coached practice for the next independent assessment. AI use is expected and often explicitly required. Homework emphasizes specification, verification, and practice rather than unaided code production. Homework is graded primarily for completion and reasonable effort; your **best 10 assignments count, at 0.5 points each**.
+- **Daily Quizzes (15 pts):** Approximately 20 very short, in-class checks occur at the end of instructional meetings. These assess the key reasoning from that day's lecture and activities and are completed without AI or internet access. Your **best 15 quizzes count, at 1 point each**.
+- **Unit Tests (40 pts):** Five in-class, case-based assessments ask you to integrate several skills on an unfamiliar empirical problem. **All five Unit Tests count, at 8 points each.** Unit Tests emphasize reasoning from claims to evidence rather than memorizing R syntax.
+- **Evidence Debates (25 pts):** Five structured evidence-adjudication exercises ask you to evaluate a factual claim as evidence is revealed, update your judgment, contribute to a team argument, and then submit an independent verdict about what the evidence actually supports. **All five Evidence Debates count, at 5 points each.**
 - **Project & Defense (15 pts):** You will be randomly assigned to a team of 3-4. Teams develop a data science project (question + dataset + analysis) outside of class -- AI use is expected and encouraged here -- but the grade is based primarily on a live, in-class poster-session defense where you explain and field questions about the whole project. See the rubric below.
-- **Remaining 15 pts:** Reserved while the redesign is finalized. The current plan is to use these points for a cumulative independent assessment or to redistribute them across Unit Tests and the Project Defense. This will be finalized before the course begins.
+
+### Homework: coached practice
+
+Most instructional lectures are paired with a short homework assignment designed to provide coached preparation and practice for the analytical task. Approximately 15 homework assignments will be assigned during the semester; your **best 10 count**, each worth **0.5 points**, for **5 course points total**.
+
+Homework is where you should use the resources available to a practicing data scientist. You may use **AI tools, your notes, course materials, classmates, and outside resources** unless an assignment specifically says otherwise. You are encouraged to use AI to generate or debug R code, explain unfamiliar syntax, propose analytical approaches, and critique your reasoning.
+
+The goal is not to demonstrate that you can produce R code without assistance. The goal is to practice making good analytical decisions and to learn how to evaluate whether the code, analysis, and interpretation you receive are appropriate.
+
+Homework is graded primarily for **completion and reasonable effort**, rather than for producing a single correct answer. Because only your best 10 homework scores count, ordinary missed assignments and occasional unsuccessful attempts are already built into the grading structure.
+
+### The course workflow
+
+Most instructional topics follow the same cycle:
+
+**Homework → Lecture / Activity → Daily Quiz**
+
+**Homework:** You prepare and practice with access to AI and other resources. The emphasis is on specifying what needs to be done, using tools effectively, checking their output, and interpreting the resulting evidence.
+
+**Lecture / Activity:** We introduce or deepen an analytical problem and work through how to reason about it.
+
+**Daily Quiz:** At the end of the class meeting, you complete a short independent check without AI or internet access. The quiz asks whether you understand the key reasoning from that instructional cycle—not whether you have memorized R syntax. Students with approved extended-time accommodations may continue working after the regular class period.
+
+After several of these cycles, an **Assessment Day** begins with an Evidence Debate that provides collaborative synthesis of the unit, followed by an independent Unit Test that asks you to transfer the unit's skills to a new empirical problem.
 
 ### How the pieces fit together
 
@@ -114,33 +133,31 @@ Defenses take place as an in-class poster session across two class periods (12/7
 
 If a team member is absent on their defense day, they receive a 5-minute makeup slot during office hours rather than the whole team rescheduling.
 
-### Extra Credit opportunities
+### Extra Credit
 
-Students who are below a C- in the class can make up a missing or low Lab Quiz score by conducting an extra credit research assignment (up to 3). These involve the following steps:
-
-1. Search for an interesting dataset on kaggle.com.
-2. Ask a research question.
-3. Formulate a theoretically-justified hypothesis for your research question.
-4. Email the professor with the answers to steps 1-3 for approval.
-5. Conduct the following data science analyses:
-	- Univariate analyses of the X and Y variables
-	- Multivariate visualization of the X and Y variables
-	- Regression analysis of the relationship between the X and Y variables
-	- Evaluation of model fit via univariate and multivariate visualization of the errors
-	- Evaluation of model fit via k-fold cross validation to estimate RMSE
-6. **Present your findings in a 5-minute one-on-one walkthrough during office hours** (rather than submitting a written report), consistent with this course's in-person assessment policy.
+There are no individual extra-credit assignments in this course. The grading structure already provides flexibility for occasional missed or unsuccessful low-stakes work: only your best 10 Homework assignments and best 15 Daily Quizzes count toward your final grade. Any extra-credit opportunities offered to the class will be announced to and available to all students.
 
 *[Back to ToC](#table-of-contents)*
 
 ## Course Policies
 
-### Missed or Late Assessments
+### Missed or Late Work
 
-Daily Quizzes and Unit Tests happen during class and cannot be submitted late. If you miss one for an excused reason (documented illness, religious observance, etc.), contact the professor **in advance when possible** to arrange a makeup. Homework is low-stakes preparation; specific due-date and completion rules will be posted with each assignment.
+The course distinguishes between low-stakes recurring work, for which flexibility is built into the grading system, and major assessments, all of which count.
+
+**Homework:** Approximately 15 assignments will be offered and only your best 10 count. Missed Homework normally does not require a makeup or extension.
+
+**Daily Quizzes:** Approximately 20 quizzes will be administered and only your best 15 count. Missed quizzes receive a zero, but your lowest scores—including zeros from ordinary absences—are automatically dropped. Separate Daily Quiz makeups are therefore not normally offered.
+
+**Unit Tests:** All five Unit Tests count. If you miss a Unit Test for an excused reason, contact the professor as soon as reasonably possible to arrange a makeup. When foreseeable, conflicts should be communicated in advance.
+
+**Evidence Debates:** All five Evidence Debates count. Because they depend on in-class interaction, they cannot ordinarily be recreated outside class. Students who miss a debate for an excused reason will complete an individual evidence-adjudication makeup covering the same learning objectives.
+
+Students experiencing prolonged illness, accommodations, religious observances, or other circumstances that extend beyond the flexibility built into the course should contact the professor so that appropriate arrangements can be made.
 
 ### Cell Phones, Laptops, Tablets, etc.
 
-You are expected to bring your laptop to class in order to work through the `.Rmd` file during the lecture and to take Daily Quizzes and Unit Tests under Respondus LockDown Browser. These `.Rmd` files will be posted to the GitHub repository at least 24 hours prior to the lecture. Students are encouraged to download these files and work through them prior to class.
+You are expected to bring a laptop to class. We will use laptops for in-class data activities, Evidence Debates, and Daily Quizzes and Unit Tests administered through Brightspace and Respondus LockDown Browser. Course materials can be accessed through Brightspace and the course GitHub site.
 
 You are asked to silence your cell phone / tablet / smart watch before class begins.
 
@@ -148,11 +165,21 @@ You are asked to silence your cell phone / tablet / smart watch before class beg
 
 Students are assumed to have read and agreed with the Vanderbilt University Academic Honesty policy, found at URL: https://www.vanderbilt.edu/student_handbook/the-honor-system/
 
-**Use of AI Tools.** Large language models (ChatGPT, Claude, Copilot, and similar tools) are standard tools in the data scientist's toolkit, and you are expected to use them for the ungraded pre-lecture homework and for developing your team project. Using AI well -- knowing what to ask, how to evaluate what it gives you, and how to catch its mistakes -- is itself a skill this course teaches.
+**Use of AI Tools.** Large language models such as ChatGPT, Claude, Copilot, and similar tools are standard tools in the data scientist's toolkit, and learning to use them critically is part of this course. Knowing what to ask, how to evaluate what an AI system produces, and how to recognize when its output is inappropriate or incorrect are skills you are expected to develop.
 
-All **independent graded assessments** (Daily Quizzes and Unit Tests) take place in class under Respondus LockDown Browser with no AI or internet access. This isn't a statement of distrust in AI -- it's what lets the rest of the course treat AI as a normal, encouraged tool without compromising our ability to certify that you've learned the material. Your project defense is graded on your live, unaided explanation of your own work, not on the submitted artifact, for the same reason.
+**Homework and project development:** AI use is expected and encouraged. You may use AI to generate or debug code, explain unfamiliar concepts or syntax, propose analytical approaches, critique interpretations, and explore alternatives. You remain responsible for evaluating everything the tool produces.
 
-Presenting AI-generated work as your own unaided reasoning during a graded assessment, or attempting to access outside tools during a locked-browser Daily Quiz or Unit Test, is an academic integrity violation under Vanderbilt's Honor Code, as is having someone else take an assessment for you, falsifying results, or facilitating dishonesty by another student.
+**In-class activities:** AI may be used when explicitly permitted or requested as part of the activity.
+
+**Daily Quizzes and Unit Tests:** These are independent assessments completed without AI, internet access, notes, or other outside assistance under Respondus LockDown Browser.
+
+**Evidence Debates:** These are also unaided assessments. You will work with classmates and with the evidence provided during class, but you may not use AI or outside internet resources. The purpose is to evaluate how *you* interpret evidence, revise judgments, and defend a conclusion.
+
+**Project Defense:** AI may be used freely while developing the team project. The live defense, however, is unaided. Every student must be able to explain and defend the entire project—including analytical choices, code/output, limitations, and conclusions—without assistance from AI.
+
+The guiding principle is simple: **AI may help you do the work, but it cannot replace your responsibility to understand and evaluate the work.**
+
+Using AI or other unauthorized assistance during a Daily Quiz, Unit Test, Evidence Debate, or Project Defense is an academic integrity violation under Vanderbilt's Honor Code. The same applies to having someone else complete work on your behalf, falsifying results, or facilitating dishonesty by another student.
 
 ### Accommodations for Learning or Access Disabilities
 
@@ -160,7 +187,7 @@ This class respects and welcomes students of all backgrounds, identities, and ab
 
 ### Illness / Attendance
 
-If you are too ill to attend class, please do not come -- email the professor as soon as reasonably possible so we can arrange a Daily Quiz or Unit Test makeup if needed (see [Missed or Late Assessments](#course-policies)). Lecture recordings are posted the evening following class, but recordings do not replace attendance for graded, in-class work.
+If you are too ill to attend class, please do not come -- email the professor as soon as reasonably possible if you will miss a major assessment or if your absence extends beyond the flexibility built into the Homework and Daily Quiz policies (see [Missed or Late Work](#course-policies)). Lecture recordings are posted the evening following class, but recordings do not replace attendance for graded, in-class work.
 
 I will be holding my office hours in-person in Commons #348, Wednesdays 10AM-12PM. The TAs are free to determine how best to hold their office hours, and their choices will be communicated to the students as soon as they are decided.
 
@@ -194,40 +221,40 @@ All these can also be found on the Campuswire calendar, along with the Zoom link
 
 ## Syllabus
 
-Class meets **Monday/Wednesday, 8:40-9:55 AM**. Dates below follow Vanderbilt's published 2026-27 academic calendar (classes 8/26-12/10; fall break 10/22-10/23; Thanksgiving break 11/21-11/29). This is the **working roadmap for the redesigned course**; later-unit titles may shift as individual lectures are rebuilt.
+Class meets **Monday/Wednesday, 8:40-9:55 AM**. Dates below follow Vanderbilt's published 2026-27 academic calendar (classes 8/26-12/10; fall break 10/22-10/23; Thanksgiving break 11/21-11/29).
 
-The semester is organized into units. Most instructional meetings begin with a short Daily Quiz on the preceding lecture/homework. Each unit culminates in a case-based Unit Test requiring transfer to an unfamiliar empirical problem.
+Most instructional meetings end with a short Daily Quiz on that day's lecture and activities. Each unit culminates in an **Assessment Day**: an Evidence Debate first provides collaborative synthesis and discussion, followed by an independent Unit Test on a different empirical case.
 
 | Date | Session | Unit / Topic | Core Question | Assessment |
 | ---: | :--- | :--- | :--- | :--- |
-| 08/26 | 1 | **Unit 1: From Claims to Evidence** — How Do We Know What's True? | What evidence would let us evaluate a factual claim? | |
-| 08/31 | 2 | Questions → Data | How do concepts become variables and observations? | **Daily Quiz 1** |
-| 09/02 | 3 | Know Your Variables | What does each variable actually measure and look like? | **Daily Quiz 2** |
-| 09/07 | 4 | Prepare the Evidence | What decisions turn raw observations into defensible evidence? | **Daily Quiz 3** |
-| 09/09 | 5 | **Unit Test 1: From Claims to Evidence** | Can you integrate the full workflow on an unfamiliar empirical case? | **Unit Test 1** |
-| 09/14 | 6 | **Unit 2: Relationships** — Variables Together I | How do we begin answering a question by putting variables together? | |
-| 09/16 | 7 | Variables Together II | Which multivariate visualization matches the question and variable types? | **Daily Quiz** |
-| 09/21 | 8 | Variables Together III | How should we describe and communicate relationships? | **Daily Quiz** |
-| 09/23 | 9 | Evidence Debate 1 | What should we believe when reasonable interpretations compete? | **Evidence Debate 1** |
-| 09/28 | 10 | **Unit Test 2: Relationships** | Can you evaluate multivariate evidence in a new context? | **Unit Test 2** |
-| 09/30 | 11 | **Unit 3: Uncertainty & Inference** — Uncertainty I | How much should samples make us uncertain about conclusions? | |
-| 10/05 | 12 | Uncertainty II | What does a confidence statement actually justify? | **Daily Quiz** |
-| 10/07 | 13 | Regression I | How can a model summarize a relationship? | **Daily Quiz** |
-| 10/12 | 14 | Regression II | How do we interpret and evaluate regression evidence? | **Daily Quiz** |
-| 10/14 | 15 | Evidence Debate 2 | How do uncertainty, confounding, and competing explanations affect a claim? | **Evidence Debate 2** |
-| 10/19 | 16 | **Unit Test 3: Uncertainty & Inference** | Can you judge what relational evidence does and does not establish? | **Unit Test 3** |
-| 10/21 | 17 | **Unit 4: Models & Prediction** — Prediction vs. Explanation | When is prediction the goal, and how does that change evaluation? | **Daily Quiz** |
+| 08/26 | 1 | **Unit 1: From Claims to Evidence** — How Do We Know What's True? | What evidence would let us evaluate a factual claim? | **Daily Quiz 1** |
+| 08/31 | 2 | Questions → Data | How do concepts become variables and observations? | **Daily Quiz 2** |
+| 09/02 | 3 | Know Your Variables | What does each variable actually measure and look like? | **Daily Quiz 3** |
+| 09/07 | 4 | Prepare the Evidence | What decisions turn raw observations into defensible evidence? | **Daily Quiz 4** |
+| 09/09 | 5 | **Unit 1 Assessment Day** | What does the evidence warrant, and can you transfer the unit's skills to a new case? | **Evidence Debate 1 + Unit Test 1** |
+| 09/14 | 6 | **Unit 2: Relationships** — Variables Together | How do we begin answering a question by putting variables together? | **Daily Quiz 5** |
+| 09/16 | 7 | Describe the Relationship | What does the relationship between two variables actually look like? | **Daily Quiz 6** |
+| 09/21 | 8 | What Else Could Explain It? | What alternative explanations could produce the relationship we observe? | **Daily Quiz 7** |
+| 09/23 | 9 | Relationships in Practice | How do we put the pieces together to evaluate a relational claim? | **Daily Quiz 8** |
+| 09/28 | 10 | **Unit 2 Assessment Day** | What should we believe about a contested relationship? | **Evidence Debate 2 + Unit Test 2** |
+| 09/30 | 11 | **Unit 3: Uncertainty & Inference** — Uncertainty I | How much should samples make us uncertain about conclusions? | **Daily Quiz 9** |
+| 10/05 | 12 | Uncertainty II | What does a confidence statement actually justify? | **Daily Quiz 10** |
+| 10/07 | 13 | Regression I | How can a model summarize a relationship? | **Daily Quiz 11** |
+| 10/12 | 14 | Regression II | How do we interpret and evaluate regression evidence? | **Daily Quiz 12** |
+| 10/14 | 15 | **Unit 3 Assessment Day** | How should uncertainty and competing explanations affect what we believe? | **Evidence Debate 3 + Unit Test 3** |
+| 10/19 | 16 | **Unit 4: Models & Prediction** — Prediction vs. Explanation | When is prediction the goal, and how does that change evaluation? | **Daily Quiz 13** |
+| 10/21 | 17 | Classification I | How do we predict categories? | **Daily Quiz 14** |
 | *10/22-23* | | *Fall Break* | | |
-| 10/26 | 18 | Classification I | How do we predict categories? | |
-| 10/28 | 19 | Classification II | How should classification performance be evaluated? | **Daily Quiz** |
-| 11/02 | 20 | Clustering / Unsupervised Learning | What can we learn when groups are not supplied in advance? | **Daily Quiz** |
-| 11/04 | 21 | **Unit Test 4: Models & Prediction** | Can you choose and evaluate predictive approaches in a new case? | **Unit Test 4** |
-| 11/09 | 22 | **Unit 5: Text, AI & Judgment** — Text as Data | How can unstructured text become evidence? | |
-| 11/11 | 23 | NLP / Sentiment | What do text measures capture, and what do they miss? | **Daily Quiz** |
-| 11/16 | 24 | Bias & Misinformation | How can data and AI systems produce misleading claims? | **Daily Quiz** |
-| 11/18 | 25 | AI, Judgment & Responsibility | What should humans remain responsible for when AI can perform the analysis? | **Daily Quiz** |
+| 10/26 | 18 | Classification II | How should classification performance be evaluated? | **Daily Quiz 15** |
+| 10/28 | 19 | Clustering / Unsupervised Learning | What can we learn when groups are not supplied in advance? | **Daily Quiz 16** |
+| 11/02 | 20 | **Unit 4 Assessment Day** | How should we choose and evaluate predictive approaches? | **Evidence Debate 4 + Unit Test 4** |
+| 11/04 | 21 | **Unit 5: Text, AI & Judgment** — Text as Data | How can unstructured text become evidence? | **Daily Quiz 17** |
+| 11/09 | 22 | NLP / Sentiment | What do text measures capture, and what do they miss? | **Daily Quiz 18** |
+| 11/11 | 23 | Bias & Misinformation | How can data and AI systems produce misleading claims? | **Daily Quiz 19** |
+| 11/16 | 24 | AI, Judgment & Responsibility | What should humans remain responsible for when AI can perform the analysis? | **Daily Quiz 20** |
+| 11/18 | 25 | **Unit 5 Assessment Day** | What should we believe when evidence itself is produced or interpreted by AI? | **Evidence Debate 5 + Unit Test 5** |
 | *11/23, 11/25* | | *Thanksgiving Break* | | |
-| 11/30 | 26 | **Unit Test 5: Text, AI & Judgment** | Can you critically evaluate unfamiliar data/AI evidence? | **Unit Test 5** |
+| 11/30 | 26 | Project Development | Can your team build a defensible empirical argument from question to conclusion? | |
 | 12/02 | 27 | Project Workshop | Can your team defend every step from question to conclusion? | |
 | 12/07 | 28 | Project Defenses | Formulate, analyze, evaluate, and communicate your own empirical claim | **Project Defense** |
 | 12/09 | 29 | Project Defenses | Formulate, analyze, evaluate, and communicate your own empirical claim | **Project Defense** |
