@@ -13,9 +13,13 @@ Course Material for DS1000: How Data Shape our World
 8. [Acknowledgements](#acknowledgements)
 
 ## Overview
-The target audience is someone who is interested in Data Science, but who has no prior experience. The class is designed to be application-forward -- demonstrating what you can do with the tools of data science in the hopes of motivating and encouraging students to go deeper and further. As an introductory class with no prerequisites, the statistical and programming fundamentals behind what we do is only briefly mentioned; the goal is to provide a sense of what can be done with data science rather than to provide a comprehensive foundation on a smaller set of topics. The contents of this repository represent a work-in-progress and revisions and edits are likely frequent.
+Data science gives us powerful tools for learning about the world—but producing an analysis is not the same thing as producing trustworthy evidence.
 
-The main text for the course is "R For Data Science" which can accessed free online [here](https://r4ds.had.co.nz/introduction.html).
+This course introduces data science through a recurring question: **What should we believe, given the evidence in front of us?** Students learn how empirical questions become data, how analytical choices shape the answers we obtain, how to recognize alternative explanations and limitations, and how to communicate conclusions that are appropriately calibrated to the evidence.
+
+The course has no prerequisites and assumes no prior programming or statistical experience. We use R and modern AI tools throughout the semester, but the primary goal is not to memorize syntax or learn to program without assistance. Instead, students learn to specify analytical tasks, use computational tools effectively, evaluate their output, and determine what conclusions the resulting evidence does and does not support.
+
+There is no required textbook. Readings and other resources will be provided with individual topics and assignments. Students who want additional technical reference material may find the freely available [R for Data Science](https://r4ds.had.co.nz/introduction.html) useful throughout the semester.
 
 Large language models (ChatGPT, Claude, or similar) are a required part of this course's workflow. Students are expected to have a free account with at least one such tool.
 
@@ -41,7 +45,7 @@ Here is the list of channels you should see upon joining the Campuswire workspac
 
 - **#general**: A space for you to share and discuss stories you've seen in the news or on social media that are relevant to our class.
 
-- **Calendar**: A calendar containing all lectures, due dates, office hours, and labs.
+- **Calendar**: A calendar containing class meetings, due dates, office hours, and other course events.
 
 - **Files**: A space for course materials (**NOT USED. VISIT BRIGHTSPACE INSTEAD.**)
 
@@ -96,7 +100,7 @@ After several of these cycles, an **Assessment Day** begins with an Evidence Deb
 
 **Homework = coached rehearsal.** You may use AI, notes, classmates, and outside resources to practice the analytical task.
 
-**Daily Quiz = independent component check.** Can you perform the key reasoning move from the previous class without assistance?
+**Daily Quiz = independent component check.** Can you independently perform the key reasoning move from today's instructional cycle?
 
 **Unit Test = independent transfer.** Can you integrate several component skills to adjudicate an unfamiliar empirical case?
 
@@ -275,15 +279,27 @@ AI may assist with implementation during homework, activities, and project devel
 
 ## Helpful Resources
 
-[Rstudio Cheat Sheet: Data Wrangling](https://www.rstudio.com/wp-content/uploads/2015/02/data-wrangling-cheatsheet.pdf)
+### R and data analysis
 
-[Rstudio Cheat Sheet: ggplot2 ](https://github.com/rstudio/cheatsheets/raw/master/data-visualization.pdf)
+[R for Data Science](https://r4ds.had.co.nz/introduction.html)
 
-[R-graphics Cookbook](http://www.cookbook-r.com/Graphs/)
+[RStudio Cheat Sheet: Data Wrangling](https://www.rstudio.com/wp-content/uploads/2015/02/data-wrangling-cheatsheet.pdf)
 
-[... And the full list of Rstudio cheat sheets](https://www.rstudio.com/resources/cheatsheets/)
+[RStudio Cheat Sheet: ggplot2](https://github.com/rstudio/cheatsheets/raw/master/data-visualization.pdf)
+
+[R Graphics Cookbook](http://www.cookbook-r.com/Graphs/)
+
+[Full collection of RStudio cheat sheets](https://www.rstudio.com/resources/cheatsheets/)
 
 [Tidymodels Resources](https://www.tidymodels.org/learn/)
+
+### AI tools
+
+AI-specific resources and guidance will be provided with relevant assignments and course activities.
+
+### Evaluating evidence
+
+Additional resources on measurement, interpretation, uncertainty, and evaluating empirical claims will be provided with relevant units.
 
 *[Back to ToC](#table-of-contents)*
 
