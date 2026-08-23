@@ -66,7 +66,7 @@ The course grade is based on the following components:
 - **Daily Quizzes (15 pts):** Approximately 20 very short, in-class checks occur at the end of instructional meetings. These assess the key reasoning from that day's lecture and activities and are completed without AI or internet access. Your **best 15 quizzes count, at 1 point each**.
 - **Unit Tests (40 pts):** Five in-class, case-based assessments ask you to integrate several skills on an unfamiliar empirical problem. **All five Unit Tests count, at 8 points each.** Unit Tests emphasize reasoning from claims to evidence rather than memorizing R syntax.
 - **Evidence Debates (25 pts):** Five structured evidence-adjudication exercises ask you to evaluate a factual claim as evidence is revealed, update your judgment, contribute to a team argument, and then submit an independent verdict about what the evidence actually supports. **All five Evidence Debates count, at 5 points each.**
-- **Project & Defense (15 pts):** You will be randomly assigned to a team of 3-4. Teams develop a data science project (question + dataset + analysis) outside of class -- AI use is expected and encouraged here -- but the grade is based primarily on a live, in-class poster-session defense where you explain and field questions about the whole project. See the rubric below.
+- **Project & Defense (15 pts):** You will be randomly assigned to a team of 3-4. Teams develop and defend an empirical claim using a question, appropriate data, analysis, and a calibrated conclusion. AI use is expected and encouraged during project development, but the grade is based primarily on a live, in-class poster-session defense where you explain and defend the full chain from question to evidence to conclusion. See the rubric below.
 
 ### Homework: coached practice
 
@@ -121,15 +121,21 @@ Letter grades are determined as per the standard Vanderbilt grading system, repr
 
 ### Project Defense Rubric (15 pts, graded per student)
 
-Defenses take place as an in-class poster session across two class periods (12/7 and 12/9). Each team presents at a station; the professor (and any TAs) circulate to grade each team over roughly 8-10 minutes: a short team walkthrough followed by individual Q&A directed at specific students by name. The individual-accountability line is scored separately for each student -- everyone on the team must be able to explain the *entire* project, not just their own piece.
+The project is the culminating application of the course's recurring analytical workflow. Each team develops an empirical question, identifies and prepares appropriate evidence, conducts an analysis, evaluates competing explanations and limitations, and reaches a conclusion calibrated to what the evidence actually supports. The goal is not technical complexity for its own sake; a simple, well-justified analysis is stronger than a sophisticated analysis that does not answer the question.
+
+Defenses take place as an in-class poster session across two class periods (12/7 and 12/9). Each team presents at a station; the professor (and any TAs) circulate to grade each team over roughly 8-10 minutes: a short team walkthrough followed by individual Q&A directed at specific students by name. Everyone on the team must be able to explain and defend the *entire* project, not just their own piece.
 
 | Criterion | Points | Scored | What's being assessed |
-| --- | --- | --- | --- |
-| Research question & motivation | 2 | Team | Is the question clear, non-trivial, with a reasoned expectation of the answer? |
-| Method selection & correct application | 4 | Team | Appropriate technique from the course, applied correctly |
-| Interpretation & model evaluation | 3 | Team | Can they read their own output and evaluate fit/uncertainty? |
-| Individual command of the material | 4 | **Individual** | Can *this* student explain any part of the project, not just "their part"? |
-| Communication & clarity | 2 | Team | Legible poster/slide, clear question-method-finding narrative |
+| --- | ---: | :--- | --- |
+| Question, concepts & evidence | 2 | Team | Is the empirical question clear? Do the data, variables, and operationalizations provide appropriate evidence for answering it? |
+| Analytical choices & execution | 3 | Team | Are the comparisons or methods appropriate to the question, and was the analysis carried out correctly? |
+| Interpretation & evidentiary reasoning | 3 | Team | Do the conclusions follow from the results? Can the team distinguish what the evidence shows from what it does not establish? |
+| Limitations & alternative explanations | 2 | Team | Can the team identify meaningful weaknesses, measurement problems, uncertainty, confounders, or competing interpretations? |
+| Individual command & defense | 4 | **Individual** | Can *this* student explain and defend any part of the project, including choices or analyses they did not personally implement? |
+| Communication | 1 | Team | Is the empirical argument clear, coherent, and easy to follow? |
+| **Total** | **15** | | |
+
+A strong defense should be able to move clearly through the full empirical argument: **What are you trying to learn? → How did you turn that question into data? → What did you do? → What did you find? → What else could explain it? → What does the evidence warrant believing?**
 
 If a team member is absent on their defense day, they receive a 5-minute makeup slot during office hours rather than the whole team rescheduling.
 
