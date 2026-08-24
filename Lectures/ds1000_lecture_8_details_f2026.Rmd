@@ -1,0 +1,285 @@
+---
+title: "DS 1000 — Relationships in Practice"
+subtitle: "NBA Scoring Case | Instructor Analysis"
+author: "DS 1000"
+output:
+  html_document:
+    toc: false
+    code_folding: hide
+    df_print: paged
+---
+
+# Purpose
+
+This instructor-facing analysis builds the evidence for the September 23 **Relationships in Practice** session. The goal is to test the empirical story before turning it into slides.
+
+The central claim is:
+
+> **Players who attempt more three-pointers score more points because three-point shooting makes them more effective scorers.**
+
+We will examine:
+
+1. the raw relationship between three-point attempts (`fg3a`) and points (`pts`);
+2. whether minutes played (`minutes`) is related to both variables;
+3. whether the `fg3a`-`pts` relationship changes when we compare players with similar playing time.
+
+The code below intentionally separates the descriptive evidence from the interpretation. The classroom activity should reveal the evidence in stages rather than show the entire analysis at once.
+
+# 1. Load the NBA data
+
+```{r setup, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+
+library(tidyverse)
+
+nba <- readr::read_rds(
+  "https://github.com/jbisbee1/DS1000_F2024/raw/main/data/nba_players_2018.Rds"
+)
+```
+
+Check the variables we need.
+
+```{r inspect-vars}
+requested_vars <- c("player", "team", "pts", "fg3a", "minutes")
+
+requested_vars[requested_vars %in% names(nba)]
+```
+
+A quick summary of the key variables:
+
+```{r summary-vars}
+nba %>%
+  summarise(
+    n = n(),
+    pts_missing = sum(is.na(pts)),
+    fg3a_missing = sum(is.na(fg3a)),
+    minutes_missing = sum(is.na(minutes)),
+    pts_mean = mean(pts, na.rm = TRUE),
+    fg3a_mean = mean(fg3a, na.rm = TRUE),
+    minutes_mean = mean(minutes, na.rm = TRUE)
+  )
+```
+
+# 2. Prepare an analysis dataset
+
+For these plots, restrict to observations with the three variables required for the relevant comparison.
+
+```{r analysis-data}
+nba_analysis <- nba %>%
+  select(any_of(c("player", "team", "pts", "fg3a", "minutes"))) %>%
+  filter(
+    !is.na(pts),
+    !is.na(fg3a),
+    !is.na(minutes)
+  )
+
+nrow(nba_analysis)
+```
+
+We will also keep an explicit record of the analysis choices for later teaching discussion.
+
+```{r analysis-description}
+tibble(
+  variable = c("fg3a", "pts", "minutes"),
+  role = c("X: three-point attempts", "Y: points scored", "Z: minutes played"),
+  interpretation = c(
+    "Opportunity to take three-point shots",
+    "Points scored during the season",
+    "Opportunity to play and score"
+  )
+)
+```
+
+# 3. Evidence A — Three-point attempts and points
+
+The first exhibit should establish the raw relationship without introducing minutes played.
+
+```{r evidence-a-plot, fig.width=8, fig.height=5.5}
+ggplot(nba_analysis, aes(x = fg3a, y = pts)) +
+  geom_point(alpha = 0.45) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(
+    title = "Points scored and three-point attempts",
+    x = "Three-point attempts",
+    y = "Points scored",
+    subtitle = "Each point represents one player-season"
+  ) +
+  theme_minimal(base_size = 14)
+```
+
+A simple numerical summary helps us characterize the association without putting the statistic on the student-facing slide.
+
+```{r evidence-a-summary}
+nba_analysis %>%
+  summarise(
+    correlation = cor(fg3a, pts),
+    fg3a_range_min = min(fg3a),
+    fg3a_range_max = max(fg3a),
+    pts_range_min = min(pts),
+    pts_range_max = max(pts)
+  )
+```
+
+We can also inspect the fitted slope.
+
+```{r evidence-a-model}
+summary(lm(pts ~ fg3a, data = nba_analysis))$coefficients
+```
+
+## Teaching interpretation
+
+The important classroom questions are:
+
+- Is the relationship positive or negative?
+- Is it roughly linear?
+- How much variation remains around the overall pattern?
+- Does this graph establish that attempting more threes *causes* players to score more points?
+
+The answer to the final question should be no: this exhibit is observational and does not by itself rule out common causes, selection, or reverse-direction stories.
+
+# 4. Evidence B — Is minutes played a plausible third variable?
+
+We now test the candidate confounder suggested in the worksheet: minutes played.
+
+## B1. Minutes played and three-point attempts
+
+```{r evidence-b1-plot, fig.width=8, fig.height=5.5}
+ggplot(nba_analysis, aes(x = minutes, y = fg3a)) +
+  geom_point(alpha = 0.45) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(
+    title = "Three-point attempts and minutes played",
+    x = "Minutes played",
+    y = "Three-point attempts",
+    subtitle = "Each point represents one player-season"
+  ) +
+  theme_minimal(base_size = 14)
+```
+
+```{r evidence-b1-summary}
+nba_analysis %>%
+  summarise(
+    correlation_minutes_fg3a = cor(minutes, fg3a),
+    slope_minutes_fg3a = coef(lm(fg3a ~ minutes, data = nba_analysis))["minutes"]
+  )
+```
+
+## B2. Minutes played and points
+
+```{r evidence-b2-plot, fig.width=8, fig.height=5.5}
+ggplot(nba_analysis, aes(x = minutes, y = pts)) +
+  geom_point(alpha = 0.45) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(
+    title = "Points scored and minutes played",
+    x = "Minutes played",
+    y = "Points scored",
+    subtitle = "Each point represents one player-season"
+  ) +
+  theme_minimal(base_size = 14)
+```
+
+```{r evidence-b2-summary}
+nba_analysis %>%
+  summarise(
+    correlation_minutes_pts = cor(minutes, pts),
+    slope_minutes_pts = coef(lm(pts ~ minutes, data = nba_analysis))["minutes"]
+  )
+```
+
+## Teaching interpretation
+
+Minutes played is a plausible third variable if it is associated with both:
+
+- the amount of opportunity a player has to attempt three-pointers; and
+- the amount of opportunity a player has to score points.
+
+The classroom task is not to declare minutes played a proven confounder. It is to recognize that the original X-Y comparison may mix together players with very different amounts of playing opportunity.
+
+# 5. Evidence C — Compare like with like
+
+The simplest student-facing conditional comparison is to divide minutes played into a small number of substantively interpretable groups and compare the relationship within each group.
+
+For the classroom exhibit, use quartiles so that the groups contain roughly similar numbers of observations.
+
+```{r create-minute-groups}
+nba_conditional <- nba_analysis %>%
+  mutate(
+    minutes_group = ntile(minutes, 4),
+    minutes_group = factor(
+      minutes_group,
+      levels = 1:4,
+      labels = c("Lowest minutes", "Low-mid minutes", "High-mid minutes", "Highest minutes")
+    )
+  )
+
+nba_conditional %>%
+  count(minutes_group)
+```
+
+Now plot the original relationship within minutes-played groups.
+
+```{r evidence-c-plot, fig.width=9, fig.height=6}
+ggplot(nba_conditional, aes(x = fg3a, y = pts)) +
+  geom_point(alpha = 0.35) +
+  geom_smooth(method = "lm", se = FALSE) +
+  facet_wrap(~ minutes_group) +
+  labs(
+    title = "Three-point attempts and points, within minutes-played groups",
+    x = "Three-point attempts",
+    y = "Points scored",
+    subtitle = "Players are grouped by quartile of minutes played"
+  ) +
+  theme_minimal(base_size = 14)
+```
+
+For a numerical check, estimate a separate slope within each group.
+
+```{r evidence-c-slopes}
+conditional_slopes <- nba_conditional %>%
+  group_by(minutes_group) %>%
+  summarise(
+    n = n(),
+    correlation = cor(fg3a, pts),
+    slope = coef(lm(pts ~ fg3a))["fg3a"],
+    .groups = "drop"
+  )
+
+conditional_slopes
+```
+
+A second way to summarize the conditional pattern is to compare the fitted slopes to the pooled relationship.
+
+```{r pooled-vs-conditional}
+pooled_slope <- coef(lm(pts ~ fg3a, data = nba_analysis))["fg3a"]
+
+list(
+  pooled_slope = pooled_slope,
+  conditional_slopes = conditional_slopes
+)
+```
+
+# 6. Optional robustness check — continuous adjustment
+
+The classroom does not need this regression, but it is useful for the instructor to see whether the conditional story is broadly consistent with a simple linear adjustment for minutes.
+
+```{r adjusted-model}
+adjusted_model <- lm(pts ~ fg3a + minutes, data = nba_analysis)
+
+summary(adjusted_model)$coefficients
+```
+
+This is **not** intended as a new technique for students. It is a diagnostic for us. The student-facing argument should be based on the graphical comparison of like-with-like groups.
+
+# 7. Instructor checklist before building the slides
+
+Run through the following questions after rendering:
+
+1. Is the pooled `fg3a`–`pts` relationship visibly positive?
+2. Is the relationship strong enough to be intuitively visible without a fitted line?
+3. Are minutes played clearly related to both `fg3a` and `pts`?
+4. Within minutes groups, does the `fg3a`–`pts` relationship remain positive, weaken, reverse, or vary across groups?
+5. Does the conditional evidence make the original causal claim more plausible, less plausible, or simply more qualified?
+6. Is the resulting story simple enough to communicate in approximately 60 minutes without introducing regression as a student skill?
+
+Only after these are checked should the student-facing slides be finalized.

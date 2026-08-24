@@ -1,0 +1,426 @@
+---
+title: "Relationships in Practice: NBA Scoring"
+subtitle: "DS 1000"
+author: "Prof. Bisbee"
+output:
+  xaringan::moon_reader:
+    css: ["default", "metropolis-fonts", "css/ds1000.css"]
+    nature:
+      ratio: "16:9"
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+<style>
+.big { font-size: 130%; }
+.huge { font-size: 180%; }
+.small { font-size: 80%; }
+.hero-image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 74vh;
+}
+.hero-image img {
+  max-width: 92%;
+  max-height: 74vh;
+  object-fit: contain;
+}
+
+.dag-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 1.5rem;
+}
+.dag-wrap svg {
+  width: min(640px, 92%);
+  height: auto;
+}
+
+.plot-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 70vh;
+}
+.plot-wrap img {
+  max-width: 96%;
+  max-height: 68vh;
+  object-fit: contain;
+}
+
+.callout {
+  border-left: 5px solid #b89b5e;
+  padding: 0.8rem 1rem;
+  background: #f3eee4;
+  margin: 1rem 0;
+}
+</style>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  warning = FALSE,
+  message = FALSE,
+  fig.align = "center",
+  fig.retina = 2,
+  fig.width = 11,
+  fig.height = 7
+)
+
+library(tidyverse)
+library(scales)
+
+nba <- readr::read_rds(
+  "https://github.com/jbisbee1/DS1000_F2024/raw/main/data/nba_players_2018.Rds"
+)
+
+# Keep the variables used in the case and remove incomplete player-seasons.
+nba_case <- nba %>%
+  select(fg3a, pts, minutes) %>%
+  drop_na()
+
+# Quartiles used for the conditional comparison in Evidence C.
+nba_case <- nba_case %>%
+  mutate(
+    minutes_group = ntile(minutes, 4),
+    minutes_group = factor(
+      minutes_group,
+      levels = 1:4,
+      labels = c("Lowest minutes", "Low-mid minutes", "High-mid minutes", "Highest minutes")
+    )
+  )
+```
+
+# Relationships in Practice
+
+<div class="huge">NBA scoring</div>
+
+<div class="callout huge">
+Today is not about learning a new technique.
+
+It is about putting the Unit 2 reasoning workflow together.
+</div>
+
+---
+
+# The claim
+
+.hero-image[
+.huge[
+
+> **Players who attempt more three-pointers score more points because taking more threes makes them more effective scorers.**
+
+]
+]
+
+---
+
+# Before we see the evidence
+
+Work through Section 1 of the worksheet.
+
+.big[
+
+What are the **unit of analysis**, **X**, and **Y**?
+
+What would we expect to see if the claim were correct?
+
+]
+
+---
+
+# Meet the data
+
+.big[
+
+**Unit of analysis:** one player-season
+
+**X:** `fg3a` — three-point attempts
+
+**Y:** `pts` — total points scored
+
+**Z:** `minutes` — minutes played during the season
+
+]
+
+<div class="callout">Before we analyze the relationship, notice the measurement issue: <strong>total points is not the same thing as scoring effectiveness.</strong></div>
+
+---
+
+# Evidence A
+
+```{r evidence-a}
+ggplot(nba_case, aes(x = fg3a, y = pts)) +
+  geom_point(alpha = 0.55, size = 2.4) +
+  labs(
+    title = "Points scored and three-point attempts",
+    subtitle = "Each point represents one player-season",
+    x = "Three-point attempts",
+    y = "Points scored"
+  ) +
+  theme_minimal(base_size = 18)
+```
+
+---
+
+# What does Evidence A show?
+
+Work through Section 2 of the worksheet.
+
+.big[
+
+Describe the relationship:
+
+**Direction → Form → Strength → Variation**
+
+]
+
+---
+
+# What does Evidence A warrant?
+
+.big[
+
+The data show a **positive association** between three-point attempts and total points scored.
+
+But the graph alone does **not** establish that taking more threes causes players to score more points.
+
+]
+
+---
+
+# What else could explain it?
+
+Work through Section 3 of the worksheet **before** we reveal more evidence.
+
+.huge[
+
+What variable **Z** might help explain why X and Y are related?
+
+]
+
+---
+
+# A candidate explanation
+
+<div class="dag-wrap">
+<svg viewBox="0 0 520 260" role="img" aria-label="Minutes played points to three-point attempts and points scored, while three-point attempts also point to points scored">
+  <defs>
+    <marker id="arrowhead" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 Z" fill="#333"/>
+    </marker>
+  </defs>
+
+  <rect x="210" y="20" width="100" height="55" rx="8" fill="#fafafa" stroke="#777" stroke-width="2"/>
+  <text x="260" y="55" text-anchor="middle" font-size="22" font-weight="700">Minutes</text>
+
+  <rect x="80" y="170" width="100" height="55" rx="8" fill="#fafafa" stroke="#777" stroke-width="2"/>
+  <text x="130" y="205" text-anchor="middle" font-size="22" font-weight="700">3PA</text>
+
+  <rect x="340" y="170" width="100" height="55" rx="8" fill="#fafafa" stroke="#777" stroke-width="2"/>
+  <text x="390" y="205" text-anchor="middle" font-size="22" font-weight="700">Points</text>
+
+  <line x1="225" y1="75" x2="165" y2="165" stroke="#333" stroke-width="2.5" marker-end="url(#arrowhead)"/>
+  <line x1="295" y1="75" x2="355" y2="165" stroke="#333" stroke-width="2.5" marker-end="url(#arrowhead)"/>
+  <line x1="180" y1="197" x2="335" y2="197" stroke="#333" stroke-width="2.5" marker-end="url(#arrowhead)"/>
+</svg>
+</div>
+
+---
+
+# What would make minutes a plausible confounder?
+
+.big[
+
+We need evidence that minutes played is related to:
+
+1. **three-point attempts**, and
+2. **points scored**.
+
+]
+
+---
+
+# Evidence B1
+
+```{r evidence-b1}
+ggplot(nba_case, aes(x = minutes, y = fg3a)) +
+  geom_point(alpha = 0.55, size = 2.4) +
+  labs(
+    title = "Three-point attempts and minutes played",
+    subtitle = "Each point represents one player-season",
+    x = "Minutes played",
+    y = "Three-point attempts"
+  ) +
+  theme_minimal(base_size = 18)
+```
+
+---
+
+# Evidence B2
+
+```{r evidence-b2}
+ggplot(nba_case, aes(x = minutes, y = pts)) +
+  geom_point(alpha = 0.55, size = 2.4) +
+  labs(
+    title = "Points scored and minutes played",
+    subtitle = "Each point represents one player-season",
+    x = "Minutes played",
+    y = "Points scored"
+  ) +
+  theme_minimal(base_size = 18)
+```
+
+---
+
+# What does Evidence B tell us?
+
+Work through Section 4 of the worksheet.
+
+.big[
+
+Minutes played is strongly related to **both** three-point attempts and total points.
+
+So minutes played is a **plausible alternative explanation** for at least part of the original relationship.
+
+]
+
+---
+
+# But is that the whole story?
+
+.huge[
+
+We need another comparison.
+
+]
+
+.big[
+
+**What should happen to the 3PA → points relationship if minutes played explains the original association?**
+
+]
+
+---
+
+# Compare like with like
+
+Work through Section 5 of the worksheet.
+
+.big[
+
+Instead of comparing every player to every other player, compare players with **similar amounts of playing time**.
+
+]
+
+---
+
+# Evidence C
+
+```{r evidence-c}
+ggplot(nba_case, aes(x = fg3a, y = pts)) +
+  geom_point(alpha = 0.55, size = 2.1) +
+  geom_smooth(method = "lm", se = FALSE, linewidth = 1.1) +
+  facet_wrap(~ minutes_group, ncol = 2, scales = "free") +
+  labs(
+    title = "Three-point attempts and points, within minutes-played groups",
+    subtitle = "Players are grouped by quartile of minutes played",
+    x = "Three-point attempts",
+    y = "Points scored"
+  ) +
+  theme_minimal(base_size = 17)
+```
+
+---
+
+# What happened?
+
+.big[
+
+Within **every** minutes-played group, the relationship remains positive.
+
+]
+
+<div class="callout"><strong>Minutes played explains <em>some</em> of the pooled relationship, but it does <em>not</em> explain all of it.</strong></div>
+
+---
+
+# Return to the claim
+
+.huge[
+
+> **Players who attempt more three-pointers score more points because taking more threes makes them more effective scorers.**
+
+]
+
+Work through Section 6 of the worksheet **before** we discuss the conclusion.
+
+---
+
+# What can we say now?
+
+.big[
+
+**The evidence supports:**
+
+- a positive association between three-point attempts and total points;
+- the idea that playing time explains part of that association;
+- a remaining positive relationship among players with similar playing time.
+
+]
+
+---
+
+# What can we *not* say?
+
+.big[
+
+The evidence does **not** establish that taking more three-pointers makes players better scorers.
+
+]
+
+Possible remaining explanations include:
+
+- player role or usage;
+- shooting ability;
+- position;
+- team strategy;
+- overall player quality;
+- other variables we have not measured.
+
+---
+
+# The workflow
+
+.huge[
+
+**Claim → X/Y → Compare → Describe → Propose Z → Test Z → Compare like with like → Revise the conclusion**
+
+]
+
+This is the same reasoning pattern we will use in the Evidence Debate and Unit Test.
+
+---
+
+# Daily Quiz 8
+
+.huge[
+
+Now test yourself independently.
+
+]
+
+.big[
+
+Open **Daily Quiz 8** in Brightspace.
+
+]
+
+.small[
+
+No AI or internet access during the quiz.
+
+]

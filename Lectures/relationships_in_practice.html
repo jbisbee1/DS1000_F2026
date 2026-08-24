@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DS 1000 — Relationships in Practice</title>
+
+  <style>
+    :root {
+      --ink: #222;
+      --muted: #666;
+      --border: #d6d6d6;
+      --panel: #ffffff;
+      --page: #f5f5f5;
+      --accent: #b89b5e;
+      --accent-light: #f3eee4;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--ink);
+      background: var(--page);
+      line-height: 1.5;
+    }
+
+    .page {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 32px 20px 60px;
+    }
+
+    .sheet {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 36px;
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: 2rem;
+    }
+
+    h2 {
+      margin-top: 0;
+      font-size: 1.4rem;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--accent);
+    }
+
+    h3 {
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      margin-bottom: 24px;
+    }
+
+    .claim {
+      padding: 18px 20px;
+      margin: 20px 0;
+      background: var(--accent-light);
+      border-left: 5px solid var(--accent);
+      border-radius: 6px;
+      font-size: 1.15rem;
+      font-weight: 700;
+    }
+
+    .instructions {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    label {
+      display: block;
+      font-weight: 700;
+      margin: 16px 0 6px;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #aaa;
+      border-radius: 6px;
+      font: inherit;
+      background: white;
+    }
+
+    textarea {
+      min-height: 90px;
+      resize: vertical;
+    }
+
+    input[type="number"] {
+      max-width: 140px;
+    }
+
+    .line {
+      border-bottom: 1px solid #aaa;
+      min-height: 32px;
+      margin: 4px 0 14px;
+    }
+
+    .choice-row {
+      margin: 12px 0;
+    }
+
+    .choice-row label {
+      display: inline;
+      margin: 0 16px 0 4px;
+      font-weight: 400;
+    }
+
+    .dag {
+  display: flex;
+  justify-content: center;
+  margin: 28px 0;
+}
+
+.dag svg {
+  width: min(520px, 100%);
+  height: auto;
+  display: block;
+}
+
+    .diagram-box {
+      border: 2px solid #777;
+      padding: 12px 22px;
+      border-radius: 6px;
+      background: #fafafa;
+    }
+
+    .arrow {
+      font-size: 1.4rem;
+    }
+
+    .scale {
+      margin: 20px 0;
+    }
+
+    .scale-line {
+      height: 3px;
+      background: #555;
+      margin: 8px 0;
+    }
+
+    .scale-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .section-number {
+      color: var(--accent);
+      font-weight: 800;
+    }
+
+    .note {
+      padding: 12px 14px;
+      background: #fafafa;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      margin-top: 18px;
+    }
+
+    @media print {
+      body {
+        background: white;
+      }
+
+      .page {
+        max-width: none;
+        padding: 0;
+      }
+
+      .sheet {
+        border: none;
+        border-radius: 0;
+        box-shadow: none;
+        page-break-after: always;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+
+    <section class="sheet">
+      <h1>DS 1000 — Relationships in Practice</h1>
+      <div class="subtitle">NBA Scoring Case</div>
+
+      <div class="claim">
+        “Players who attempt more three-pointers score more points because
+        three-point shooting makes them more effective scorers.”
+      </div>
+
+      <p class="instructions">
+        Do not try to decide whether the claim is true yet. Your job is to
+        determine what the evidence does and does not support.
+      </p>
+    </section>
+
+    <section class="sheet">
+      <h2><span class="section-number">1.</span> Translate the claim into data</h2>
+
+      <label for="unit">Unit of analysis</label>
+      <input id="unit" type="text">
+
+      <label for="x">X</label>
+      <input id="x" type="text">
+
+      <label for="y">Y</label>
+      <input id="y" type="text">
+
+      <label for="xmeasure">What does X actually measure?</label>
+      <textarea id="xmeasure"></textarea>
+
+      <label for="ymeasure">What does Y actually measure?</label>
+      <textarea id="ymeasure"></textarea>
+
+      <label for="expected">
+        Before seeing the data, what relationship would you expect if the
+        claim were correct?
+      </label>
+      <textarea id="expected"></textarea>
+    </section>
+
+    <section class="sheet">
+      <h2><span class="section-number">2.</span> Evidence A: Put the variables together</h2>
+
+      <p class="instructions">
+        Examine Evidence A when it is revealed in class.
+      </p>
+
+      <label for="direction">Direction</label>
+      <input id="direction" type="text">
+
+      <label for="form">Form</label>
+      <input id="form" type="text">
+
+      <label for="strength">Strength</label>
+      <input id="strength" type="text">
+
+      <label for="variation">Important variation or unusual observations</label>
+      <textarea id="variation"></textarea>
+
+      <label>What can we conclude?</label>
+      <p>
+        Players who
+      </p>
+      <textarea id="conclusionA"></textarea>
+
+      <label>Does Evidence A establish that attempting more three-pointers causes players to score more points?</label>
+
+      <div class="choice-row">
+        <input type="radio" id="causalYes" name="causalA" value="yes">
+        <label for="causalYes">Yes</label>
+
+        <input type="radio" id="causalNo" name="causalA" value="no">
+        <label for="causalNo">No</label>
+      </div>
+
+      <label for="explainA">Explain</label>
+      <textarea id="explainA"></textarea>
+    </section>
+
+    <section class="sheet">
+      <h2><span class="section-number">3.</span> What else could explain the relationship?</h2>
+
+      <p class="instructions">
+        Before seeing any additional evidence, identify another variable that
+        might help explain why X and Y are related.
+      </p>
+
+      <label for="z">Candidate Z</label>
+      <input id="z" type="text">
+
+      <label for="zX">Why might Z be related to three-point attempts?</label>
+      <textarea id="zX"></textarea>
+
+      <label for="zY">Why might Z also be related to points scored?</label>
+      <textarea id="zY"></textarea>
+
+<div class="dag">
+  <svg viewBox="0 0 520 260" role="img"
+       aria-label="Z points to X and Y, and X points to Y">
+
+    <defs>
+      <marker id="arrowhead"
+              markerWidth="8"
+              markerHeight="8"
+              refX="7"
+              refY="4"
+              orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#333"/>
+      </marker>
+    </defs>
+
+    <!-- Z -->
+    <rect x="210" y="20"
+          width="100" height="55" rx="8"
+          fill="#fafafa"
+          stroke="#777"
+          stroke-width="2"/>
+
+    <text x="260" y="55"
+          text-anchor="middle"
+          font-size="22"
+          font-weight="700">Z</text>
+
+    <!-- X -->
+    <rect x="80" y="170"
+          width="100" height="55" rx="8"
+          fill="#fafafa"
+          stroke="#777"
+          stroke-width="2"/>
+
+    <text x="130" y="205"
+          text-anchor="middle"
+          font-size="22"
+          font-weight="700">X</text>
+
+    <!-- Y -->
+    <rect x="340" y="170"
+          width="100" height="55" rx="8"
+          fill="#fafafa"
+          stroke="#777"
+          stroke-width="2"/>
+
+    <text x="390" y="205"
+          text-anchor="middle"
+          font-size="22"
+          font-weight="700">Y</text>
+
+    <!-- Z -> X -->
+    <line x1="225" y1="75"
+          x2="165" y2="165"
+          stroke="#333"
+          stroke-width="2.5"
+          marker-end="url(#arrowhead)"/>
+
+    <!-- Z -> Y -->
+    <line x1="295" y1="75"
+          x2="355" y2="165"
+          stroke="#333"
+          stroke-width="2.5"
+          marker-end="url(#arrowhead)"/>
+
+    <!-- X -> Y -->
+    <line x1="180" y1="197"
+          x2="335" y2="197"
+          stroke="#333"
+          stroke-width="2.5"
+          marker-end="url(#arrowhead)"/>
+
+  </svg>
+</div>
+
+      <label for="observeZ">
+        What would you want to observe in the data to determine whether Z matters?
+      </label>
+      <textarea id="observeZ"></textarea>
+    </section>
+
+    <section class="sheet">
+      <h2><span class="section-number">4.</span> Evidence B: Investigate the alternative explanation</h2>
+
+      <p class="instructions">
+        Examine Evidence B when it is revealed in class.
+      </p>
+
+      <label>Is minutes played related to three-point attempts?</label>
+      <div class="choice-row">
+        <input type="radio" id="mins3Yes" name="mins3" value="yes">
+        <label for="mins3Yes">Yes</label>
+
+        <input type="radio" id="mins3No" name="mins3" value="no">
+        <label for="mins3No">No</label>
+      </div>
+
+      <label for="mins3Evidence">Evidence</label>
+      <textarea id="mins3Evidence"></textarea>
+
+      <label>Is minutes played related to points scored?</label>
+      <div class="choice-row">
+        <input type="radio" id="minsPtsYes" name="minsPts" value="yes">
+        <label for="minsPtsYes">Yes</label>
+
+        <input type="radio" id="minsPtsNo" name="minsPts" value="no">
+        <label for="minsPtsNo">No</label>
+      </div>
+
+      <label for="minsPtsEvidence">Evidence</label>
+      <textarea id="minsPtsEvidence"></textarea>
+
+      <label>
+        Based on these results, could minutes played explain at least part of
+        the original X–Y relationship?
+      </label>
+
+      <div class="choice-row">
+        <input type="radio" id="couldExplainYes" name="couldExplain" value="yes">
+        <label for="couldExplainYes">Yes</label>
+
+        <input type="radio" id="couldExplainNo" name="couldExplain" value="no">
+        <label for="couldExplainNo">No</label>
+
+        <input type="radio" id="couldExplainMaybe" name="couldExplain" value="maybe">
+        <label for="couldExplainMaybe">Not enough information yet</label>
+      </div>
+
+      <label for="explainB">Explain</label>
+      <textarea id="explainB"></textarea>
+    </section>
+
+    <section class="sheet">
+      <h2><span class="section-number">5.</span> Compare like with like</h2>
+
+      <p class="instructions">
+        Examine Evidence C when it is revealed in class. We now compare players
+        who received similar amounts of playing time.
+      </p>
+
+      <label>What happens to the relationship between three-point attempts and points scored?</label>
+
+      <div class="choice-row">
+        <input type="radio" id="stronger" name="relationshipC" value="stronger">
+        <label for="stronger">It becomes substantially stronger</label><br>
+
+        <input type="radio" id="same" name="relationshipC" value="same">
+        <label for="same">It remains approximately the same</label><br>
+
+        <input type="radio" id="weaker" name="relationshipC" value="weaker">
+        <label for="weaker">It becomes substantially weaker</label><br>
+
+        <input type="radio" id="differs" name="relationshipC" value="differs">
+        <label for="differs">The pattern differs across groups</label>
+      </div>
+
+      <label for="describeC">Describe what you see</label>
+      <textarea id="describeC"></textarea>
+
+      <label for="whyC">
+        Why is this comparison more informative than the original pooled comparison?
+      </label>
+      <textarea id="whyC"></textarea>
+    </section>
+
+    <section class="sheet">
+      <h2><span class="section-number">6.</span> Revise the claim</h2>
+
+      <div class="claim">
+        “Players who attempt more three-pointers score more points because
+        three-point shooting makes them more effective scorers.”
+      </div>
+
+      <label for="initial">
+        Initially, the data showed that
+      </label>
+      <textarea id="initial"></textarea>
+
+      <label for="afterZ">
+        After considering minutes played,
+      </label>
+      <textarea id="afterZ"></textarea>
+
+      <label for="supports">
+        The evidence supports the conclusion that
+      </label>
+      <textarea id="supports"></textarea>
+
+      <label for="notEstablish">
+        But the evidence does NOT establish that
+      </label>
+      <textarea id="notEstablish"></textarea>
+
+      <div class="scale">
+        <label>Final confidence in the original claim</label>
+
+        <input
+          id="confidence"
+          type="range"
+          min="0"
+          max="100"
+          value="50"
+          style="width: 100%;"
+        >
+
+        <div class="scale-labels">
+          <span>0 — Not at all</span>
+          <span>50</span>
+          <span>100 — Very strongly</span>
+        </div>
+
+        <p>
+          Confidence: <strong><span id="confidenceValue">50</span>/100</strong>
+        </p>
+      </div>
+
+      <label for="finalJudgment">
+        In no more than two sentences, state the conclusion you think is best
+        supported by the evidence.
+      </label>
+      <textarea id="finalJudgment"></textarea>
+
+      <div class="note">
+        This worksheet is for in-class reasoning and discussion.
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    const confidence = document.getElementById("confidence");
+    const confidenceValue = document.getElementById("confidenceValue");
+
+    confidence.addEventListener("input", function () {
+      confidenceValue.textContent = this.value;
+    });
+  </script>
+</body>
+</html>

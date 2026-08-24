@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Relationships in Practice: NBA Scoring</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Prof. Bisbee" />
+    <script src="ds1000_lecture_8_slides_f2026_files/header-attrs-2.30/header-attrs.js"></script>
+    <link href="ds1000_lecture_8_slides_f2026_files/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="ds1000_lecture_8_slides_f2026_files/remark-css-0.0.1/metropolis-fonts.css" rel="stylesheet" />
+    <link rel="stylesheet" href="css/ds1000.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# Relationships in Practice: NBA Scoring
+]
+.subtitle[
+## DS 1000
+]
+.author[
+### Prof. Bisbee
+]
+
+---
+
+
+&lt;style&gt;
+.big { font-size: 130%; }
+.huge { font-size: 180%; }
+.small { font-size: 80%; }
+.hero-image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 74vh;
+}
+.hero-image img {
+  max-width: 92%;
+  max-height: 74vh;
+  object-fit: contain;
+}
+
+.dag-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 1.5rem;
+}
+.dag-wrap svg {
+  width: min(640px, 92%);
+  height: auto;
+}
+
+.plot-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 70vh;
+}
+.plot-wrap img {
+  max-width: 96%;
+  max-height: 68vh;
+  object-fit: contain;
+}
+
+.callout {
+  border-left: 5px solid #b89b5e;
+  padding: 0.8rem 1rem;
+  background: #f3eee4;
+  margin: 1rem 0;
+}
+&lt;/style&gt;
+
+
+
+# Relationships in Practice
+
+&lt;div class="huge"&gt;NBA scoring&lt;/div&gt;
+
+&lt;div class="callout huge"&gt;
+Today is not about learning a new technique.
+
+It is about putting the Unit 2 reasoning workflow together.
+&lt;/div&gt;
+
+---
+
+# The claim
+
+.hero-image[
+.huge[
+
+&gt; **Players who attempt more three-pointers score more points because taking more threes makes them more effective scorers.**
+
+]
+]
+
+---
+
+# Before we see the evidence
+
+Work through Section 1 of the worksheet.
+
+.big[
+
+What are the **unit of analysis**, **X**, and **Y**?
+
+What would we expect to see if the claim were correct?
+
+]
+
+---
+
+# Meet the data
+
+.big[
+
+**Unit of analysis:** one player-season
+
+**X:** `fg3a` — three-point attempts
+
+**Y:** `pts` — total points scored
+
+**Z:** `minutes` — minutes played during the season
+
+]
+
+&lt;div class="callout"&gt;Before we analyze the relationship, notice the measurement issue: &lt;strong&gt;total points is not the same thing as scoring effectiveness.&lt;/strong&gt;&lt;/div&gt;
+
+---
+
+# Evidence A
+
+&lt;img src="ds1000_lecture_8_slides_f2026_files/figure-html/evidence-a-1.png" width="792" style="display: block; margin: auto;" /&gt;
+
+---
+
+# What does Evidence A show?
+
+Work through Section 2 of the worksheet.
+
+.big[
+
+Describe the relationship:
+
+**Direction → Form → Strength → Variation**
+
+]
+
+---
+
+# What does Evidence A warrant?
+
+.big[
+
+The data show a **positive association** between three-point attempts and total points scored.
+
+But the graph alone does **not** establish that taking more threes causes players to score more points.
+
+]
+
+---
+
+# What else could explain it?
+
+Work through Section 3 of the worksheet **before** we reveal more evidence.
+
+.huge[
+
+What variable **Z** might help explain why X and Y are related?
+
+]
+
+---
+
+# A candidate explanation
+
+&lt;div class="dag-wrap"&gt;
+&lt;svg viewBox="0 0 520 260" role="img" aria-label="Minutes played points to three-point attempts and points scored, while three-point attempts also point to points scored"&gt;
+  &lt;defs&gt;
+    &lt;marker id="arrowhead" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"&gt;
+      &lt;path d="M0,0 L8,4 L0,8 Z" fill="#333"/&gt;
+    &lt;/marker&gt;
+  &lt;/defs&gt;
+
+  &lt;rect x="210" y="20" width="100" height="55" rx="8" fill="#fafafa" stroke="#777" stroke-width="2"/&gt;
+  &lt;text x="260" y="55" text-anchor="middle" font-size="22" font-weight="700"&gt;Minutes&lt;/text&gt;
+
+  &lt;rect x="80" y="170" width="100" height="55" rx="8" fill="#fafafa" stroke="#777" stroke-width="2"/&gt;
+  &lt;text x="130" y="205" text-anchor="middle" font-size="22" font-weight="700"&gt;3PA&lt;/text&gt;
+
+  &lt;rect x="340" y="170" width="100" height="55" rx="8" fill="#fafafa" stroke="#777" stroke-width="2"/&gt;
+  &lt;text x="390" y="205" text-anchor="middle" font-size="22" font-weight="700"&gt;Points&lt;/text&gt;
+
+  &lt;line x1="225" y1="75" x2="165" y2="165" stroke="#333" stroke-width="2.5" marker-end="url(#arrowhead)"/&gt;
+  &lt;line x1="295" y1="75" x2="355" y2="165" stroke="#333" stroke-width="2.5" marker-end="url(#arrowhead)"/&gt;
+  &lt;line x1="180" y1="197" x2="335" y2="197" stroke="#333" stroke-width="2.5" marker-end="url(#arrowhead)"/&gt;
+&lt;/svg&gt;
+&lt;/div&gt;
+
+---
+
+# What would make minutes a plausible confounder?
+
+.big[
+
+We need evidence that minutes played is related to:
+
+1. **three-point attempts**, and
+2. **points scored**.
+
+]
+
+---
+
+# Evidence B1
+
+&lt;img src="ds1000_lecture_8_slides_f2026_files/figure-html/evidence-b1-1.png" width="792" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Evidence B2
+
+&lt;img src="ds1000_lecture_8_slides_f2026_files/figure-html/evidence-b2-1.png" width="792" style="display: block; margin: auto;" /&gt;
+
+---
+
+# What does Evidence B tell us?
+
+Work through Section 4 of the worksheet.
+
+.big[
+
+Minutes played is strongly related to **both** three-point attempts and total points.
+
+So minutes played is a **plausible alternative explanation** for at least part of the original relationship.
+
+]
+
+---
+
+# But is that the whole story?
+
+.huge[
+
+We need another comparison.
+
+]
+
+.big[
+
+**What should happen to the 3PA → points relationship if minutes played explains the original association?**
+
+]
+
+---
+
+# Compare like with like
+
+Work through Section 5 of the worksheet.
+
+.big[
+
+Instead of comparing every player to every other player, compare players with **similar amounts of playing time**.
+
+]
+
+---
+
+# Evidence C
+
+&lt;img src="ds1000_lecture_8_slides_f2026_files/figure-html/evidence-c-1.png" width="792" style="display: block; margin: auto;" /&gt;
+
+---
+
+# What happened?
+
+.big[
+
+Within **every** minutes-played group, the relationship remains positive.
+
+]
+
+&lt;div class="callout"&gt;&lt;strong&gt;Minutes played explains &lt;em&gt;some&lt;/em&gt; of the pooled relationship, but it does &lt;em&gt;not&lt;/em&gt; explain all of it.&lt;/strong&gt;&lt;/div&gt;
+
+---
+
+# Return to the claim
+
+.huge[
+
+&gt; **Players who attempt more three-pointers score more points because taking more threes makes them more effective scorers.**
+
+]
+
+Work through Section 6 of the worksheet **before** we discuss the conclusion.
+
+---
+
+# What can we say now?
+
+.big[
+
+**The evidence supports:**
+
+- a positive association between three-point attempts and total points;
+- the idea that playing time explains part of that association;
+- a remaining positive relationship among players with similar playing time.
+
+]
+
+---
+
+# What can we *not* say?
+
+.big[
+
+The evidence does **not** establish that taking more three-pointers makes players better scorers.
+
+]
+
+Possible remaining explanations include:
+
+- player role or usage;
+- shooting ability;
+- position;
+- team strategy;
+- overall player quality;
+- other variables we have not measured.
+
+---
+
+# The workflow
+
+.huge[
+
+**Claim → X/Y → Compare → Describe → Propose Z → Test Z → Compare like with like → Revise the conclusion**
+
+]
+
+This is the same reasoning pattern we will use in the Evidence Debate and Unit Test.
+
+---
+
+# Daily Quiz 8
+
+.huge[
+
+Now test yourself independently.
+
+]
+
+.big[
+
+Open **Daily Quiz 8** in Brightspace.
+
+]
+
+.small[
+
+No AI or internet access during the quiz.
+
+]
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+  "ratio": "16:9",
+  "highlightStyle": "github",
+  "highlightLines": true,
+  "countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
