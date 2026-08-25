@@ -30,27 +30,14 @@ output:
 
 </style>
 
-```{css,echo=FALSE}
+<style type="text/css">
 .small .remark-code { font-size: 85% !important; }
 .tiny .remark-code { font-size: 60% !important; }
 .big { font-size: 150%; }
 .huge { font-size: 200%; }
-```
+</style>
 
-```{r,include=FALSE}
-set.seed(123)
-options(width=60)
-knitr::opts_chunk$set(fig.align='center',fig.width=9,fig.height=5,message=FALSE,warning=FALSE)
-library(tidyverse)
 
-df <- tryCatch(
-  read_rds("../data/sc_debt.Rds"),
-  error = function(e) tryCatch(
-    read_rds("data/sc_debt.Rds"),
-    error = function(e2) NULL
-  )
-)
-```
 
 # How do we know what's true?
 
