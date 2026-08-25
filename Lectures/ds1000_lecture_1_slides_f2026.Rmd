@@ -172,25 +172,25 @@ The common thread is simple:
 
 # Why are you here?
 
-<div class="hero-image"><img src="figs/fight_ds_econ.PNG" alt="Data science and economics illustration"></div>
+<div class="hero-image"><img src="figs/fight_ds_econ.png" alt="Data science and economics illustration"></div>
 
 ---
 
 # Why are you here?
 
-<div class="hero-image"><img src="figs/fight_ds_ps.PNG" alt="Data science and political science illustration"></div>
+<div class="hero-image"><img src="figs/fight_ds_ps.png" alt="Data science and political science illustration"></div>
 
 ---
 
 # Why are you here?
 
-<div class="hero-image"><img src="figs/fight_ds_cs.PNG" alt="Data science and computer science illustration"></div>
+<div class="hero-image"><img src="figs/fight_ds_cs.png" alt="Data science and computer science illustration"></div>
 
 ---
 
 # Why are you here?
 
-<div class="hero-image"><img src="figs/fight_ds_stats.PNG" alt="Data science and statistics illustration"></div>
+<div class="hero-image"><img src="figs/fight_ds_stats.png" alt="Data science and statistics illustration"></div>
 
 ---
 
