@@ -237,15 +237,15 @@ Most instructional meetings end with a short Daily Quiz on that day's lecture an
 
 | Date | Session | Unit / Topic | Core Question | Assessment |
 | ---: | :--- | :--- | :--- | :--- |
-| 08/26 | 1 | **Unit 1: From Claims to Evidence** — How Do We Know What's True? | What evidence would let us evaluate a factual claim? | **Daily Quiz 1** |
-| 08/31 | 2 | Questions → Data | How do concepts become variables and observations? | **Daily Quiz 2** |
-| 09/02 | 3 | Know Your Variables | What does each variable actually measure and look like? | **Daily Quiz 3** |
-| 09/07 | 4 | Prepare the Evidence | What decisions turn raw observations into defensible evidence? | **Daily Quiz 4** |
+| 08/26 | 1 | **Unit 1: From Claims to Evidence** — [How Do We Know What's True?](https://www.jamesbisbee.com/DS1000_F2026/Lectures/ds1000_lecture_1_slides_f2026.html#1) | What evidence would let us evaluate a factual claim? | **Daily Quiz 1** |
+| 08/31 | 2 | [Questions → Data](https://www.jamesbisbee.com/DS1000_F2026/Lectures/ds1000_lecture_2_slides_f2026.html#1) | How do concepts become variables and observations? | **Daily Quiz 2** |
+| 09/02 | 3 | [Know Your Variables](https://www.jamesbisbee.com/DS1000_F2026/Lectures/ds1000_lecture_3_slides_f2026.html#1) | What does each variable actually measure and look like? | **Daily Quiz 3** |
+| 09/07 | 4 | [Prepare the Evidence](https://www.jamesbisbee.com/DS1000_F2026/Lectures/ds1000_lecture_4_slides_f2026.html#1) | What decisions turn raw observations into defensible evidence? | **Daily Quiz 4** |
 | 09/09 | 5 | **Unit 1 Assessment Day** | What does the evidence warrant, and can you transfer the unit's skills to a new case? | **Evidence Debate 1 + Unit Test 1** |
-| 09/14 | 6 | **Unit 2: Relationships** — Variables Together | How do we begin answering a question by putting variables together? | **Daily Quiz 5** |
-| 09/16 | 7 | Describe the Relationship | What does the relationship between two variables actually look like? | **Daily Quiz 6** |
-| 09/21 | 8 | What Else Could Explain It? | What alternative explanations could produce the relationship we observe? | **Daily Quiz 7** |
-| 09/23 | 9 | Relationships in Practice | How do we put the pieces together to evaluate a relational claim? | **Daily Quiz 8** |
+| 09/14 | 6 | **Unit 2: Relationships** — [Variables Together](https://www.jamesbisbee.com/DS1000_F2026/Lectures/ds1000_lecture_5_slides_f2026.html#1) | How do we begin answering a question by putting variables together? | **Daily Quiz 5** |
+| 09/16 | 7 | [Describe the Relationship](https://www.jamesbisbee.com/DS1000_F2026/Lectures/ds1000_lecture_6_slides_f2026.html#1) | What does the relationship between two variables actually look like? | **Daily Quiz 6** |
+| 09/21 | 8 | [What Else Could Explain It?](https://www.jamesbisbee.com/DS1000_F2026/Lectures/ds1000_lecture_7_slides_f2026.html#1) | What alternative explanations could produce the relationship we observe? | **Daily Quiz 7** |
+| 09/23 | 9 | [Relationships in Practice](https://www.jamesbisbee.com/DS1000_F2026/Lectures/ds1000_lecture_8_slides_f2026.html#1) | How do we put the pieces together to evaluate a relational claim? | **Daily Quiz 8** |
 | 09/28 | 10 | **Unit 2 Assessment Day** | What should we believe about a contested relationship? | **Evidence Debate 2 + Unit Test 2** |
 | 09/30 | 11 | **Unit 3: Uncertainty & Inference** — Uncertainty I | How much should samples make us uncertain about conclusions? | **Daily Quiz 9** |
 | 10/05 | 12 | Uncertainty II | What does a confidence statement actually justify? | **Daily Quiz 10** |
