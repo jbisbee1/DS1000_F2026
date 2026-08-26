@@ -27,6 +27,29 @@ output:
   max-height: 74vh;
   object-fit: contain;
 }
+.split {
+  display: flex;
+  gap: 1.2em;
+  margin-top: 1em;
+  align-items: stretch;
+}
+.split > div {
+  flex: 1;
+  padding: 0.9em 1em;
+  border-radius: 10px;
+  text-align: center;
+  font-size: 92%;
+}
+.panel-label {
+  display: block;
+  font-size: 1.5em;
+  font-weight: 600;
+  margin-bottom: 0.35em;
+}
+.panel-muted { background: #f4f4f4; color: #8a8a8a; border: 1px solid #e4e4e4; }
+.panel-gold  { background: #fbf5e8; border: 2px solid #CFAE70; }
+.panel-dead  { background: #fafafa; border: 1px solid #dddddd; }
+.panel-dead .panel-label { color: #A33A3A; }
 
 </style>
 
@@ -76,7 +99,69 @@ What should you do next?
 
 ---
 
+# The question in the course title
+
+.center[.big[How do we know **what's true**?]]
+
+--
+
+That sentence hides two very different questions.
+
+<div class="split">
+<div class="panel-muted">
+<span class="panel-label">What's true?</span>
+The answer.
+</div>
+<div class="panel-gold">
+<span class="panel-label">How do I know?</span>
+The procedure that gets you to an answer you can defend.
+</div>
+</div>
+
+--
+
+Almost every argument you will ever watch is conducted on the left.
+
+.center[**This course lives on the right.**]
+
+---
+
+# Two ways to get "how do I know?" wrong
+
+<div class="split">
+<div class="panel-dead">
+<span class="panel-label">Gullibility</span>
+<em>"A study found that&hellip;"</em>
+<br><br>
+Accept the claim because it arrived with a number attached.
+</div>
+<div class="panel-dead">
+<span class="panel-label">Nihilism</span>
+<em>"You can prove anything with statistics."</em>
+<br><br>
+Reject every claim, because any of them might be wrong.
+</div>
+</div>
+
+--
+
+These look like opposites. They are the same move.
+
+--
+
+.center[**Both let you skip the work of evaluating the evidence.**]
+
+--
+
+And both end in the same place: somebody else decides what you believe.
+
+---
+
 # The first habit of this course
+
+Distinguishing a well-supported claim from a badly supported one is a **skill**, not a personality trait. You are not stuck with however credulous or however cynical you happen to be.
+
+--
 
 Don't start with:
 
@@ -153,9 +238,63 @@ But the goal is not the tool.
 
 ---
 
-# Where I come from
+# Who am I?
 
-My work uses data science to answer questions about:
+.big[Prof. James Bisbee]
+
+--
+
+- PhD, Politics, NYU (2019)
+
+- Postdocs: Princeton (Niehaus Center) and NYU (Center for Social Media & Politics)
+
+- Assistant Professor of Political Science & Data Science, Vanderbilt
+
+--
+
+- Before academia: World Bank / IFC, and MarketCast
+
+--
+
+The through-line: I get paid to ask whether the evidence actually supports the claim.
+
+---
+
+# What I have worked on
+
+- **Methods and measurement:** whether findings travel beyond their original setting
+[1](https://www.journals.uchicago.edu/doi/full/10.1086/691280?af=R),
+[2](https://www.cambridge.org/core/journals/american-political-science-review/article/testing-social-science-network-theories-with-online-network-data-an-evaluation-of-external-validity/4BF517F10F38DFB574FED4A3D805B613);
+how we estimate quantities we cannot observe directly
+[3](https://www.cambridge.org/core/journals/american-political-science-review/article/barp-improving-mister-p-using-bayesian-additive-regression-trees/630866EB47F9366EDB3C22CFD951BB6F),
+[4](https://www.cambridge.org/core/journals/political-analysis/article/geographic-boundaries-and-local-economic-conditions-matter-for-views-of-the-economy/32C8C058B8E16CAD48374F95B2B1B3EF)
+
+--
+
+- **Substantive questions:** economic shocks and populism
+[1](https://www.tandfonline.com/doi/full/10.1080/13501763.2019.1678662);
+COVID-19 and American politics
+[2](https://www.journals.uchicago.edu/doi/10.1086/716969),
+[3](https://www.cambridge.org/core/journals/american-political-science-review/article/flight-to-safety-covidinduced-changes-in-the-intensity-of-status-quo-preference-and-voting-behavior/AE84D93BAF8B27284DD8F6A75DE5D18A);
+international political economy
+[4](https://doi.org/10.1017/S0020818319000109)
+
+--
+
+- **Writing for a general audience:**
+[Washington Post 1](https://www.washingtonpost.com/news/monkey-cage/wp/2018/04/04/losing-jobs-to-free-trade-makes-americans-more-protectionist-and-nativist/),
+[Washington Post 2](https://www.washingtonpost.com/politics/2020/04/02/sanders-was-losing-biden-anyway-he-lost-more-areas-with-coronavirus-cases/),
+[podcasts](https://www.niskanencenter.org/did-chinese-trade-competition-increase-nativism-and-elect-trump/)
+
+--
+
+Every one of these started as a contested claim that somebody wanted settled.
+
+---
+
+# What I work on now
+
+My current research uses data science to answer questions about:
 
 - YouTube + polarization
 - Twitter + misinformation
@@ -612,6 +751,91 @@ And when you encounter a puzzle, be able to ask:
 And keep asking:
 
 > **Does the evidence actually support the claim?**
+
+---
+
+# What is expected of you
+
+<div class="hero-image"><img src="figs/responsibilities_teacher_student.png" alt="Teacher discipline declines and student responsibility rises with age, crossing at college"></div>
+
+---
+
+# What is expected of you
+
+Two lines, moving in opposite directions.
+
+--
+
+- Through high school, **teacher discipline** does most of the work: attendance is enforced, deadlines are chased, missing work is noticed.
+
+--
+
+- In the real world, **you** do that work: nobody follows up, and the consequences are yours.
+
+--
+
+College is where the lines cross. This class sits on the far side of that crossing.
+
+---
+
+# What that means in practice
+
+**My responsibilities**
+
+- Show up prepared, explain the reasoning rather than just the syntax, and tell you what the evidence does and does not support.
+- Post materials, hold office hours, and answer questions on Campuswire.
+- Make the assessments a fair test of the reasoning we practiced.
+
+--
+
+**Your responsibilities**
+
+- Do the homework *before* class. It is coached practice for the assessment that follows, not busywork.
+- Bring a working laptop, with `R`, RStudio, and LockDown Browser installed.
+- Ask early. A question asked in week three is cheap; the same question in week eleven is expensive.
+- Track your own deadlines, and tell me about a conflict *before* it becomes a missed assessment.
+
+---
+
+# This course is hard by design
+
+Learning to code and learning to reason about evidence are both genuinely difficult, and you will do them at the same time.
+
+--
+
+That creates a tension: the material is hard, but the goal is to **encourage** you to keep going in data science.
+
+--
+
+My solution is structural, not lenient grading.
+
+--
+
+- Roughly 15 homeworks, **best 10 count**.
+
+- Roughly 20 daily quizzes, **best 15 count**.
+
+--
+
+Ordinary bad days, illnesses, and false starts are already priced in. There is **no separate extra credit** — the flexibility is built into the grading system itself.
+
+---
+
+# What I ask of you when it gets hard
+
+.big[Struggle is not evidence that you do not belong here.]
+
+--
+
+It is the ordinary experience of learning a language, and `R` is a language.
+
+--
+
+- Come to office hours *while* you are stuck, not after the deadline.
+
+- Post the error message on Campuswire. Someone else has hit it.
+
+- If something in your life is making this impossible, tell me early enough that I can do something about it.
 
 ---
 

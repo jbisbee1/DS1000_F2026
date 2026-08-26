@@ -235,39 +235,39 @@ Class meets **Monday/Wednesday, 8:40-9:55 AM**. Dates below follow Vanderbilt's 
 
 Most instructional meetings end with a short Daily Quiz on that day's lecture and activities. Each unit culminates in an **Assessment Day**: an Evidence Debate first provides collaborative synthesis and discussion, followed by an independent Unit Test on a different empirical case.
 
-| Date | Session | Unit / Topic | Core Question | Assessment |
-| ---: | :--- | :--- | :--- | :--- |
-| 08/26 | 1 | **Unit 1: From Claims to Evidence** — [How Do We Know What's True?](https://www.jamesbisbee.com/DS1000_F2026/Lectures/ds1000_lecture_1_slides_f2026.html#1) | What evidence would let us evaluate a factual claim? | **Daily Quiz 1** |
-| 08/31 | 2 | [Questions → Data](https://www.jamesbisbee.com/DS1000_F2026/Lectures/ds1000_lecture_2_slides_f2026.html#1) | How do concepts become variables and observations? | **Daily Quiz 2** |
-| 09/02 | 3 | [Know Your Variables](https://www.jamesbisbee.com/DS1000_F2026/Lectures/ds1000_lecture_3_slides_f2026.html#1) | What does each variable actually measure and look like? | **Daily Quiz 3** |
-| 09/07 | 4 | [Prepare the Evidence](https://www.jamesbisbee.com/DS1000_F2026/Lectures/ds1000_lecture_4_slides_f2026.html#1) | What decisions turn raw observations into defensible evidence? | **Daily Quiz 4** |
-| 09/09 | 5 | **Unit 1 Assessment Day** | What does the evidence warrant, and can you transfer the unit's skills to a new case? | **Evidence Debate 1 + Unit Test 1** |
-| 09/14 | 6 | **Unit 2: Relationships** — [Variables Together](https://www.jamesbisbee.com/DS1000_F2026/Lectures/ds1000_lecture_5_slides_f2026.html#1) | How do we begin answering a question by putting variables together? | **Daily Quiz 5** |
-| 09/16 | 7 | [Describe the Relationship](https://www.jamesbisbee.com/DS1000_F2026/Lectures/ds1000_lecture_6_slides_f2026.html#1) | What does the relationship between two variables actually look like? | **Daily Quiz 6** |
-| 09/21 | 8 | [What Else Could Explain It?](https://www.jamesbisbee.com/DS1000_F2026/Lectures/ds1000_lecture_7_slides_f2026.html#1) | What alternative explanations could produce the relationship we observe? | **Daily Quiz 7** |
-| 09/23 | 9 | [Relationships in Practice](https://www.jamesbisbee.com/DS1000_F2026/Lectures/ds1000_lecture_8_slides_f2026.html#1) | How do we put the pieces together to evaluate a relational claim? | **Daily Quiz 8** |
-| 09/28 | 10 | **Unit 2 Assessment Day** | What should we believe about a contested relationship? | **Evidence Debate 2 + Unit Test 2** |
-| 09/30 | 11 | **Unit 3: Uncertainty & Inference** — Uncertainty I | How much should samples make us uncertain about conclusions? | **Daily Quiz 9** |
-| 10/05 | 12 | Uncertainty II | What does a confidence statement actually justify? | **Daily Quiz 10** |
-| 10/07 | 13 | Regression I | How can a model summarize a relationship? | **Daily Quiz 11** |
-| 10/12 | 14 | Regression II | How do we interpret and evaluate regression evidence? | **Daily Quiz 12** |
-| 10/14 | 15 | **Unit 3 Assessment Day** | How should uncertainty and competing explanations affect what we believe? | **Evidence Debate 3 + Unit Test 3** |
-| 10/19 | 16 | **Unit 4: Models & Prediction** — Prediction vs. Explanation | When is prediction the goal, and how does that change evaluation? | **Daily Quiz 13** |
-| 10/21 | 17 | Classification I | How do we predict categories? | **Daily Quiz 14** |
-| *10/22-23* | | *Fall Break* | | |
-| 10/26 | 18 | Classification II | How should classification performance be evaluated? | **Daily Quiz 15** |
-| 10/28 | 19 | Clustering / Unsupervised Learning | What can we learn when groups are not supplied in advance? | **Daily Quiz 16** |
-| 11/02 | 20 | **Unit 4 Assessment Day** | How should we choose and evaluate predictive approaches? | **Evidence Debate 4 + Unit Test 4** |
-| 11/04 | 21 | **Unit 5: Text, AI & Judgment** — Text as Data | How can unstructured text become evidence? | **Daily Quiz 17** |
-| 11/09 | 22 | NLP / Sentiment | What do text measures capture, and what do they miss? | **Daily Quiz 18** |
-| 11/11 | 23 | Bias & Misinformation | How can data and AI systems produce misleading claims? | **Daily Quiz 19** |
-| 11/16 | 24 | AI, Judgment & Responsibility | What should humans remain responsible for when AI can perform the analysis? | **Daily Quiz 20** |
-| 11/18 | 25 | **Unit 5 Assessment Day** | What should we believe when evidence itself is produced or interpreted by AI? | **Evidence Debate 5 + Unit Test 5** |
-| *11/23, 11/25* | | *Thanksgiving Break* | | |
-| 11/30 | 26 | Project Development | Can your team build a defensible empirical argument from question to conclusion? | |
-| 12/02 | 27 | Project Workshop | Can your team defend every step from question to conclusion? | |
-| 12/07 | 28 | Project Defenses | Formulate, analyze, evaluate, and communicate your own empirical claim | **Project Defense** |
-| 12/09 | 29 | Project Defenses | Formulate, analyze, evaluate, and communicate your own empirical claim | **Project Defense** |
+| Date | Session | Unit / Topic | Core Question | Homework | Assessment |
+| ---: | :--- | :--- | :--- | :--- | :--- |
+| 08/26 | 1 | **Unit 1: From Claims to Evidence** — [How Do We Know What's True?](https://www.jamesbisbee.com/DS1000_F2026/Lectures/ds1000_lecture_1_slides_f2026.html#1) | What evidence would let us evaluate a factual claim? | | **Daily Quiz 1** |
+| 08/31 | 2 | [Questions → Data](https://www.jamesbisbee.com/DS1000_F2026/Lectures/ds1000_lecture_2_slides_f2026.html#1) | How do concepts become variables and observations? | HW 1 | **Daily Quiz 2** |
+| 09/02 | 3 | [Know Your Variables](https://www.jamesbisbee.com/DS1000_F2026/Lectures/ds1000_lecture_3_slides_f2026.html#1) | What does each variable actually measure and look like? | HW 2 | **Daily Quiz 3** |
+| 09/07 | 4 | [Prepare the Evidence](https://www.jamesbisbee.com/DS1000_F2026/Lectures/ds1000_lecture_4_slides_f2026.html#1) | What decisions turn raw observations into defensible evidence? | HW 3 | **Daily Quiz 4** |
+| 09/09 | 5 | **Unit 1 Assessment Day** | What does the evidence warrant, and can you transfer the unit's skills to a new case? | | **Evidence Debate 1 + Unit Test 1** |
+| 09/14 | 6 | **Unit 2: Relationships** — [Variables Together](https://www.jamesbisbee.com/DS1000_F2026/Lectures/ds1000_lecture_5_slides_f2026.html#1) | How do we begin answering a question by putting variables together? | | **Daily Quiz 5** |
+| 09/16 | 7 | [Describe the Relationship](https://www.jamesbisbee.com/DS1000_F2026/Lectures/ds1000_lecture_6_slides_f2026.html#1) | What does the relationship between two variables actually look like? | HW 4 | **Daily Quiz 6** |
+| 09/21 | 8 | [What Else Could Explain It?](https://www.jamesbisbee.com/DS1000_F2026/Lectures/ds1000_lecture_7_slides_f2026.html#1) | What alternative explanations could produce the relationship we observe? | HW 5 | **Daily Quiz 7** |
+| 09/23 | 9 | [Relationships in Practice](https://www.jamesbisbee.com/DS1000_F2026/Lectures/ds1000_lecture_8_slides_f2026.html#1) | How do we put the pieces together to evaluate a relational claim? | HW 6 | **Daily Quiz 8** |
+| 09/28 | 10 | **Unit 2 Assessment Day** | What should we believe about a contested relationship? | | **Evidence Debate 2 + Unit Test 2** |
+| 09/30 | 11 | **Unit 3: Uncertainty & Inference** — Uncertainty I | How much should samples make us uncertain about conclusions? | | **Daily Quiz 9** |
+| 10/05 | 12 | Uncertainty II | What does a confidence statement actually justify? | HW 7 | **Daily Quiz 10** |
+| 10/07 | 13 | Regression I | How can a model summarize a relationship? | HW 8 | **Daily Quiz 11** |
+| 10/12 | 14 | Regression II | How do we interpret and evaluate regression evidence? | HW 9 | **Daily Quiz 12** |
+| 10/14 | 15 | **Unit 3 Assessment Day** | How should uncertainty and competing explanations affect what we believe? | | **Evidence Debate 3 + Unit Test 3** |
+| 10/19 | 16 | **Unit 4: Models & Prediction** — Prediction vs. Explanation | When is prediction the goal, and how does that change evaluation? | | **Daily Quiz 13** |
+| 10/21 | 17 | Classification I | How do we predict categories? | HW 10 | **Daily Quiz 14** |
+| *10/22-23* | | *Fall Break* | | | |
+| 10/26 | 18 | Classification II | How should classification performance be evaluated? | HW 11 | **Daily Quiz 15** |
+| 10/28 | 19 | Clustering / Unsupervised Learning | What can we learn when groups are not supplied in advance? | HW 12 | **Daily Quiz 16** |
+| 11/02 | 20 | **Unit 4 Assessment Day** | How should we choose and evaluate predictive approaches? | | **Evidence Debate 4 + Unit Test 4** |
+| 11/04 | 21 | **Unit 5: Text, AI & Judgment** — Text as Data | How can unstructured text become evidence? | | **Daily Quiz 17** |
+| 11/09 | 22 | NLP / Sentiment | What do text measures capture, and what do they miss? | HW 13 | **Daily Quiz 18** |
+| 11/11 | 23 | Bias & Misinformation | How can data and AI systems produce misleading claims? | HW 14 | **Daily Quiz 19** |
+| 11/16 | 24 | AI, Judgment & Responsibility | What should humans remain responsible for when AI can perform the analysis? | HW 15 | **Daily Quiz 20** |
+| 11/18 | 25 | **Unit 5 Assessment Day** | What should we believe when evidence itself is produced or interpreted by AI? | | **Evidence Debate 5 + Unit Test 5** |
+| *11/23, 11/25* | | *Thanksgiving Break* | | | |
+| 11/30 | 26 | Project Development | Can your team build a defensible empirical argument from question to conclusion? | | |
+| 12/02 | 27 | Project Workshop | Can your team defend every step from question to conclusion? | | |
+| 12/07 | 28 | Project Defenses | Formulate, analyze, evaluate, and communicate your own empirical claim | | **Project Defense** |
+| 12/09 | 29 | Project Defenses | Formulate, analyze, evaluate, and communicate your own empirical claim | | **Project Defense** |
 
 ### Recurring analytical workflow
 
