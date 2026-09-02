@@ -199,7 +199,7 @@ This class respects and welcomes students of all backgrounds, identities, and ab
 
 If you are too ill to attend class, please do not come -- email the professor as soon as reasonably possible if you will miss a major assessment or if your absence extends beyond the flexibility built into the Homework and Daily Quiz policies (see [Missed or Late Work](#course-policies)). Lecture recordings are posted the evening following class, but recordings do not replace attendance for graded, in-class work.
 
-I will be holding my office hours in-person in Commons #348, Wednesdays 10AM-12PM. The TAs are free to determine how best to hold their office hours, and their choices will be communicated to the students as soon as they are decided.
+I will be holding my office hours in-person in Commons #348, Wednesdays 10AM-12PM. Daniel Gormezano (TA) will hold office hours on Zoom on Tuesdays and Thursdays from 2-3PM. Please see either Campuswire or Brightspace for the Zoom link (which can't be shared on a public-facing github like this).
 
 ### If You Need Help
 

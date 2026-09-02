@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Questions → Data</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Prof. Bisbee" />
+    <script src="ds1000_lecture_2_slides_f2026_files/header-attrs-2.30/header-attrs.js"></script>
+    <link href="ds1000_lecture_2_slides_f2026_files/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="ds1000_lecture_2_slides_f2026_files/remark-css-0.0.1/metropolis-fonts.css" rel="stylesheet" />
+    <link rel="stylesheet" href="css/ds1000.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# Questions → Data
+]
+.subtitle[
+## Teaching a computer what we mean
+]
+.author[
+### Prof. Bisbee
+]
+
+---
+
+
+&lt;style&gt;
+.big { font-size: 130%; }
+.huge { font-size: 180%; }
+.small { font-size: 80%; }
+.hero-image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 74vh;
+}
+.hero-image img {
+  max-width: 92%;
+  max-height: 74vh;
+  object-fit: contain;
+}
+
+&lt;/style&gt;
+
+&lt;style type="text/css"&gt;
+.small .remark-code { font-size: 85% !important; }
+.tiny .remark-code { font-size: 60% !important; }
+.big { font-size: 150%; }
+.huge { font-size: 200%; }
+&lt;/style&gt;
+
+
+
+# Last time
+
+We started with a claim:
+
+&gt; **Someone tells you something is true. What evidence would let you decide?**
+
+--
+
+And we broke research problems into pieces:
+
+**Question → Concepts → Variables → Unit of analysis → Understand variables → Put variables together → Evaluate → Communicate**
+
+---
+
+# Today
+
+.big[How do the things we care about become **data**?]
+
+--
+
+By the end of class, you should be able to:
+
+1. identify the **unit of analysis** in a dataset;
+2. connect substantive **concepts** to measured **variables**;
+3. read a simple tabular dataset;
+4. read simple R/tidyverse instructions;
+5. decide whether code actually implements the analytical task we intended.
+
+&lt;!-- INSTRUCTOR NOTE — LO2 is primary today; LO4 and LO5 begin at a basic level. --&gt;
+
+---
+
+# Our running claim
+
+&gt; **More selective colleges produce graduates who earn more.**
+
+--
+
+Before touching R:
+
+- What concepts are in this claim?
+- What would we need to measure?
+- What would one observation represent?
+
+--
+
+Homework 1 asked you to begin answering these questions.
+
+---
+
+# Concept ≠ variable
+
+### Concept
+
+An abstract idea we care about.
+
+Examples:
+
+- college selectivity
+- graduate earnings
+- political ideology
+- health
+
+--
+
+### Variable
+
+A recorded measurement intended to capture some aspect of a concept.
+
+---
+
+# The measurement problem
+
+Suppose we care about:
+
+.big[**College selectivity**]
+
+--
+
+How might we measure it?
+
+- admissions rate?
+- average SAT score?
+- applicant qualifications?
+- institutional ranking?
+
+--
+
+These are related ideas.
+
+They are **not the same thing**.
+
+---
+
+# First principle
+
+.center[.huge[
+**The computer only sees the variable.**
+]]
+
+--
+
+It does not know what you *meant* by the variable.
+
+--
+
+That judgment belongs to you.
+
+&lt;!-- INSTRUCTOR NOTE — Early construct-validity preview. Lecture 3 will develop this much more fully. --&gt;
+
+---
+
+# From the world to a table
+
+A dataset is a structured representation of observations.
+
+--
+
+In the kind of tabular data we will use most often:
+
+&gt; **Rows are observations.**
+
+&gt; **Columns are variables.**
+
+---
+
+# The most important question in a dataset
+
+.center[.huge[
+**What does one row represent?**
+]]
+
+--
+
+A person?
+
+A college?
+
+A country?
+
+A tweet?
+
+A person on a particular day?
+
+--
+
+This is the **unit of analysis**.
+
+---
+
+# Why the unit of analysis matters
+
+Imagine a dataset with:
+
+- `student_id`
+- `college`
+- `earnings`
+
+--
+
+If one row is a **student**, we can ask about differences among people.
+
+--
+
+If one row is a **college**, we can ask about differences among institutions.
+
+--
+
+Same topic. Different evidence.
+
+---
+
+# College Scorecard data
+
+For our running example, we will use a subset of the U.S. College Scorecard.
+
+--
+
+.big[What should one row represent?]
+
+--
+
+**One college / institution.**
+
+---
+
+# Now open RStudio
+
+Today R is not the subject.
+
+.big[R is how we inspect and manipulate the evidence.]
+
+--
+
+You need enough R to:
+
+- understand what an instruction is doing;
+- modify simple instructions;
+- recognize when an instruction does the wrong thing;
+- ask AI for help without surrendering judgment.
+
+---
+
+# The minimum R vocabulary
+
+**Object:** Something we have given a name.
+
+**Function:** An instruction that does something.
+
+**Argument:** Information we give the function.
+
+**Pipe (`%&gt;%`):** Take what we have and do something next.
+
+---
+
+# Objects: giving something a name
+
+
+``` r
+claim &lt;- "More selective colleges produce graduates who earn more"
+claim
+```
+
+```
+## [1] "More selective colleges produce graduates who earn more"
+```
+
+--
+
+`&lt;-` means:
+
+&gt; **Store the thing on the right under the name on the left.**
+
+--
+
+You do not need to love the syntax.
+
+You need to be able to read the instruction.
+
+---
+
+# Functions: giving an instruction
+
+
+``` r
+mean(c(2, 4, 6))
+```
+
+```
+## [1] 4
+```
+
+--
+
+Read it as:
+
+&gt; Use the function `mean()` on the values 2, 4, and 6.
+
+--
+
+Functions are verbs.
+
+Arguments tell the verb what to act on or how to act.
+
+---
+
+# Load the data
+
+
+``` r
+df &lt;- read_rds("data/sc_debt.Rds")
+```
+
+--
+
+Read this in English:
+
+&gt; Read the College Scorecard file and store it as an object called `df`.
+
+--
+
+That is enough for now.
+
+---
+
+# Inspect before manipulating
+
+
+``` r
+df
+```
+
+```
+## # A tibble: 2,546 × 16
+##    unitid instnm stabbr grad_debt_mdn control region preddeg
+##     &lt;int&gt; &lt;chr&gt;  &lt;chr&gt;          &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;  &lt;chr&gt;  
+##  1 100654 Alaba… AL             33375 Public  South… Bachel…
+##  2 100663 Unive… AL             22500 Public  South… Bachel…
+##  3 100690 Amrid… AL             27334 Private South… Associ…
+##  4 100706 Unive… AL             21607 Public  South… Bachel…
+##  5 100724 Alaba… AL             32000 Public  South… Bachel…
+##  6 100751 The U… AL             23250 Public  South… Bachel…
+##  7 100760 Centr… AL             12500 Public  South… Associ…
+##  8 100812 Athen… AL             19500 Public  South… Bachel…
+##  9 100830 Aubur… AL             24826 Public  South… Bachel…
+## 10 100858 Aubur… AL             21281 Public  South… Bachel…
+## # ℹ 2,536 more rows
+## # ℹ 9 more variables: openadmp &lt;int&gt;, adm_rate &lt;dbl&gt;,
+## #   ccbasic &lt;int&gt;, sat_avg &lt;int&gt;, md_earn_wne_p6 &lt;int&gt;,
+## #   ugds &lt;int&gt;, costt4_a &lt;int&gt;, selective &lt;dbl&gt;,
+## #   research_u &lt;dbl&gt;
+```
+
+---
+
+# Inspect before manipulating
+
+Do not immediately start changing the data.
+
+First ask:
+
+1. What does one row represent?
+2. What variables are available?
+3. Which variables might bear on our question?
+
+---
+
+# What variables are available?
+
+
+``` r
+names(df)
+```
+
+```
+##  [1] "unitid"         "instnm"         "stabbr"        
+##  [4] "grad_debt_mdn"  "control"        "region"        
+##  [7] "preddeg"        "openadmp"       "adm_rate"      
+## [10] "ccbasic"        "sat_avg"        "md_earn_wne_p6"
+## [13] "ugds"           "costt4_a"       "selective"     
+## [16] "research_u"
+```
+
+--
+
+Names are not meanings.
+
+--
+
+We need a **data dictionary**.
+
+---
+
+# A few College Scorecard variables
+
+| Variable | Recorded meaning |
+|---|---|
+| `instnm` | Institution name |
+| `adm_rate` | Proportion of applicants admitted |
+| `sat_avg` | Average SAT score |
+| `md_earn_wne_p6` | Earnings of recent graduates |
+| `grad_debt_mdn` | Median graduate debt |
+| `ugds` | Number of undergraduates |
+| `stabbr` | State |
+
+--
+
+.big[Which variables bear most directly on our claim?]
+
+---
+
+# Operationalizing the claim
+
+&gt; **More selective colleges produce graduates who earn more.**
+
+--
+
+Possible operationalization:
+
+**Selectivity** → `adm_rate`
+
+**Graduate earnings** → `md_earn_wne_p6`
+
+--
+
+But notice what just happened.
+
+We made **substantive choices** before writing analytical code.
+
+---
+
+# Does `adm_rate` measure selectivity?
+
+It measures:
+
+&gt; the proportion of applicants who are admitted.
+
+--
+
+That seems useful.
+
+But ask:
+
+- Who applies in the first place?
+- Are application pools comparable across colleges?
+- Could two schools with the same admissions rate differ in meaningful ways?
+
+--
+
+.big[Variables are evidence about concepts, not the concepts themselves.]
+
+---
+
+# Does the earnings variable mean "college value"?
+
+Not necessarily.
+
+Graduate earnings may reflect:
+
+- what the college did;
+- who enrolled;
+- field of study;
+- geography;
+- family background;
+- labor-market conditions;
+- many other things.
+
+--
+
+This is why good analysis begins **before** the model.
+
+---
+
+# Which observations belong in the analysis?
+
+Suppose we want to look only at Vanderbilt.
+
+Substantive instruction:
+
+&gt; Keep the observation whose institution name is Vanderbilt University.
+
+--
+
+R instruction:
+
+
+``` r
+df %&gt;%
+  filter(instnm == "Vanderbilt University")
+```
+
+```
+## # A tibble: 1 × 16
+##   unitid instnm  stabbr grad_debt_mdn control region preddeg
+##    &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;          &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;  &lt;chr&gt;  
+## 1 221999 Vander… TN             14962 Private South… Bachel…
+## # ℹ 9 more variables: openadmp &lt;int&gt;, adm_rate &lt;dbl&gt;,
+## #   ccbasic &lt;int&gt;, sat_avg &lt;int&gt;, md_earn_wne_p6 &lt;int&gt;,
+## #   ugds &lt;int&gt;, costt4_a &lt;int&gt;, selective &lt;dbl&gt;,
+## #   research_u &lt;dbl&gt;
+```
+
+---
+
+# `filter()` answers a substantive question
+
+.center[.huge[
+**Which observations do I want?**
+]]
+
+--
+
+`filter()` keeps **rows** that satisfy a condition.
+
+--
+
+The important decision is not remembering the word `filter`.
+
+The important decision is knowing **which observations belong in the analysis and why**.
+
+---
+
+# Which variables belong in the analysis?
+
+Suppose we want only the pieces most relevant to the claim.
+
+`select()` keeps **columns**.
+
+
+
+``` r
+df %&gt;%
+  select(instnm, adm_rate, md_earn_wne_p6)
+```
+
+```
+## # A tibble: 2,546 × 3
+##    instnm                            adm_rate md_earn_wne_p6
+##    &lt;chr&gt;                                &lt;dbl&gt;          &lt;int&gt;
+##  1 Alabama A &amp; M University             0.918          25200
+##  2 University of Alabama at Birming…    0.737          35100
+##  3 Amridge University                  NA              30700
+##  4 University of Alabama in Huntsvi…    0.826          36200
+##  5 Alabama State University             0.969          22600
+##  6 The University of Alabama            0.827          37400
+##  7 Central Alabama Community College   NA              23100
+##  8 Athens State University             NA              33400
+##  9 Auburn University at Montgomery      0.904          30100
+## 10 Auburn University                    0.807          39500
+## # ℹ 2,536 more rows
+```
+
+
+---
+
+# `select()` answers another substantive question
+
+.center[.huge[
+**Which variables do I need?**
+]]
+
+--
+
+Again, the syntax is secondary.
+
+The analytical judgment comes first.
+
+---
+
+# The pipe
+
+
+``` r
+df %&gt;%
+  filter(stabbr == "TN") %&gt;%
+  select(instnm, adm_rate, md_earn_wne_p6)
+```
+
+```
+## # A tibble: 57 × 3
+##    instnm                            adm_rate md_earn_wne_p6
+##    &lt;chr&gt;                                &lt;dbl&gt;          &lt;int&gt;
+##  1 American Baptist College            NA                 NA
+##  2 Austin Peay State University         0.950          29200
+##  3 Baptist Health Sciences Universi…    0.596          50100
+##  4 Belmont University                   0.838          34600
+##  5 Bethel University                    0.903          33100
+##  6 Bryan College-Dayton                 0.510          34300
+##  7 Carson-Newman University             0.692          31500
+##  8 Chattanooga State Community Coll…   NA              25000
+##  9 Christian Brothers University        0.501          33100
+## 10 Columbia State Community College    NA              26600
+## # ℹ 47 more rows
+```
+
+---
+
+# The pipe
+
+Read `%&gt;%` as:
+
+&gt; **and then...**
+
+--
+
+Start with `df`
+
+**and then** keep Tennessee colleges
+
+**and then** keep these variables.
+
+---
+
+# Computational thinking
+
+The code is just a translation of a sequence of decisions:
+
+1. Start with the College Scorecard data.
+2. Decide which observations matter.
+3. Decide which variables matter.
+4. Keep those pieces.
+
+--
+
+.big[The hard part is specifying the task clearly.]
+
+---
+
+# AI can write this code
+
+Suppose you tell an AI assistant:
+
+&gt; "Using `df`, keep only Tennessee colleges and retain institution name, admissions rate, and graduate earnings. Use tidyverse."
+
+--
+
+It might produce:
+
+
+``` r
+df %&gt;%
+  filter(stabbr == "TN") %&gt;%
+  select(instnm, adm_rate, md_earn_wne_p6)
+```
+
+--
+
+That is useful.
+
+But who decided what `TN`, `adm_rate`, and `md_earn_wne_p6` meant?
+
+---
+
+# AI can also be confidently wrong
+
+Imagine AI returns:
+
+
+``` r
+df %&gt;%
+  filter(instnm == "TN") %&gt;%
+  select(stabbr, sat_avg, grad_debt_mdn)
+```
+
+--
+
+.big[What is wrong?]
+
+--
+
+The code is valid R.
+
+It is a bad implementation of the analytical task.
+
+&lt;!-- INSTRUCTOR NOTE — LO5. Distinguish syntactic validity from substantive validity. --&gt;
+
+---
+
+# The standard for AI-generated code
+
+Do not ask only:
+
+&gt; **Does the code run?**
+
+--
+
+Ask:
+
+&gt; **Does the code do what I intended?**
+
+&gt; **Do the variables mean what I think they mean?**
+
+&gt; **Did it keep the observations I intended to study?**
+
+--
+
+A program can run perfectly and answer the wrong question.
+
+---
+
+# How do we verify code?
+
+Use simple checks.
+
+If we asked for Tennessee colleges:
+
+
+``` r
+df %&gt;%
+  filter(stabbr == "TN") %&gt;%
+  select(instnm, stabbr) %&gt;%
+  head()
+```
+
+```
+## # A tibble: 6 × 2
+##   instnm                             stabbr
+##   &lt;chr&gt;                              &lt;chr&gt; 
+## 1 American Baptist College           TN    
+## 2 Austin Peay State University       TN    
+## 3 Baptist Health Sciences University TN    
+## 4 Belmont University                 TN    
+## 5 Bethel University                  TN    
+## 6 Bryan College-Dayton               TN
+```
+
+--
+
+Verification means comparing the output against the task we specified.
+
+---
+
+# A quick practice problem
+
+Claim:
+
+&gt; **Students at larger colleges graduate with more debt.**
+
+Available variables include:
+
+- `ugds`: number of undergraduates
+- `grad_debt_mdn`: median graduate debt
+- `adm_rate`: admissions rate
+- `stabbr`: state
+
+--
+
+Before writing code:
+
+1. What are the concepts?
+2. What is the unit of analysis?
+3. Which variables would you retain?
+
+---
+
+# Now evaluate the instruction
+
+An AI assistant proposes:
+
+
+``` r
+df %&gt;%
+  select(instnm, ugds, grad_debt_mdn)
+```
+
+--
+
+Is this a reasonable **first step**?
+
+--
+
+Yes.
+
+But it has not answered the research question.
+
+It has only prepared relevant evidence for inspection.
+
+---
+
+# What should happen next?
+
+We now have candidate variables:
+
+- `ugds`
+- `grad_debt_mdn`
+
+--
+
+Should we immediately put them together?
+
+--
+
+.center[.huge[
+**No.**
+]]
+
+---
+
+# Before asking how variables relate...
+
+.center[.huge[
+**Understand each variable.**
+]]
+
+--
+
+For each one, ask:
+
+- What does it measure?
+- What type of variable is it?
+- What values does it take?
+- What does its distribution look like?
+- Is anything missing or strange?
+
+--
+
+That is where we go next.
+
+---
+
+# The course roadmap
+
+**Question**
+
+↓
+
+**Concepts → Variables → Unit of analysis**  ← *today*
+
+↓
+
+**Understand each variable**  ← *next*
+
+↓
+
+**Put variables together**
+
+↓
+
+**Evaluate → Communicate**
+
+---
+
+# What you should take away
+
+1. A dataset is a representation of the world, not the world itself.
+2. One row has to represent something specific.
+3. Variables operationalize concepts imperfectly.
+4. `filter()` means choosing observations; `select()` means choosing variables.
+5. AI can translate clear analytical instructions into code.
+6. **You remain responsible for whether those instructions and that code make sense.**
+
+---
+
+# Before next class
+
+Work through `ds1000_hw_2_f2026.Rmd`.
+
+--
+
+You will return to the College Scorecard claim with the actual data.
+
+--
+
+The goal is not to memorize R syntax.
+
+.big[The goal is to learn how questions become data.]
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+  "ratio": "16:9",
+  "highlightStyle": "github",
+  "highlightLines": true,
+  "countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

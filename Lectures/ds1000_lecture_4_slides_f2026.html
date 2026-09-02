@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Prepare the Evidence</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Prof. Bisbee" />
+    <script src="ds1000_lecture_4_slides_f2026_files/header-attrs-2.31/header-attrs.js"></script>
+    <link href="ds1000_lecture_4_slides_f2026_files/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="ds1000_lecture_4_slides_f2026_files/remark-css-0.0.1/metropolis-fonts.css" rel="stylesheet" />
+    <link rel="stylesheet" href="css/ds1000.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# Prepare the Evidence
+]
+.subtitle[
+## DS 1000
+]
+.author[
+### Prof. Bisbee
+]
+
+---
+
+
+&lt;style&gt;
+.big { font-size: 130%; }
+.huge { font-size: 180%; }
+.small { font-size: 80%; }
+.hero-image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 74vh;
+}
+.hero-image img {
+  max-width: 92%;
+  max-height: 74vh;
+  object-fit: contain;
+}
+
+&lt;/style&gt;
+
+&lt;style type="text/css"&gt;
+.small .remark-code { font-size: 85% !important; }
+.tiny .remark-code { font-size: 60% !important; }
+.big { font-size: 150%; }
+.huge { font-size: 200%; }
+&lt;/style&gt;
+
+
+
+&lt;!--
+LEARNING OBJECTIVES
+LO1: Interrogate empirical claims.
+LO2: Translate questions into data problems.
+LO3: Select and justify analytical approaches.
+LO4: Conduct and evaluate data analyses.
+LO5: Critically use AI as an analytical tool.
+LO6: Communicate evidence responsibly.
+
+Lecture 4 primarily reinforces LO1, LO2, LO4, and LO5.
+--&gt;
+
+# Prepare the Evidence
+
+.big[
+We have a question.
+
+We have variables.
+
+We have inspected their distributions.
+
+Now:
+
+&gt; **What decisions are required before these data become trustworthy evidence?**
+]
+
+---
+
+# Where We Are
+
+.big[
+**Question → Concepts → Variables → Unit of analysis → Understand each variable → Prepare the evidence → Put variables together → Evaluate → Communicate**
+]
+
+Today:
+
+**Prepare the evidence**
+
+&lt;!-- LO2: Adds data preparation explicitly to the decomposition workflow. --&gt;
+
+---
+
+# Our Running Question
+
+.big[
+&gt; **More selective colleges produce graduates who earn more.**
+]
+
+We identified:
+
+- `adm_rate`
+- `md_earn_wne_p6`
+
+But the raw College Scorecard contains many institutions and many variables.
+
+We need to decide what actually belongs in our analysis.
+
+---
+
+# Wrangling Is Judgment
+
+.big[
+**Data wrangling is the documented process of turning raw observations into the evidence required by a particular question.**
+]
+
+R executes the decisions.
+
+**We make the decisions.**
+
+&lt;!-- LO4: Reframes wrangling as analytical judgment rather than syntax. --&gt;
+
+---
+
+# Four Decisions
+
+.big[
+Before analysis, ask:
+
+1. **Who belongs?**
+2. **What is missing?**
+3. **What needs to change?**
+4. **Can someone reproduce what I did?**
+]
+
+These questions matter more than remembering function names.
+
+---
+
+# Who Belongs?
+
+Our claim sounds like it concerns "colleges."
+
+But the Scorecard contains different kinds of institutions.
+
+.big[
+**What population do we actually want to make claims about?**
+]
+
+Suppose we decide:
+
+&gt; Bachelor's-degree institutions.
+
+That is a substantive decision.
+
+&lt;!-- LO1: Population definition determines scope of inference. --&gt;
+
+---
+
+# Filtering Changes the Claim
+
+If we remove institutions from the data, we are changing the population represented by the analysis.
+
+.big[
+`filter()` is not just a coding operation.
+
+It is an answer to:
+
+&gt; **Which observations belong in my analysis?**
+]
+
+---
+
+# Tell R the Decision
+
+Suppose `preddeg == 3` identifies institutions where the predominant degree is a bachelor's degree.
+
+
+``` r
+college &lt;- df %&gt;%
+  filter(preddeg == 3)
+```
+
+The important part is not the syntax.
+
+The important part is knowing **why** we made this restriction.
+
+&lt;!-- LO4: Code implements a substantive population decision. --&gt;
+
+---
+
+# Verify the Decision
+
+Never assume the code did what you intended.
+
+
+``` r
+nrow(df)
+```
+
+```
+## [1] 2546
+```
+
+``` r
+nrow(college)
+```
+
+```
+## [1] 0
+```
+
+``` r
+table(college$preddeg, useNA = "ifany")
+```
+
+```
+## &lt; table of extent 0 &gt;
+```
+
+.big[
+**Specification → execution → verification**
+]
+
+That workflow will recur throughout the course.
+
+&lt;!-- LO5: Same verification workflow applies to AI-generated code. --&gt;
+
+---
+
+# What Is Missing?
+
+Lecture 3 introduced `NA`.
+
+Now ask a harder question:
+
+.big[
+&gt; **Which observations are missing the evidence we need?**
+]
+
+For our question, we need both:
+
+- admissions rate
+- graduate earnings
+
+---
+
+# Count Missingness
+
+
+``` r
+college %&gt;%
+  summarise(
+    missing_adm = sum(is.na(adm_rate)),
+    missing_earn = sum(is.na(md_earn_wne_p6))
+  )
+```
+
+```
+## # A tibble: 1 × 2
+##   missing_adm missing_earn
+##         &lt;int&gt;        &lt;int&gt;
+## 1           0            0
+```
+
+You do not need to memorize this syntax.
+
+You do need to understand what is being counted.
+
+---
+
+# Dropping Is a Decision
+
+We could write:
+
+
+``` r
+analysis_df &lt;- college %&gt;%
+  drop_na(adm_rate, md_earn_wne_p6)
+```
+
+But before doing so:
+
+.big[
+&gt; **Who disappears?**
+]
+
+And:
+
+&gt; **Could the missing institutions be systematically different?**
+
+&lt;!-- LO1: Missing-data handling affects evidentiary claims. --&gt;
+
+---
+
+# Compare Before and After
+
+
+``` r
+nrow(college)
+```
+
+```
+## [1] 0
+```
+
+``` r
+nrow(analysis_df)
+```
+
+```
+## [1] 0
+```
+
+How many observations did we lose?
+
+That number is part of the analysis.
+
+.big[
+Deleting missing data should never be an invisible step.
+]
+
+---
+
+# Missingness Can Be Evidence
+
+Why might admissions rate be missing?
+
+Possibilities include:
+
+- open-admission institutions
+- non-reporting
+- measure not applicable
+- data collection problems
+
+.big[
+Missingness is sometimes telling us something about how the data were generated.
+]
+
+---
+
+# What Needs to Change?
+
+Sometimes the stored variable is correct but inconvenient.
+
+`adm_rate` is stored as a proportion:
+
+`0.25`
+
+Humans often communicate admissions rates as percentages:
+
+`25%`
+
+Same information.
+
+Different representation.
+
+---
+
+# Transform for Meaning
+
+
+``` r
+analysis_df &lt;- analysis_df %&gt;%
+  mutate(adm_pct = adm_rate * 100)
+```
+
+.big[
+A transformation should have a reason.
+
+Here the reason is **interpretability**.
+]
+
+&lt;!-- LO4: Transformation motivated by substantive communication. --&gt;
+
+---
+
+# Transformations Can Mislead
+
+Imagine someone accidentally writes:
+
+```r
+mutate(adm_pct = adm_rate / 100)
+```
+
+The code runs.
+
+The result is wrong.
+
+.big[
+**Computational validity is not analytical validity.**
+]
+
+&lt;!-- LO5: Students must audit transformations even if AI/code executes successfully. --&gt;
+
+---
+
+# Keep What We Need
+
+Our question does not require every Scorecard variable.
+
+Suppose we retain:
+
+- institution name
+- state
+- admissions percentage
+- graduate earnings
+
+
+``` r
+analysis_df &lt;- analysis_df %&gt;%
+  select(instnm, stabbr, adm_pct, md_earn_wne_p6)
+```
+
+---
+
+# Why Select Variables?
+
+Not because extra columns are inherently bad.
+
+.big[
+A focused analytical dataset makes our reasoning easier to inspect.
+]
+
+We should be able to explain why every retained variable matters.
+
+---
+
+# The Pipeline
+
+.big[
+**Raw data**
+
+↓
+
+Define the population
+
+↓
+
+Choose relevant variables
+
+↓
+
+Investigate missingness
+
+↓
+
+Make justified exclusions
+
+↓
+
+Transform when needed
+
+↓
+
+Verify
+
+↓
+
+**Analytical data**
+]
+
+---
+
+# Every Arrow Is a Choice
+
+.big[
+There is no neutral "cleaning" step.
+]
+
+Choices about:
+
+- inclusion
+- exclusion
+- missingness
+- coding
+- transformation
+
+can change the evidence we eventually see.
+
+&lt;!-- LO1: Data preparation itself can shape factual claims. --&gt;
+
+---
+
+# Reproducibility
+
+Imagine two workflows.
+
+**Workflow A**
+
+Open spreadsheet → delete rows → edit cells → save `FINAL_v2_REAL.csv`
+
+**Workflow B**
+
+Raw data → documented code → analytical data
+
+.big[
+Which one can another analyst inspect and reproduce?
+]
+
+---
+
+# Why We Use Code
+
+The advantage of code is not merely speed.
+
+.big[
+Code creates a record of the decisions that transformed the data.
+]
+
+Someone else can:
+
+- inspect them
+- question them
+- rerun them
+- change them
+
+That is part of trustworthy analysis.
+
+&lt;!-- LO4 + LO6: Reproducibility supports evaluation and communication. --&gt;
+
+---
+
+# AI Can Write the Pipeline
+
+Suppose we tell an AI assistant:
+
+&gt; Keep bachelor's-degree institutions with observed admissions rates and earnings. Convert admissions rates to percentages. Retain institution name, state, admissions percentage, and earnings.
+
+AI can translate that specification into R.
+
+That is useful.
+
+---
+
+# But AI Does Not Own the Decisions
+
+The AI should not decide for us:
+
+- what population the claim concerns
+- which variable represents the concept
+- whether dropping missing observations is justified
+- whether a transformation preserves meaning
+
+.big[
+**AI can implement a specification. We remain responsible for the specification.**
+]
+
+&lt;!-- LO5: Explicit division of labor between AI and student. --&gt;
+
+---
+
+# Audit AI-Generated Code
+
+When AI gives you a wrangling pipeline, ask:
+
+1. Did it keep the intended population?
+2. Did it retain the intended variables?
+3. Did it handle missingness as instructed?
+4. Are transformations mathematically correct?
+5. Did it make an unstated decision?
+
+.big[
+Do not ask only: **Does it run?**
+]
+
+Ask: **Does it do what we intended?**
+
+---
+
+# A Plausible Mistake
+
+An AI assistant proposes:
+
+```r
+analysis_df &lt;- df %&gt;%
+  filter(preddeg == 3,
+         adm_rate &gt; 0,
+         md_earn_wne_p6 &gt; 0) %&gt;%
+  mutate(adm_pct = adm_rate / 100) %&gt;%
+  select(instnm, adm_pct, md_earn_wne_p6)
+```
+
+.big[
+The code runs.
+
+Is it correct?
+]
+
+---
+
+# Audit the Pipeline
+
+What should we inspect?
+
+- `adm_rate &gt; 0` is not the same instruction as "observed admissions rate"
+- `md_earn_wne_p6 &gt; 0` introduces an additional restriction
+- percentage conversion is backwards
+- state was omitted
+
+.big[
+Plausible code can silently change the analysis.
+]
+
+&lt;!-- LO5: Concrete critique of AI-style plausible code. --&gt;
+
+---
+
+# Explain the Analysis
+
+A competent analyst should be able to say:
+
+.big[
+&gt; "I restricted the data to bachelor's-degree institutions, required observed admissions-rate and earnings data, converted admissions rates to percentages for interpretability, and retained the variables needed for the analysis."
+]
+
+That explanation is more important than reciting the R syntax.
+
+&lt;!-- LO6: Communicate data preparation decisions clearly. --&gt;
+
+---
+
+# A New Claim
+
+Consider:
+
+.big[
+&gt; **Students at more expensive colleges graduate with more debt.**
+]
+
+Before analyzing it, specify:
+
+- population
+- concepts
+- variables
+- unit of analysis
+- missing-data requirements
+- transformations, if any
+
+Then write the computational instructions.
+
+&lt;!-- LO2: Transfer to unfamiliar substantive claim. --&gt;
+
+---
+
+# From Question to Evidence
+
+Our first unit now looks like this:
+
+.small[
+**What is the claim?**
+
+↓
+
+**What concepts does it involve?**
+
+↓
+
+**How are they measured?**
+
+↓
+
+**What does one row represent?**
+
+↓
+
+**What does each variable look like?**
+
+↓
+
+**What preparation decisions are required?**
+]
+
+---
+
+# What Unit Test 1 Will Ask
+
+You will not need to reproduce long tidyverse pipelines from memory.
+
+You should be able to:
+
+- identify the unit of analysis
+- distinguish concepts from variables
+- evaluate an operationalization
+- choose an appropriate univariate visualization
+- interpret a distribution
+- reason about missingness
+- determine whether simple R code implements an analytical instruction
+
+&lt;!-- Instructor note: This slide makes the assessment target transparent without giving exact questions. --&gt;
+
+---
+
+# The Rule to Remember
+
+.huge[
+**Raw data are not evidence yet.**
+]
+
+.big[
+They become evidence through a series of choices.
+
+Those choices should be:
+
+**justified, visible, and reproducible.**
+]
+
+---
+
+# Next
+
+Homework 4 will ask you to rehearse the full workflow on a new problem.
+
+Then:
+
+.big[
+**Unit Test 1**
+]
+
+You will perform the reasoning independently.
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+  "ratio": "16:9",
+  "highlightStyle": "github",
+  "highlightLines": true,
+  "countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

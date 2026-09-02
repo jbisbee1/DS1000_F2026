@@ -760,7 +760,7 @@ That is where we go next.
 
 # Before next class
 
-Work through `ds1000_hw_2.Rmd`.
+Work through `ds1000_hw_2_f2026.Rmd`.
 
 --
 

@@ -1,0 +1,69 @@
+---
+title: "Lecture 3"
+output: html_document
+date: "2026-09-02"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Univariate visualization
+
+- after fighting over the *CONCEPT* of a variable, we now need to **LOOK** at it
+
+# Loading the data
+
+```{r}
+require(tidyverse)
+library(tidyverse)
+
+df <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/sc_debt.Rds")
+
+```
+
+# Start by just LOOKING at the variables
+
+```{r}
+df %>%
+  select(adm_rate,md_earn_wne_p6)
+```
+
+# Now visualize them with a plot
+
+- New `R` function called: `ggplot()`
+- `ggplot()` uses plus signs (`+`) instead of pipes (`%>%`)
+
+```{r}
+df %>%
+  ggplot(aes(x = adm_rate)) +
+  geom_histogram() + 
+  labs(x = "College admissions rate",
+       y = "Number of colleges",
+       title = "Distribution of admissions rate",
+       subtitle = "US colleges surveyed in 2021")
+```
+
+```{r}
+df %>%
+  ggplot(aes(x = md_earn_wne_p6)) +
+  geom_histogram() +
+  labs(x = "Graduate Earnings",
+       y= "Frequency",
+       title = "Distribution of Graduate Earnings")
+```
+
+# Categorical visualization vs continuous
+
+- For continuous (numeric) variables, use `geom_histogram()` (or `geom_density()`)
+- For categorical variables, use `geom_bar()`
+
+```{r}
+df %>%
+  ggplot(aes(y = stabbr)) + 
+  geom_bar()
+```
+
+
+
+

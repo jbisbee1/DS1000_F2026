@@ -627,7 +627,7 @@ Our first unit now looks like this:
 
 ---
 
-# What Quiz 1 Will Ask
+# What Unit Test 1 Will Ask
 
 You will not need to reproduce long tidyverse pipelines from memory.
 
@@ -668,7 +668,7 @@ Homework 4 will ask you to rehearse the full workflow on a new problem.
 Then:
 
 .big[
-**Lab Quiz 1**
+**Unit Test 1**
 ]
 
 You will perform the reasoning independently.
