@@ -11,4 +11,6 @@ Lectures/*/VideoDecodeStats
 Quizzes
 Tests
 NFGH
-evidence_debates
+evidence_debates/*
+!evidence_debates/EDB_1
+!evidence_debates/EDB_1/**

@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DS-1000 Evidence Debate 1 — College Affordability</title>
+<style>
+:root{--ink:#1f2937;--muted:#6b7280;--page:#f4f6f8;--panel:#fff;--accent:#1d4ed8;--border:#d1d5db;--success:#166534;--successbg:#dcfce7;--danger:#991b1b;--dangerbg:#fee2e2;--bluebg:#eff6ff}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);background:var(--page);line-height:1.5}.wrap{max-width:1080px;margin:0 auto;padding:28px 20px 72px}header,section{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:28px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,.04)}h1{margin:0 0 6px;font-size:2rem}h2{margin-top:0;font-size:1.45rem}h3{margin-top:0;font-size:1.1rem}.muted{color:var(--muted)}.small{font-size:.9rem}.claim{font-size:1.5rem;font-weight:750;margin:18px 0;padding:18px;border-left:5px solid var(--accent);background:var(--bluebg);border-radius:8px}.notice{padding:14px 16px;background:#f9fafb;border:1px solid var(--border);border-radius:10px;margin:14px 0}.status{display:inline-flex;align-items:center;gap:8px;font-size:.9rem;padding:8px 12px;border-radius:999px;background:#eef2ff;color:#3730a3;font-weight:650}.status.good{background:var(--successbg);color:var(--success)}.status.bad{background:var(--dangerbg);color:var(--danger)}.student-code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:800;letter-spacing:.08em;font-size:1.15rem}.progress{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:20px}.step{padding:10px;text-align:center;border-radius:8px;background:#e5e7eb;color:#4b5563;font-size:.88rem}.step.active{background:var(--accent);color:#fff}.step.done{background:#bfdbfe;color:#1e3a8a}.hidden{display:none}.belief{display:grid;grid-template-columns:1fr 64px;gap:14px;align-items:center;margin:10px 0 18px}input[type=range]{width:100%}.belief-value{text-align:center;font-weight:800;font-size:1.2rem}label{display:block;font-weight:700;margin:14px 0 7px}textarea{width:100%;min-height:110px;resize:vertical;border:1px solid #9ca3af;border-radius:8px;padding:10px 12px;font:inherit}button{border:0;border-radius:8px;padding:11px 16px;font:inherit;font-weight:750;color:#fff;background:var(--accent);cursor:pointer}button:disabled{cursor:not-allowed;opacity:.55}.success,.error{padding:14px 16px;border-radius:10px;margin-top:14px}.success{background:var(--successbg);color:var(--success)}.error{background:var(--dangerbg);color:var(--danger)}.evidence{margin:18px 0;padding:18px;border:1px solid var(--border);border-radius:12px;background:#fbfdff}.evidence img{display:block;width:100%;height:auto;border:1px solid var(--border);border-radius:8px;background:#fff}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px}.role{padding:16px;border:2px solid var(--border);border-radius:12px;background:#fafafa}.role strong{font-size:1.1rem}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:18px}.footer-note{font-size:.88rem;color:var(--muted);margin-top:18px}@media(min-width:700px){.progress{grid-template-columns:repeat(6,1fr)}}@media(max-width:680px){.two-col{grid-template-columns:1fr}}
+
+    .claim-reminder {
+      margin: 14px 0 18px;
+      padding: 14px 16px;
+      border-left: 4px solid var(--accent);
+      background: #eff6ff;
+      border-radius: 8px;
+      font-weight: 700;
+    }
+
+    .evidence-image {
+      display: block;
+      width: 100%;
+      max-width: 100%;
+      height: auto;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      cursor: zoom-in;
+      background: white;
+      transition: box-shadow .15s ease, transform .15s ease;
+    }
+
+    .evidence-image:hover {
+      box-shadow: 0 4px 16px rgba(0,0,0,.12);
+    }
+
+    .image-note {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: .85rem;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      inset: 0;
+      background: rgba(0,0,0,.78);
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .modal.open { display: flex; }
+
+    .modal-content {
+      position: relative;
+      max-width: 96vw;
+      max-height: 94vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-content img {
+      max-width: 96vw;
+      max-height: 94vh;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      border-radius: 10px;
+      background: white;
+      box-shadow: 0 8px 40px rgba(0,0,0,.35);
+    }
+
+    .modal-close {
+      position: absolute;
+      top: -42px;
+      right: 0;
+      color: white;
+      font-size: 30px;
+      line-height: 1;
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+      padding: 4px 8px;
+    }
+
+  </style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<h1>Evidence Debate 1</h1>
+<div class="muted">DS-1000 · Unit 1: From Claims to Evidence</div>
+<div class="claim">“College has become unaffordable for the average American.”</div>
+<p><strong>Your job is not to defend what you personally believe.</strong> Your job is to record what you think the evidence warrants at each stage.</p>
+<div class="notice"><strong>Your student code:</strong> <span id="studentCode" class="student-code">Generating...</span><div class="small muted">This anonymous code connects your responses during the activity. Refreshing the page will preserve it.</div></div>
+<div id="status" class="status">Connecting to response database...</div>
+<div class="progress">
+<div class="step active" id="p0">1. Claim</div><div class="step" id="p1">2. Evidence A</div><div class="step" id="p2">3. Evidence B</div><div class="step" id="p3">4. Evidence C</div><div class="step" id="p4">5. Argument</div><div class="step" id="p5">6. Adjudication</div>
+</div>
+</header>
+
+<section id="s0">
+<h2>Stage 0: What does the claim mean?</h2>
+<p>Before seeing any evidence, decide what would have to be measured for this claim to be meaningful.</p>
+<div class="two-col">
+<div><label for="m1">What does “college” mean in this claim? Name at least one choice that could change the answer.</label><textarea id="m1"></textarea></div>
+<div><label for="m2">How would you operationalize “unaffordable”? What quantity would you want to observe?</label><textarea id="m2"></textarea></div>
+</div>
+<label>Initial confidence in the claim</label>
+<div class="belief"><input type="range" id="c0" min="0" max="100" value="50"><div class="belief-value" id="c0v">50</div></div>
+<button id="b0">Record Stage 0</button><div id="msg0"></div>
+</section>
+
+<section id="s1" class="hidden">
+<h2>Stage 1: Evidence A — Published tuition over time</h2>
+<div class="evidence"><img src="assets/evidence_A_published_tuition.png" class="evidence-image" onclick="openImageModal(this.src, this.alt)" alt="Inflation-adjusted published tuition and fees over time by college sector"><div class="image-note">Click the figure to view it larger.</div></div>
+<p>These are enrollment-weighted published tuition and fees in constant 2025 dollars.</p>
+<label>What does this evidence show?</label><textarea id="a1"></textarea>
+<label>What does it <em>not</em> establish about “affordability”?</label><textarea id="a2"></textarea>
+<label>What additional information would you want before deciding whether college is unaffordable?</label><textarea id="a3"></textarea>
+<div class="claim-reminder">Claim: “College has become unaffordable for the average American.”</div>
+<label>Update your confidence in the claim</label>
+<div class="belief"><input type="range" id="c1" min="0" max="100" value="50"><div class="belief-value" id="c1v">50</div></div>
+<button id="b1">Record Evidence A</button><div id="msg1"></div>
+</section>
+
+<section id="s2" class="hidden">
+<h2>Stage 2: Evidence B — What counts as “the price of college”?</h2>
+<p>The same College Board data permit several defensible definitions of college cost.</p>
+<div class="grid">
+<div class="evidence"><h3>Evidence B1: Institution type</h3><img src="assets/evidence_B1_sector_tuition.png" class="evidence-image" onclick="openImageModal(this.src, this.alt)" alt="Published tuition and fees by college sector in 2025-26"><div class="image-note">Click the figure to view it larger.</div></div>
+<div class="evidence"><h3>Evidence B2: Tuition versus attending</h3><img src="assets/evidence_B2_tuition_vs_total.png" class="evidence-image" onclick="openImageModal(this.src, this.alt)" alt="Published tuition compared with tuition plus housing and food in 2025-26"><div class="image-note">Click the figure to view it larger.</div></div>
+</div>
+<label>Does the phrase “the price of college” identify one unambiguous variable? Explain.</label><textarea id="b21"></textarea>
+<label>Which measure would you use to evaluate the original claim, and why?</label><textarea id="b22"></textarea>
+<label>Who is the relevant population for “the average American”? What population do these data actually describe?</label><textarea id="b23"></textarea>
+<div class="claim-reminder">Claim: “College has become unaffordable for the average American.”</div>
+<label>Update your confidence in the claim</label>
+<div class="belief"><input type="range" id="c2" min="0" max="100" value="50"><div class="belief-value" id="c2v">50</div></div>
+<button id="b2">Record Evidence B</button><div id="msg2"></div>
+</section>
+
+<section id="s3" class="hidden">
+<h2>Stage 3: Evidence C — An average can hide substantial variation</h2>
+<div class="evidence"><img src="assets/evidence_C_state_variation.png" class="evidence-image" onclick="openImageModal(this.src, this.alt)" alt="Public four-year in-state tuition and fees by state in 2025-26"><div class="image-note">Click the figure to view it larger.</div></div>
+<p>This figure shows average published public four-year in-state tuition and fees by state, in 2025 dollars.</p>
+<label>What does the state variation add to your interpretation of the national average?</label><textarea id="c31"></textarea>
+<label>What unit of analysis and population would produce the most defensible test of the original claim?</label><textarea id="c32"></textarea>
+<label>Using only the evidence supplied so far, what crucial quantity is still missing if we want to measure “affordability” rather than simply “price”?</label><textarea id="c33"></textarea>
+<div class="claim-reminder">Claim: “College has become unaffordable for the average American.”</div>
+<label>Update your confidence one final time before the debate</label>
+<div class="belief"><input type="range" id="c3" min="0" max="100" value="50"><div class="belief-value" id="c3v">50</div></div>
+<button id="b3">Record Evidence C</button><div id="msg3"></div>
+</section>
+
+<section id="s4" class="hidden">
+<h2>Stage 4: Prepare your team argument</h2>
+<div class="role"><div>Your assigned role:</div><strong id="roleText"></strong><p class="muted small">Your assignment is to construct the strongest evidence-based argument you can. Your assigned position does not have to match your personal belief.</p></div>
+<label>What should the class believe?</label><textarea id="d1"></textarea>
+<label>Strongest evidence supporting your position</label><textarea id="d2"></textarea>
+<label>Second strongest piece of evidence</label><textarea id="d3"></textarea>
+<label>Strongest limitation of your own argument</label><textarea id="d4"></textarea>
+<button id="b4">Record Team Argument</button><div id="msg4"></div>
+</section>
+
+<section id="s5" class="hidden">
+<h2>Stage 5: Final adjudication</h2>
+<div class="success"><strong>Your advocacy role is over.</strong> You are now the analyst. Decide what you actually believe.</div>
+<div class="claim-reminder">Claim: “College has become unaffordable for the average American.”</div>
+    <label>Final confidence in the claim</label><div class="belief"><input type="range" id="cf" min="0" max="100" value="50"><div class="belief-value" id="cfv">50</div></div>
+<div class="grid">
+<div><label>Strongest evidence supporting the claim</label><textarea id="f1"></textarea></div>
+<div><label>Strongest evidence challenging the claim</label><textarea id="f2"></textarea></div>
+<div><label>Most important unresolved question</label><textarea id="f3"></textarea></div>
+<div><label>Two-sentence conclusion</label><textarea id="f4"></textarea></div>
+</div>
+<button id="bf">Record Final Adjudication</button><div id="msgf"></div>
+<p class="footer-note">Your responses are recorded as separate stages so we can study how judgments change as additional evidence is revealed.</p>
+</section>
+</div>
+
+<script id="supabase-cdn" src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+// WORKING PILOT CONFIGURATION: same initialization pattern as the verified two-stage pilot.
+const SUPABASE_URL="https://syjgkatbxjiyjiosacdr.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY="sb_publishable_dpOWSyvPGnRtpef9UYMvgg_I2x-hSnG";
+let supabaseClient=null;
+
+const DEBATE_ID="college-affordability-debate-2026";
+const STUDENT_KEY="ds1000_evidence_debate1_student_code_v1";
+const STAGE_KEY=`ds1000_evidence_debate1_college_stage_${DEBATE_ID}`;
+function makeCode(){const chars="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";const b=new Uint32Array(6);crypto.getRandomValues(b);return Array.from(b,x=>chars[x%chars.length]).join("")}
+let studentCode=localStorage.getItem(STUDENT_KEY);if(!studentCode){studentCode=makeCode();localStorage.setItem(STUDENT_KEY,studentCode)}document.getElementById('studentCode').textContent=studentCode;
+
+const status=document.getElementById('status');
+function setStatus(t,good=false,bad=false){status.textContent=t;status.className='status'+(good?' good':'')+(bad?' bad':'')}
+function msg(id,t,good=true){document.getElementById(id).innerHTML=`<div class="${good?'success':'error'}">${t}</div>`}
+function slider(id,val){const x=document.getElementById(id),v=document.getElementById(val);x.addEventListener('input',()=>v.textContent=x.value)}
+[['c0','c0v'],['c1','c1v'],['c2','c2v'],['c3','c3v'],['cf','cfv']].forEach(x=>slider(x[0],x[1]));
+function done(p){document.getElementById(p).classList.remove('active');document.getElementById(p).classList.add('done')}
+function active(p){document.getElementById(p).classList.add('active')}
+function getStage(){return Number(localStorage.getItem(STAGE_KEY)||0)}
+function setStage(stage){localStorage.setItem(STAGE_KEY,String(stage))}
+function lock(ids){ids.forEach(id=>{const el=document.getElementById(id);if(el)el.disabled=true})}
+
+function initSupabase(){
+  const missing=(SUPABASE_URL.includes('PASTE_YOUR')||SUPABASE_PUBLISHABLE_KEY.includes('PASTE_YOUR'));
+  if(missing){
+    setStatus('Student code ready. Add your Supabase URL and publishable key.',false,true);
+    return;
+  }
+  if(!window.supabase || typeof window.supabase.createClient !== 'function'){
+    setStatus('Supabase JavaScript library did not load.',false,true);
+    console.error('Supabase client library unavailable.', window.supabase);
+    return;
+  }
+  try{
+    supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+    setStatus('Ready. Your student code is active.',true);
+  }catch(err){
+    console.error(err);
+    setStatus('Supabase client could not be initialized.',false,true);
+  }
+}
+
+async function save(stage,confidence,response_json){
+  if(!supabaseClient){return {error:{message:'Supabase client is not available. Check that the Supabase JavaScript library loaded and that the URL/key are set.',code:'CLIENT_NOT_READY'}}}
+  const {error}=await supabaseClient.from('debate_responses').insert({debate_id:DEBATE_ID,student_code:studentCode,stage,confidence,response_json});
+  return {error};
+}
+
+async function submit0(){
+  const m1=document.getElementById('m1').value.trim(),m2=document.getElementById('m2').value.trim();
+  if(!m1||!m2){msg('msg0','Answer both Stage 0 questions first.',false);return}
+  b0.disabled=true;setStatus('Saving Stage 0...');
+  const r=await save(0,+c0.value,{measurement_limitation_1:m1,measurement_limitation_2:m2});
+  if(r.error){console.error(r.error);msg('msg0',`${r.error.message} (${r.error.code||'no code'})`,false);b0.disabled=false;setStatus('Could not save Stage 0',false,true);return}
+  setStage(1);done('p0');active('p1');setStatus('Stage 0 saved.',true);msg('msg0','Stage 0 saved. Evidence A is now unlocked.');lock(['m1','m2','c0','b0']);document.getElementById('s1').classList.remove('hidden');document.getElementById('s1').scrollIntoView({behavior:'smooth'});
+}
+
+async function submit1(){
+  const a1=document.getElementById('a1').value.trim(),a2=document.getElementById('a2').value.trim(),a3=document.getElementById('a3').value.trim();
+  if(!a1||!a2||!a3){msg('msg1','Answer all three Evidence A questions first.',false);return}
+  b1.disabled=true;setStatus('Saving Evidence A...');
+  const r=await save(1,+c1.value,{evidence_a_show:a1,evidence_a_not_establish:a2,alternative_explanation:a3});
+  if(r.error){console.error(r.error);msg('msg1',`${r.error.message} (${r.error.code||'no code'})`,false);b1.disabled=false;setStatus('Could not save Evidence A',false,true);return}
+  setStage(2);done('p1');active('p2');setStatus('Evidence A saved.',true);msg('msg1','Evidence A saved. Evidence B is now unlocked.');lock(['a1','a2','a3','c1','b1']);document.getElementById('s2').classList.remove('hidden');document.getElementById('s2').scrollIntoView({behavior:'smooth'});
+}
+
+async function submit2(){
+  const b21=document.getElementById('b21').value.trim(),b22=document.getElementById('b22').value.trim(),b23=document.getElementById('b23').value.trim();
+  if(!b21||!b22||!b23){msg('msg2','Answer all three Evidence B questions first.',false);return}
+  b2.disabled=true;setStatus('Saving Evidence B...');
+  const r=await save(2,+c2.value,{budget_vs_bechdel:b21,budget_vs_gross:b22,budget_as_confounder:b23});
+  if(r.error){console.error(r.error);msg('msg2',`${r.error.message} (${r.error.code||'no code'})`,false);b2.disabled=false;setStatus('Could not save Evidence B',false,true);return}
+  setStage(3);done('p2');active('p3');setStatus('Evidence B saved.',true);msg('msg2','Evidence B saved. Evidence C is now unlocked.');lock(['b21','b22','b23','c2','b2']);document.getElementById('s3').classList.remove('hidden');document.getElementById('s3').scrollIntoView({behavior:'smooth'});
+}
+
+async function submit3(){
+  const c31=document.getElementById('c31').value.trim(),c32=document.getElementById('c32').value.trim(),c33=document.getElementById('c33').value.trim();
+  if(!c31||!c32||!c33){msg('msg3','Answer all three Evidence C questions first.',false);return}
+  b3.disabled=true;setStatus('Saving Evidence C...');
+  const r=await save(3,+c3.value,{conditional_change:c31,pooled_vs_conditional:c32,remaining_limit:c33});
+  if(r.error){console.error(r.error);msg('msg3',`${r.error.message} (${r.error.code||'no code'})`,false);b3.disabled=false;setStatus('Could not save Evidence C',false,true);return}
+  setStage(4);done('p3');active('p4');setStatus('Evidence C saved.',true);msg('msg3','Evidence C saved. Prepare your team argument.');lock(['c31','c32','c33','c3','b3']);assignRole();document.getElementById('s4').classList.remove('hidden');document.getElementById('s4').scrollIntoView({behavior:'smooth'});
+}
+
+function assignRole(){let h=0;for(const ch of studentCode)h=(h*31+ch.charCodeAt(0))>>>0;document.getElementById('roleText').textContent=(h%2===0)?'AFFIRMATIVE — argue that the evidence supports the claim as a useful generalization':'SKEPTIC — argue that the broad claim is not established by the available measurements'}
+
+async function submit4(){
+  const d1=document.getElementById('d1').value.trim(),d2=document.getElementById('d2').value.trim(),d3=document.getElementById('d3').value.trim(),d4=document.getElementById('d4').value.trim();
+  if(!d1||!d2||!d3||!d4){msg('msg4','Complete the four team-argument prompts first.',false);return}
+  b4.disabled=true;setStatus('Saving team argument...');
+  const role=document.getElementById('roleText').textContent;
+  const r=await save(4,null,{role,claim:d1,evidence_1:d2,evidence_2:d3,strongest_limitation:d4});
+  if(r.error){console.error(r.error);msg('msg4',`${r.error.message} (${r.error.code||'no code'})`,false);b4.disabled=false;setStatus('Could not save Stage 4',false,true);return}
+  setStage(5);done('p4');active('p5');setStatus('Team argument saved.',true);msg('msg4','Argument saved. Now adjudicate independently.');lock(['d1','d2','d3','d4','b4']);document.getElementById('s5').classList.remove('hidden');document.getElementById('s5').scrollIntoView({behavior:'smooth'});
+}
+
+async function submitFinal(){
+  const f1=document.getElementById('f1').value.trim(),f2=document.getElementById('f2').value.trim(),f3=document.getElementById('f3').value.trim(),f4=document.getElementById('f4').value.trim();
+  if(!f1||!f2||!f3||!f4){msg('msgf','Complete all four adjudication prompts first.',false);return}
+  bf.disabled=true;setStatus('Saving final adjudication...');
+  const r=await save(5,+cf.value,{supporting_evidence:f1,challenging_evidence:f2,unresolved_question:f3,conclusion:f4});
+  if(r.error){console.error(r.error);msg('msgf',`${r.error.message} (${r.error.code||'no code'})`,false);bf.disabled=false;setStatus('Could not save final adjudication',false,true);return}
+  setStage(6);done('p5');setStatus('Debate record complete.',true);msg('msgf','Final adjudication saved. Thank you.');lock(['f1','f2','f3','f4','cf','bf']);
+}
+
+b0.addEventListener('click',submit0);b1.addEventListener('click',submit1);b2.addEventListener('click',submit2);b3.addEventListener('click',submit3);b4.addEventListener('click',submit4);bf.addEventListener('click',submitFinal);
+
+initSupabase();
+
+// Resume the visible stage from the browser's saved progress.
+(function resume(){
+  const stage=getStage();
+  if(stage>=1){done('p0');active('p1');document.getElementById('s1').classList.remove('hidden');lock(['m1','m2','c0','b0'])}
+  if(stage>=2){done('p1');active('p2');document.getElementById('s2').classList.remove('hidden');lock(['a1','a2','a3','c1','b1'])}
+  if(stage>=3){done('p2');active('p3');document.getElementById('s3').classList.remove('hidden');lock(['b21','b22','b23','c2','b2'])}
+  if(stage>=4){done('p3');active('p4');assignRole();document.getElementById('s4').classList.remove('hidden');lock(['c31','c32','c33','c3','b3'])}
+  if(stage>=5){done('p4');active('p5');document.getElementById('s5').classList.remove('hidden');lock(['d1','d2','d3','d4','b4'])}
+  if(stage>=6){done('p5');lock(['f1','f2','f3','f4','cf','bf'])}
+})();
+</script>
+
+  <div class="modal" id="imageModal" role="dialog" aria-modal="true" aria-label="Expanded evidence figure">
+    <div class="modal-content">
+      <button class="modal-close" onclick="closeImageModal()" aria-label="Close expanded figure">&times;</button>
+      <img id="modalImage" src="" alt="">
+    </div>
+  </div>
+
+<script>
+function openImageModal(src, alt) {
+  const modal = document.getElementById("imageModal");
+  const image = document.getElementById("modalImage");
+  image.src = src;
+  image.alt = alt || "Expanded evidence figure";
+  modal.classList.add("open");
+  document.body.style.overflow = "hidden";
+}
+
+function closeImageModal() {
+  const modal = document.getElementById("imageModal");
+  const image = document.getElementById("modalImage");
+  modal.classList.remove("open");
+  image.src = "";
+  document.body.style.overflow = "";
+}
+
+document.getElementById("imageModal").addEventListener("click", function(event) {
+  if (event.target === this) closeImageModal();
+});
+
+document.addEventListener("keydown", function(event) {
+  if (event.key === "Escape") closeImageModal();
+});
+</script>
+
+</body>
+</html>
