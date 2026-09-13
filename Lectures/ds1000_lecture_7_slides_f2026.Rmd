@@ -829,7 +829,7 @@ When you see an association, ask:
 
 # Next
 
-Homework 7 and Quiz 6 will practice:
+Homework 6 and Quiz 6 will practice:
 
 - generating alternative explanations;
 - identifying plausible confounders;

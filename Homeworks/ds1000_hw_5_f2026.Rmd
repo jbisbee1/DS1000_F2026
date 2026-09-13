@@ -1,300 +1,378 @@
 ---
 title: "DS-1000 Homework 5"
-subtitle: "Variables Together"
+subtitle: "Describe the Relationship"
 author: "DS-1000: How Data Shape Our World"
-date: "Due before Lecture 6"
+date: "Due before Lecture 7"
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, error = TRUE)
+
 library(tidyverse)
 library(scales)
 
 polls <- read_rds("https://github.com/jbisbee1/DS1000_F2024/raw/main/data/Pres2020_PV.Rds") %>%
   mutate(
     Trump = Trump / 100,
-    Biden = Biden / 100
+    Biden = Biden / 100,
+    margin = Biden - Trump,
+    election_day = as.Date("11/3/2020", "%m/%d/%Y"),
+    EndDate = as.Date(EndDate, "%m/%d/%Y"),
+    DaysToED = as.numeric(election_day - EndDate)
   )
 ```
 
 # What is this homework for?
 
-In Unit 1, you learned to understand variables **one at a time**.
+In Homework 5, you practiced choosing a visualization that makes the relationship in a question visible.
 
-Lecture 5 added the next step:
+Now the graph is in front of you.
 
-> **How should we put X and Y together so that the comparison required by the question is visible?**
+The next task is to decide what it actually shows.
 
-The central rule is:
+For a relationship between two continuous variables, use this checklist:
 
-- continuous + continuous → scatterplot;
-- categorical + continuous → compare distributions across groups;
-- categorical + categorical → compare counts or proportions.
+> **Direction → Form → Strength → Unusual observations**
 
-You may use your notes, classmates, the internet, and AI. You are not being asked to memorize `ggplot2` syntax. Your responsibility is to decide **what comparison the question requires**, determine whether the visualization is appropriate, and verify that generated code actually implements that decision.
+Then ask whether a numerical summary such as **correlation** helps—and what information that summary leaves behind.
 
-This homework uses polling data from the 2020 U.S. presidential election. Each row represents a poll.
+You may use AI, your notes, classmates, and the internet. AI can help generate code and propose interpretations. Your responsibility is to inspect the evidence and determine whether the interpretation is warranted.
 
-# Part I: Start With the Question
+# Part I: Describe Before You Summarize
 
-Consider the claim:
+We will continue using the 2020 presidential polling data from Homework 5.
 
-> **Polls conducted using different interview methods produced different estimates of Trump's support.**
+Each row represents one national poll.
 
-Some variables that may be useful are:
+Consider the question:
 
-| Variable | Meaning |
-|---|---|
-| `Trump` | Poll estimate of support for Donald Trump |
-| `Biden` | Poll estimate of support for Joe Biden |
-| `Mode` | Method used to contact/interview respondents |
-| `SampleSize` | Number of respondents in the poll |
-| `RepCertVote` | Certified Republican vote share |
-| `DemCertVote` | Certified Democratic vote share |
+> **Did Biden's polling margin change as Election Day approached?**
 
-## 1. Identify X and Y
+The relevant variables are:
 
-For the claim above:
+- `DaysToED`: number of days between the poll's end date and Election Day;
+- `margin`: Biden support minus Trump support.
 
-**What is X?**
+## 1. See the Relationship
 
+Create a scatterplot showing `DaysToED` on the x-axis and `margin` on the y-axis.
 
+You may ask AI to generate the `ggplot2` code.
 
-**What type of variable is X?**
+```{r margin-time}
+# Create the scatterplot here.
 
+```
 
+Before calculating any summary statistic, describe what you see.
 
-**What is Y?**
+**Direction:**
 
 
 
-**What type of variable is Y?**
+**Form:**
 
 
 
-## 2. Choose the Comparison
+**Strength:**
 
-Given those variable types, what kind of visualization should we use first?
 
-Explain why it makes the comparison in the claim visible.
+
+**Unusual observations or other important features:**
+
+
+
+Now write one sentence that combines those observations into a substantive description of the relationship.
 
 **Your answer:**
 
 
 
-# Part II: Ask AI to Implement the Choice
+# Part II: Compress the Relationship
 
-## 3. Generate the Visualization
+## 2. Calculate Correlation
 
-Ask an AI assistant to write `ggplot2` code that compares the distribution of Trump support across polling modes.
+Ask AI to show you how to calculate the correlation between `DaysToED` and `margin`.
 
-Tell it that:
+Paste and run the code below.
+
+```{r correlation-time}
+# Calculate the correlation here.
+
+```
+
+Report the correlation:
+
+**r =**
+
+
+
+Interpret its **sign** and **magnitude** in plain English.
+
+**Your answer:**
+
+
+
+## 3. What Did the Number Lose?
+
+Compare your correlation with the scatterplot.
+
+Name **two features of the data** that you can see in the plot but that are not contained in the correlation coefficient itself.
+
+**Your answer:**
+
+
+
+Complete the statement:
+
+> The correlation is useful because ________________________________________, but it is incomplete because ________________________________________.
+
+# Part III: Correlation Can Miss a Relationship
+
+A correlation summarizes the strength and direction of a **linear** relationship.
+
+That last word matters.
+
+Run the following code to create a small artificial dataset.
+
+```{r curved-data}
+set.seed(1000)
+
+curved <- tibble(
+  x = seq(-3, 3, length.out = 120),
+  y = x^2 + rnorm(120, 0, 0.7)
+)
+```
+
+## 4. Look First
+
+Create a scatterplot of `x` and `y`.
+
+```{r curved-plot}
+# Create the scatterplot here.
+
+```
+
+Does there appear to be a relationship between X and Y?
+
+Describe its form.
+
+**Your answer:**
+
+
+
+Now calculate the correlation.
+
+```{r curved-correlation}
+# Calculate the correlation here.
+
+```
+
+What is the value?
+
+**r =**
+
+
+
+Suppose an AI assistant saw only this correlation and concluded:
+
+> **"There is essentially no relationship between X and Y."**
+
+Why is that interpretation wrong?
+
+**Your answer:**
+
+
+
+# Part IV: An Unusual Observation
+
+Run the following code.
+
+```{r outlier-data}
+set.seed(123)
+
+outlier_demo <- tibble(
+  x = seq(-3, 3, length.out = 60),
+  y = 1.2 * x + rnorm(60, 0, 0.8)
+)
+
+outlier_demo$y[60] <- outlier_demo$y[60] - 10
+```
+
+## 5. Plot and Summarize
+
+Create a scatterplot.
+
+```{r outlier-plot}
+# Create the scatterplot here.
+
+```
+
+Calculate the correlation for all observations.
+
+```{r outlier-cor}
+# Calculate the correlation here.
+
+```
+
+Now calculate it again after removing the final observation **only for purposes of comparison**.
+
+```{r outlier-cor-compare}
+# Hint: you can use slice(1:59), filter(), or ask AI for another approach.
+
+```
+
+How much did the correlation change?
+
+**Your answer:**
+
+
+
+What does this demonstrate about relying on a single numerical summary?
+
+**Your answer:**
+
+
+
+Should an analyst automatically delete the unusual observation?
+
+Explain.
+
+**Your answer:**
+
+
+
+# Part V: Group Differences
+
+Consider a different question:
+
+> **Did polls using different interview modes produce different estimates of Trump support?**
+
+Here:
 
 - `Mode` is categorical;
-- `Trump` is continuous;
-- you want to compare the distribution of Trump support across polling modes;
-- unreadable or clearly invalid mode categories may be removed if necessary, but it should explain any exclusions.
+- `Trump` is continuous.
 
-Paste and run the code below.
+## 6. Compare the Groups
 
-```{r mode-trump}
-# Paste the AI-generated code here.
+Create a visualization that compares the distribution of Trump support across polling modes.
 
-```
+You may reuse ideas from Homework 5 or ask AI for code.
 
-## 4. Audit the Visualization
-
-Do not assume that the visualization is appropriate because the code runs.
-
-Answer each question.
-
-**Does the visualization match the variable types? Why?**
-
-
-
-**Does it actually make differences across polling modes visible?**
-
-
-
-**Did the AI filter, transform, reorder, or otherwise change the data? If so, was that choice justified?**
-
-
-
-**What does one observation represented in this visualization correspond to?**
-
-
-
-# Part III: Same Data, Different Question
-
-Now consider:
-
-> **Polls with larger samples were more accurate in estimating Trump's vote share.**
-
-We can define polling error as the difference between the poll's estimate of Trump support and Trump's certified vote share.
-
-```{r create-error}
-polls <- polls %>%
-  mutate(TrumpError = Trump - RepCertVote / 100)
-```
-
-## 5. Identify the Variables
-
-For this new question:
-
-**What is X, and what type of variable is it?**
-
-
-
-**What is Y, and what type of variable is it?**
-
-
-
-**What visualization follows from those variable types?**
-
-
-
-## 6. Generate and Check the Plot
-
-Ask AI to generate an appropriate visualization of the relationship between sample size and Trump polling error.
-
-Paste and run the code below.
-
-```{r sample-error}
-# Paste the AI-generated code here.
+```{r mode-groups}
+# Create the group comparison here.
 
 ```
 
-Before interpreting it, check:
+Describe the comparison using the same general habits from Lecture 6.
 
-**Does the plot use the variables on sensible axes?**
+Address:
 
-
-
-**Does one mark correspond to one poll?**
-
-
-
-**Did AI make any filtering or transformation decisions that you did not request?**
-
-
-
-# Part IV: A Technically Valid but Unhelpful Plot
-
-Suppose another analyst wants to evaluate:
-
-> **Polls conducted using different interview methods produced different estimates of Trump's support.**
-
-They make this plot:
-
-```{r wrong-question}
-polls %>%
-  ggplot(aes(x = Trump)) +
-  geom_histogram()
-```
-
-## 7. Audit the Analysis
-
-The code is valid and the histogram is an appropriate **univariate** visualization of `Trump`.
-
-Why does it nevertheless fail to answer the research question?
+- typical values;
+- variation within groups;
+- overlap across groups;
+- unusual observations, if relevant.
 
 **Your answer:**
 
 
 
-Describe the comparison that the visualization needs to make visible instead.
+## 7. Averages Are Not Distributions
 
-**Your answer:**
+Ask AI to calculate the mean Trump support for each polling mode.
 
-
-
-# Part V: Categorical + Categorical
-
-Suppose we create a simple variable indicating whether each poll overestimated or underestimated Trump's certified vote share.
-
-```{r error-direction}
-polls <- polls %>%
-  mutate(
-    ErrorDirection = ifelse(
-      TrumpError > 0,
-      "Overestimated Trump",
-      "Underestimated Trump"
-    )
-  )
-```
-
-Now ask:
-
-> **Was the direction of polling error different across interview modes?**
-
-## 8. Choose the Representation
-
-What type of variable is `Mode`?
-
-
-
-What type of variable is `ErrorDirection`?
-
-
-
-What kind of comparison is appropriate for these two variables?
-
-**Your answer:**
-
-
-
-Ask AI to generate a visualization that compares **proportions** rather than only raw counts across polling modes.
-
-```{r categorical-categorical}
-# Paste the AI-generated code here.
+```{r mode-means}
+# Calculate group means here.
 
 ```
 
-Why might proportions be more informative than raw counts in this case?
+Do the group means tell the entire story visible in your visualization?
+
+Explain what information the means leave out.
 
 **Your answer:**
 
 
 
-# Part VI: What Can We Say?
+# Part VI: Audit an AI Interpretation
 
-## 9. Describe, Don't Explain
+Suppose an AI assistant receives the following information:
 
-Choose **one** of the multivariate visualizations you created above.
+> Correlation between X and Y: **r = -0.61**
 
-In two or three sentences, describe the visible pattern in substantive language.
+It responds:
 
-At this stage, do **not** explain why the relationship exists and do **not** make a causal claim.
+> **"There is a strong negative relationship between X and Y. Increasing X causes Y to decrease."**
+
+## 8. What Is Wrong?
+
+Identify **two separate problems** with the AI's interpretation.
+
+**Problem 1:**
+
+
+
+**Problem 2:**
+
+
+
+What additional evidence would you want before giving a more complete description of the relationship?
 
 **Your answer:**
 
 
 
-## 10. The Rule
+# Part VII: Communicate the Evidence
 
-Complete this statement in your own words:
+## 9. Write a Calibrated Description
 
-> **Do not choose the graph first. Instead, ________________________________.**
+Return to the relationship between `DaysToED` and polling `margin`.
+
+Write **two sentences** for a non-statistical audience.
+
+Your description should:
+
+- describe the visible relationship;
+- use the correlation if it is informative;
+- avoid causal language;
+- avoid claiming that correlation contains more information than it does.
 
 **Your answer:**
 
 
 
-# Before Quiz 4
+# Looking Ahead
+
+So far, we have learned to ask:
+
+> **What relationship do I see?**
+
+But even a strong, clear relationship leaves a harder question unanswered:
+
+> **Why do X and Y move together?**
+
+A relationship could exist because:
+
+- X affects Y;
+- Y affects X;
+- something else affects both;
+- the relationship differs across groups.
+
+That is the problem we take up in Lecture 7.
+
+# Before Quiz 5
 
 You should be able to do the following without AI:
 
-- identify X and Y from a substantive question;
-- determine whether each variable is continuous or categorical;
-- choose a visualization that matches the variable types and the comparison;
-- recognize when a technically valid graph fails to answer the research question;
-- explain what one observation or mark represents;
-- evaluate whether AI-generated visualization code actually implements the intended comparison;
-- describe the visible pattern without claiming why it exists.
+- describe the direction, form, and strength of a continuous–continuous relationship;
+- identify unusual observations;
+- interpret the sign and magnitude of a correlation;
+- explain that correlation summarizes **linear** association;
+- recognize that a low correlation does not imply no relationship of any kind;
+- explain why a scatterplot can reveal information hidden by correlation;
+- explain why group averages do not replace group distributions;
+- describe group differences without making a causal claim;
+- critique an AI interpretation that overstates what a correlation establishes.
 
-You do **not** need to memorize long `ggplot2` commands.
-
-Lecture 6 will ask the next question:
-
-> **Once we can see a relationship, how should we describe and summarize it?**
+> **Describe before you explain.**

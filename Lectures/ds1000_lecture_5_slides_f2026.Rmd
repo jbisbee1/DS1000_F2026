@@ -729,9 +729,9 @@ Then let the question and variable types determine the graph.
 
 ---
 
-# Homework 5
+# Homework 4
 
-In Homework 5, you will practice:
+In Homework 4, you will practice:
 
 - identifying X and Y;
 - classifying their variable types;

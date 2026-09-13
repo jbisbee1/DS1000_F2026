@@ -799,7 +799,7 @@ And never let a numerical summary replace the data it summarizes.
 
 ---
 
-# Homework 6
+# Homework 5
 
 You will practice:
 

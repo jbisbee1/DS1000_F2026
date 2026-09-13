@@ -12,7 +12,7 @@
 <meta name="author" content="DS-1000: How Data Shape Our World" />
 
 
-<title>From Association to Explanation</title>
+<title>DS-1000 Homework 6</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -349,240 +349,279 @@ display: none;
 
 
 
-<h1 class="title toc-ignore">From Association to Explanation</h1>
-<h3 class="subtitle">Homework 7</h3>
+<h1 class="title toc-ignore">DS-1000 Homework 6</h1>
+<h3 class="subtitle">Describe the Relationship</h3>
 <h4 class="author">DS-1000: How Data Shape Our World</h4>
-<h4 class="date">Due before Evidence Debate 1</h4>
+<h4 class="date">Due before Lecture 7</h4>
 
 </div>
 
 
 <div id="what-is-this-homework-for" class="section level1">
 <h1>What is this homework for?</h1>
-<p>In Homework 6, you learned to describe a relationship.</p>
-<p>Now we take the next skeptical step:</p>
+<p>In Homework 5, you practiced choosing a visualization that makes the
+relationship in a question visible.</p>
+<p>Now the graph is in front of you.</p>
+<p>The next task is to decide what it actually shows.</p>
+<p>For a relationship between two continuous variables, use this
+checklist:</p>
 <blockquote>
-<p><strong>We observe a relationship. What else could explain
-it?</strong></p>
+<p><strong>Direction → Form → Strength → Unusual
+observations</strong></p>
 </blockquote>
-<p>This homework uses a deliberately simple example so that we can focus
-on one idea: <strong>confounding</strong>.</p>
-<p>You will observe a relationship between ice-cream sales and
-drownings. Then you will discover that a third variable helps explain
-why those two variables move together.</p>
+<p>Then ask whether a numerical summary such as
+<strong>correlation</strong> helps—and what information that summary
+leaves behind.</p>
 <p>You may use AI, your notes, classmates, and the internet. AI can help
-you write code and propose explanations. Your job is to decide whether
-the explanations are supported by the evidence.</p>
+generate code and propose interpretations. Your responsibility is to
+inspect the evidence and determine whether the interpretation is
+warranted.</p>
+</div>
+<div id="part-i-describe-before-you-summarize" class="section level1">
+<h1>Part I: Describe Before You Summarize</h1>
+<p>We will continue using the 2020 presidential polling data from
+Homework 5.</p>
+<p>Each row represents one national poll.</p>
+<p>Consider the question:</p>
 <blockquote>
-<p><strong>A plausible explanation is not the same thing as an
-established explanation.</strong></p>
+<p><strong>Did Biden’s polling margin change as Election Day
+approached?</strong></p>
 </blockquote>
-</div>
-<div id="the-data" class="section level1">
-<h1>The Data</h1>
-<p>Each row represents one day.</p>
-<table>
-<colgroup>
-<col width="50%" />
-<col width="50%" />
-</colgroup>
-<thead>
-<tr class="header">
-<th>Variable</th>
-<th>Meaning</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><code>day</code></td>
-<td>Observation identifier</td>
-</tr>
-<tr class="even">
-<td><code>temperature</code></td>
-<td>Daily high temperature, in °F</td>
-</tr>
-<tr class="odd">
-<td><code>ice_cream_sales</code></td>
-<td>Number of ice-cream sales (scaled teaching measure)</td>
-</tr>
-<tr class="even">
-<td><code>drownings</code></td>
-<td>Number of drowning incidents observed that day</td>
-</tr>
-<tr class="odd">
-<td><code>temperature_group</code></td>
-<td>Cool, moderate, or hot day</td>
-</tr>
-</tbody>
-</table>
-</div>
-<div id="part-i-start-with-the-relationship" class="section level1">
-<h1>Part I: Start With the Relationship</h1>
-<p>Consider the claim:</p>
-<blockquote>
-<p><strong>Days with more ice-cream sales have more
-drownings.</strong></p>
-</blockquote>
-<div id="identify-x-and-y" class="section level2">
-<h2>1. Identify X and Y</h2>
-<p>What is X?</p>
-<p>What is Y?</p>
-<p>What is the unit of analysis?</p>
-<p>What kind of variables are X and Y?</p>
-</div>
-<div id="look-at-the-relationship" class="section level2">
-<h2>2. Look at the Relationship</h2>
-<p>Create a scatterplot of ice-cream sales and drownings.</p>
-<pre class="r"><code># Ask AI for code if helpful.</code></pre>
-<p>Describe the relationship:</p>
+<p>The relevant variables are:</p>
+<ul>
+<li><code>DaysToED</code>: number of days between the poll’s end date
+and Election Day;</li>
+<li><code>margin</code>: Biden support minus Trump support.</li>
+</ul>
+<div id="see-the-relationship" class="section level2">
+<h2>1. See the Relationship</h2>
+<p>Create a scatterplot showing <code>DaysToED</code> on the x-axis and
+<code>margin</code> on the y-axis.</p>
+<p>You may ask AI to generate the <code>ggplot2</code> code.</p>
+<pre class="r"><code># Create the scatterplot here.</code></pre>
+<p>Before calculating any summary statistic, describe what you see.</p>
 <p><strong>Direction:</strong></p>
+<p><strong>Form:</strong></p>
 <p><strong>Strength:</strong></p>
-<p><strong>Other important features:</strong></p>
-<p>Calculate the correlation.</p>
+<p><strong>Unusual observations or other important
+features:</strong></p>
+<p>Now write one sentence that combines those observations into a
+substantive description of the relationship.</p>
+<p><strong>Your answer:</strong></p>
+</div>
+</div>
+<div id="part-ii-compress-the-relationship" class="section level1">
+<h1>Part II: Compress the Relationship</h1>
+<div id="calculate-correlation" class="section level2">
+<h2>2. Calculate Correlation</h2>
+<p>Ask AI to show you how to calculate the correlation between
+<code>DaysToED</code> and <code>margin</code>.</p>
+<p>Paste and run the code below.</p>
 <pre class="r"><code># Calculate the correlation here.</code></pre>
-<p>What does the correlation tell you?</p>
+<p>Report the correlation:</p>
+<p><strong>r =</strong></p>
+<p>Interpret its <strong>sign</strong> and <strong>magnitude</strong> in
+plain English.</p>
+<p><strong>Your answer:</strong></p>
+</div>
+<div id="what-did-the-number-lose" class="section level2">
+<h2>3. What Did the Number Lose?</h2>
+<p>Compare your correlation with the scatterplot.</p>
+<p>Name <strong>two features of the data</strong> that you can see in
+the plot but that are not contained in the correlation coefficient
+itself.</p>
+<p><strong>Your answer:</strong></p>
+<p>Complete the statement:</p>
+<blockquote>
+<p>The correlation is useful because
+________________________________________, but it is incomplete because
+________________________________________.</p>
+</blockquote>
+</div>
+</div>
+<div id="part-iii-correlation-can-miss-a-relationship" class="section level1">
+<h1>Part III: Correlation Can Miss a Relationship</h1>
+<p>A correlation summarizes the strength and direction of a
+<strong>linear</strong> relationship.</p>
+<p>That last word matters.</p>
+<p>Run the following code to create a small artificial dataset.</p>
+<pre class="r"><code>set.seed(1000)
+
+curved &lt;- tibble(
+  x = seq(-3, 3, length.out = 120),
+  y = x^2 + rnorm(120, 0, 0.7)
+)</code></pre>
+<div id="look-first" class="section level2">
+<h2>4. Look First</h2>
+<p>Create a scatterplot of <code>x</code> and <code>y</code>.</p>
+<pre class="r"><code># Create the scatterplot here.</code></pre>
+<p>Does there appear to be a relationship between X and Y?</p>
+<p>Describe its form.</p>
+<p><strong>Your answer:</strong></p>
+<p>Now calculate the correlation.</p>
+<pre class="r"><code># Calculate the correlation here.</code></pre>
+<p>What is the value?</p>
+<p><strong>r =</strong></p>
+<p>Suppose an AI assistant saw only this correlation and concluded:</p>
+<blockquote>
+<p><strong>“There is essentially no relationship between X and
+Y.”</strong></p>
+</blockquote>
+<p>Why is that interpretation wrong?</p>
 <p><strong>Your answer:</strong></p>
 </div>
 </div>
-<div id="part-ii-what-could-explain-it" class="section level1">
-<h1>Part II: What Could Explain It?</h1>
-<p>Suppose someone says:</p>
-<blockquote>
-<p><strong>“Ice-cream sales cause drownings.”</strong></p>
-</blockquote>
-<p>Do not accept or reject this yet.</p>
-<div id="generate-alternative-explanations" class="section level2">
-<h2>3. Generate Alternative Explanations</h2>
-<p>Give two plausible explanations for why ice-cream sales and drownings
-might move together.</p>
-<p>At least one should involve a third variable.</p>
-<p><strong>Explanation 1:</strong></p>
-<p><strong>Explanation 2:</strong></p>
-<p>Which explanation seems most plausible, and why?</p>
-</div>
-</div>
-<div id="part-iii-find-z" class="section level1">
-<h1>Part III: Find Z</h1>
-<p>A natural candidate is:</p>
-<blockquote>
-<p><strong>Temperature</strong></p>
-</blockquote>
-<p>Why might temperature matter for both ice-cream sales and
-drownings?</p>
+<div id="part-iv-an-unusual-observation" class="section level1">
+<h1>Part IV: An Unusual Observation</h1>
+<p>Run the following code.</p>
+<pre class="r"><code>set.seed(123)
+
+outlier_demo &lt;- tibble(
+  x = seq(-3, 3, length.out = 60),
+  y = 1.2 * x + rnorm(60, 0, 0.8)
+)
+
+outlier_demo$y[60] &lt;- outlier_demo$y[60] - 10</code></pre>
+<div id="plot-and-summarize" class="section level2">
+<h2>5. Plot and Summarize</h2>
+<p>Create a scatterplot.</p>
+<pre class="r"><code># Create the scatterplot here.</code></pre>
+<p>Calculate the correlation for all observations.</p>
+<pre class="r"><code># Calculate the correlation here.</code></pre>
+<p>Now calculate it again after removing the final observation
+<strong>only for purposes of comparison</strong>.</p>
+<pre class="r"><code># Hint: you can use slice(1:59), filter(), or ask AI for another approach.</code></pre>
+<p>How much did the correlation change?</p>
 <p><strong>Your answer:</strong></p>
-<div id="examine-temperature-and-ice-cream-sales" class="section level2">
-<h2>4. Examine Temperature and Ice-Cream Sales</h2>
-<p>Create a visualization of temperature and ice-cream sales.</p>
-<pre class="r"><code># Create the visualization here.</code></pre>
-<p>Describe the relationship.</p>
-</div>
-<div id="examine-temperature-and-drownings" class="section level2">
-<h2>5. Examine Temperature and Drownings</h2>
-<p>Create a visualization of temperature and drownings.</p>
-<pre class="r"><code># Create the visualization here.</code></pre>
-<p>Describe the relationship.</p>
-<p>Now complete this causal diagram:</p>
-<pre class="text"><code>Temperature → __________________
-           ↘ __________________</code></pre>
-<p>What does this diagram suggest about the original ice-cream/drowning
-relationship?</p>
-</div>
-</div>
-<div id="part-iv-does-the-relationship-survive-within-groups" class="section level1">
-<h1>Part IV: Does the Relationship Survive Within Groups?</h1>
-<p>Now compare ice-cream sales and drownings separately within the three
-temperature groups.</p>
-<div id="compare-within-temperature-groups" class="section level2">
-<h2>6. Compare Within Temperature Groups</h2>
-<p>Create a visualization that shows ice-cream sales and drownings, with
-the observations separated by <code>temperature_group</code>.</p>
-<pre class="r"><code># Create the visualization here.</code></pre>
-<p>Describe what you see within the three temperature groups.</p>
+<p>What does this demonstrate about relying on a single numerical
+summary?</p>
 <p><strong>Your answer:</strong></p>
-<p>How does the within-group pattern differ from the overall
-pattern?</p>
+<p>Should an analyst automatically delete the unusual observation?</p>
+<p>Explain.</p>
+<p><strong>Your answer:</strong></p>
 </div>
-<div id="explain-the-change" class="section level2">
-<h2>7. Explain the Change</h2>
-<p>Complete the sentence:</p>
+</div>
+<div id="part-v-group-differences" class="section level1">
+<h1>Part V: Group Differences</h1>
+<p>Consider a different question:</p>
 <blockquote>
-<p><strong>Ice-cream sales and drownings are associated in the pooled
-data because…</strong></p>
+<p><strong>Did polls using different interview modes produce different
+estimates of Trump support?</strong></p>
 </blockquote>
-<p>Why does looking within temperature groups help us interpret the
-original association?</p>
+<p>Here:</p>
+<ul>
+<li><code>Mode</code> is categorical;</li>
+<li><code>Trump</code> is continuous.</li>
+</ul>
+<div id="compare-the-groups" class="section level2">
+<h2>6. Compare the Groups</h2>
+<p>Create a visualization that compares the distribution of Trump
+support across polling modes.</p>
+<p>You may reuse ideas from Homework 5 or ask AI for code.</p>
+<pre class="r"><code># Create the group comparison here.</code></pre>
+<p>Describe the comparison using the same general habits from Lecture
+6.</p>
+<p>Address:</p>
+<ul>
+<li>typical values;</li>
+<li>variation within groups;</li>
+<li>overlap across groups;</li>
+<li>unusual observations, if relevant.</li>
+</ul>
+<p><strong>Your answer:</strong></p>
+</div>
+<div id="averages-are-not-distributions" class="section level2">
+<h2>7. Averages Are Not Distributions</h2>
+<p>Ask AI to calculate the mean Trump support for each polling mode.</p>
+<pre class="r"><code># Calculate group means here.</code></pre>
+<p>Do the group means tell the entire story visible in your
+visualization?</p>
+<p>Explain what information the means leave out.</p>
+<p><strong>Your answer:</strong></p>
 </div>
 </div>
-<div id="part-v-audit-an-ai-explanation" class="section level1">
-<h1>Part V: Audit an AI Explanation</h1>
-<p>Suppose an AI assistant is shown the overall positive relationship
-and says:</p>
+<div id="part-vi-audit-an-ai-interpretation" class="section level1">
+<h1>Part VI: Audit an AI Interpretation</h1>
+<p>Suppose an AI assistant receives the following information:</p>
 <blockquote>
-<p><strong>“The data prove that buying ice cream increases the risk of
-drowning.”</strong></p>
+<p>Correlation between X and Y: <strong>r = -0.61</strong></p>
 </blockquote>
-<div id="audit-the-claim" class="section level2">
-<h2>8. Audit the Claim</h2>
-<p>Identify two problems with this interpretation.</p>
+<p>It responds:</p>
+<blockquote>
+<p><strong>“There is a strong negative relationship between X and Y.
+Increasing X causes Y to decrease.”</strong></p>
+</blockquote>
+<div id="what-is-wrong" class="section level2">
+<h2>8. What Is Wrong?</h2>
+<p>Identify <strong>two separate problems</strong> with the AI’s
+interpretation.</p>
 <p><strong>Problem 1:</strong></p>
 <p><strong>Problem 2:</strong></p>
-<p>Now suppose the AI assistant instead says:</p>
-<blockquote>
-<p><strong>“Temperature completely proves that there is no relationship
-between ice cream and drowning.”</strong></p>
-</blockquote>
-<p>Is that statement also too strong? Explain.</p>
+<p>What additional evidence would you want before giving a more complete
+description of the relationship?</p>
+<p><strong>Your answer:</strong></p>
 </div>
 </div>
-<div id="part-vi-what-do-the-data-actually-support" class="section level1">
-<h1>Part VI: What Do the Data Actually Support?</h1>
-<div id="calibrated-conclusion" class="section level2">
-<h2>9. Calibrated Conclusion</h2>
-<p>Write two or three sentences explaining what the data show.</p>
-<p>Your answer should distinguish:</p>
+<div id="part-vii-communicate-the-evidence" class="section level1">
+<h1>Part VII: Communicate the Evidence</h1>
+<div id="write-a-calibrated-description" class="section level2">
+<h2>9. Write a Calibrated Description</h2>
+<p>Return to the relationship between <code>DaysToED</code> and polling
+<code>margin</code>.</p>
+<p>Write <strong>two sentences</strong> for a non-statistical
+audience.</p>
+<p>Your description should:</p>
 <ul>
-<li>the observed association;</li>
-<li>the role of temperature;</li>
-<li>what the data do <strong>not</strong> establish.</li>
+<li>describe the visible relationship;</li>
+<li>use the correlation if it is informative;</li>
+<li>avoid causal language;</li>
+<li>avoid claiming that correlation contains more information than it
+does.</li>
 </ul>
 <p><strong>Your answer:</strong></p>
 </div>
 </div>
-<div id="the-skeptics-workflow" class="section level1">
-<h1>The Skeptic’s Workflow</h1>
-<p>Complete the sequence:</p>
+<div id="looking-ahead" class="section level1">
+<h1>Looking Ahead</h1>
+<p>So far, we have learned to ask:</p>
 <blockquote>
-<p><strong>I observe an association between X and Y. Before interpreting
-it causally, I should ________________________________.</strong></p>
+<p><strong>What relationship do I see?</strong></p>
 </blockquote>
-<p>Then:</p>
+<p>But even a strong, clear relationship leaves a harder question
+unanswered:</p>
 <blockquote>
-<p><strong>A plausible confounder is a variable that
-________________________________.</strong></p>
+<p><strong>Why do X and Y move together?</strong></p>
 </blockquote>
-<p>And:</p>
-<blockquote>
-<p><strong>Looking at the X–Y relationship within groups of Z can help
-because ________________________________.</strong></p>
-</blockquote>
-</div>
-<div id="before-quiz-6" class="section level1">
-<h1>Before Quiz 6</h1>
-<p>You should be able to:</p>
+<p>A relationship could exist because:</p>
 <ul>
-<li>distinguish an observed association from a causal explanation;</li>
-<li>identify plausible alternative explanations;</li>
-<li>identify a third variable that may be related to both X and Y;</li>
-<li>compare pooled and within-group relationships;</li>
-<li>explain how confounding can create or alter an observed
+<li>X affects Y;</li>
+<li>Y affects X;</li>
+<li>something else affects both;</li>
+<li>the relationship differs across groups.</li>
+</ul>
+<p>That is the problem we take up in Lecture 7.</p>
+</div>
+<div id="before-quiz-5" class="section level1">
+<h1>Before Quiz 5</h1>
+<p>You should be able to do the following without AI:</p>
+<ul>
+<li>describe the direction, form, and strength of a
+continuous–continuous relationship;</li>
+<li>identify unusual observations;</li>
+<li>interpret the sign and magnitude of a correlation;</li>
+<li>explain that correlation summarizes <strong>linear</strong>
 association;</li>
-<li>recognize why conditional analysis is useful;</li>
-<li>audit an AI-generated causal explanation;</li>
-<li>communicate a calibrated conclusion.</li>
+<li>recognize that a low correlation does not imply no relationship of
+any kind;</li>
+<li>explain why a scatterplot can reveal information hidden by
+correlation;</li>
+<li>explain why group averages do not replace group distributions;</li>
+<li>describe group differences without making a causal claim;</li>
+<li>critique an AI interpretation that overstates what a correlation
+establishes.</li>
 </ul>
 <blockquote>
-<p><strong>Association is evidence. Explanation must be
-earned.</strong></p>
+<p><strong>Describe before you explain.</strong></p>
 </blockquote>
 </div>
 
