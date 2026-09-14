@@ -16,3 +16,51 @@ require(tidyverse)
 df <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/sc_debt.Rds")
 ```
 
+```{r}
+colnames(df)
+
+df %>%
+  count(preddeg)
+```
+
+# APplying filter to only the bachelor's degree institutions
+
+```{r}
+college <- df %>%
+  filter(preddeg == "Bachelor's")
+
+college %>%
+  count(preddeg)
+```
+# What is missing?
+
+```{r}
+college %>%
+  summarise(missing_adm_rate = sum(is.na(adm_rate)),
+            missing_earnings = sum(is.na(md_earn_wne_p6)))
+
+college %>%
+  summarise(missing_both = sum(is.na(adm_rate) & is.na(md_earn_wne_p6)))
+```
+
+# What needs to change?
+
+- we want to convert the `adm_rate` proportion to a percentage point for *ease of communication*
+
+```{r}
+college <- college %>%
+  mutate(adm_rate_pct = adm_rate*100)
+
+college %>%
+  filter(!is.na(adm_rate_pct)) %>%
+  summarise(adm_rate_pct = mean(adm_rate_pct))
+
+college %>%
+  summarise(adm_rate_pct = mean(adm_rate_pct,na.rm = TRUE))
+
+df %>%
+  filter(grepl("Harvard",instnm)) %>%
+  select(adm_rate,instnm)
+```
+
+

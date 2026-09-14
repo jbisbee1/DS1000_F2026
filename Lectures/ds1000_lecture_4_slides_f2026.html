@@ -214,14 +214,6 @@ nrow(college)
 ## [1] 0
 ```
 
-``` r
-table(college$preddeg, useNA = "ifany")
-```
-
-```
-## &lt; table of extent 0 &gt;
-```
-
 .big[
 **Specification → execution → verification**
 ]
@@ -229,6 +221,42 @@ table(college$preddeg, useNA = "ifany")
 That workflow will recur throughout the course.
 
 &lt;!-- LO5: Same verification workflow applies to AI-generated code. --&gt;
+
+---
+
+# Look at the possible values
+
+
+``` r
+df %&gt;%
+  count(preddeg)
+```
+
+```
+## # A tibble: 2 × 2
+##   preddeg        n
+##   &lt;chr&gt;      &lt;int&gt;
+## 1 Associate    821
+## 2 Bachelor's  1725
+```
+
+---
+
+# Inform your code
+
+
+``` r
+college &lt;- df %&gt;%
+  filter(preddeg == "Bachelor's")
+
+nrow(college)
+```
+
+```
+## [1] 1725
+```
+
+
 
 ---
 
@@ -264,7 +292,7 @@ college %&gt;%
 ## # A tibble: 1 × 2
 ##   missing_adm missing_earn
 ##         &lt;int&gt;        &lt;int&gt;
-## 1           0            0
+## 1         213          184
 ```
 
 You do not need to memorize this syntax.
@@ -305,7 +333,7 @@ nrow(college)
 ```
 
 ```
-## [1] 0
+## [1] 1725
 ```
 
 ``` r
@@ -313,8 +341,36 @@ nrow(analysis_df)
 ```
 
 ```
-## [1] 0
+## [1] 1396
 ```
+
+``` r
+213+184
+```
+
+```
+## [1] 397
+```
+
+---
+
+# Compare Before and After
+
+
+``` r
+college %&gt;%
+  summarise(
+    missing_both = sum(is.na(adm_rate) &amp; is.na(md_earn_wne_p6))
+  )
+```
+
+```
+## # A tibble: 1 × 1
+##   missing_both
+##          &lt;int&gt;
+## 1           68
+```
+
 
 How many observations did we lose?
 
@@ -578,7 +634,7 @@ An AI assistant proposes:
 
 ```r
 analysis_df &lt;- df %&gt;%
-  filter(preddeg == 3,
+  filter(preddeg == "Bachelor's",
          adm_rate &gt; 0,
          md_earn_wne_p6 &gt; 0) %&gt;%
   mutate(adm_pct = adm_rate / 100) %&gt;%
