@@ -1,0 +1,133 @@
+---
+title: "Lecture 5 Notes"
+output: html_document
+date: "2026-09-14"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Putting variables together
+- always always look at the variable *TYPE*
+
+- continuous by continuous -> scatterplot
+
+```{r}
+require(tidyverse)
+
+df <- read_rds('https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/sc_debt.Rds')
+```
+
+# Reminding ourselves
+- what types of data are these variables (`adm_rate` and `md_earn_wne_p6`)?
+
+```{r}
+df %>%
+  select(adm_rate,md_earn_wne_p6)
+```
+
+# Multivariate visualization
+
+```{r}
+df %>%
+  filter(preddeg == "Bachelor's") %>%
+  ggplot(aes(x = adm_rate,
+             y = md_earn_wne_p6)) + 
+  geom_point() + 
+  geom_smooth(method = 'lm')
+```
+
+# Observation 1
+- looks like the relationship is different, depending on whether the adm_rate > 0.5
+
+```{r}
+df %>%
+  filter(preddeg == "Bachelor's",
+         adm_rate <= 0.5) %>%
+  ggplot(aes(x = adm_rate,
+             y = md_earn_wne_p6)) + 
+  geom_point() + 
+  geom_smooth(method = 'lm') + 
+  labs(x = 'Admissions rate',
+       y = 'Future earnings',
+       subtitle = 'Subsetting to more selective schools')
+
+df %>%
+  filter(preddeg == "Bachelor's",
+         adm_rate > 0.5) %>%
+  ggplot(aes(x = adm_rate,
+             y = md_earn_wne_p6)) + 
+  geom_point() + 
+  geom_smooth(method = 'lm') + 
+  labs(x = 'Admissions rate',
+       y = 'Future earnings',
+       subtitle = 'Subsetting to less selective schools')
+```
+
+# Looking at the outliers
+
+- big earnings outliers
+
+```{r}
+df %>%
+  filter(md_earn_wne_p6 > 100000) %>%
+  select(instnm) %>%
+  pull(instnm)
+```
+
+- small earnings outliers
+
+```{r}
+df %>%
+  filter(preddeg == "Bachelor's",
+         adm_rate < .025) %>%
+  select(instnm,stabbr)
+```
+
+# Categorical by continuous
+
+- reintroduce histograms / boxplots with colors
+
+```{r}
+df %>%
+  ggplot(aes(x = adm_rate,
+             fill = preddeg)) + 
+  geom_density(alpha = .4)
+```
+
+# What if there are many categories?
+
+- using states (`stabbr`) as an example
+
+```{r}
+df %>%
+  ggplot(aes(x = adm_rate,
+             fill = stabbr)) + 
+  geom_density(alpha = .4)
+```
+
+# better approach uses boxplots
+
+```{r}
+df %>%
+  ggplot(aes(x = adm_rate,
+             y = stabbr)) + 
+  geom_boxplot()
+```
+
+# NBA example
+
+```{r}
+nba <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/nba_players_2018.Rds")
+
+nba %>%
+  select(matches('Rookie|conf')) %>%
+  count(isRookie,idConference) %>%
+  spread(isRookie,n)
+```
+
+
+
+
+
