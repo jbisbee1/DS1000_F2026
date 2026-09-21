@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE, error = TRUE, warning = FALSE, message = FALS
 
 library(tidyverse)
 
-df <- read_csv("../data/ds1000_hw7_icecream_drownings.csv", show_col_types = FALSE)
+df <- read_csv("https://raw.githubusercontent.com/jbisbee1/DS1000_F2026/refs/heads/main/data/icecream_drownings.csv", show_col_types = FALSE)
 ```
 
 # What is this homework for?

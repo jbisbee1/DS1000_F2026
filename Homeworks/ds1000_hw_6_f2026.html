@@ -350,42 +350,37 @@ display: none;
 
 
 <h1 class="title toc-ignore">From Association to Explanation</h1>
-<h3 class="subtitle">Homework 7</h3>
+<h3 class="subtitle">Homework 6</h3>
 <h4 class="author">DS-1000: How Data Shape Our World</h4>
-<h4 class="date">Due before Evidence Debate 1</h4>
+<h4 class="date">Due before Lecture 8</h4>
 
 </div>
 
 
 <div id="what-is-this-homework-for" class="section level1">
 <h1>What is this homework for?</h1>
-<p>In Homework 6, you learned to describe a relationship.</p>
+<p>In Homework 5, you learned to describe a relationship.</p>
 <p>Now we take the next skeptical step:</p>
 <blockquote>
 <p><strong>We observe a relationship. What else could explain
 it?</strong></p>
 </blockquote>
-<p>This homework uses a deliberately simple example so that we can focus
-on one idea: <strong>confounding</strong>.</p>
-<p>You will observe a relationship between ice-cream sales and
-drownings. Then you will discover that a third variable helps explain
-why those two variables move together.</p>
+<p>This homework uses a deliberately simple example to introduce a
+powerful idea:</p>
+<blockquote>
+<p><strong>The relationship you see in the full dataset can differ from
+the relationships you see within relevant subgroups.</strong></p>
+</blockquote>
+<p>We will discover a version of <strong>Simpson’s paradox</strong>
+using ice-cream sales, drownings, and temperature.</p>
 <p>You may use AI, your notes, classmates, and the internet. AI can help
 you write code and propose explanations. Your job is to decide whether
 the explanations are supported by the evidence.</p>
-<blockquote>
-<p><strong>A plausible explanation is not the same thing as an
-established explanation.</strong></p>
-</blockquote>
 </div>
 <div id="the-data" class="section level1">
 <h1>The Data</h1>
 <p>Each row represents one day.</p>
 <table>
-<colgroup>
-<col width="50%" />
-<col width="50%" />
-</colgroup>
 <thead>
 <tr class="header">
 <th>Variable</th>
@@ -403,182 +398,237 @@ established explanation.</strong></p>
 </tr>
 <tr class="odd">
 <td><code>ice_cream_sales</code></td>
-<td>Number of ice-cream sales (scaled teaching measure)</td>
+<td>Ice-cream sales (teaching measure)</td>
 </tr>
 <tr class="even">
 <td><code>drownings</code></td>
-<td>Number of drowning incidents observed that day</td>
+<td>Drowning incidents observed that day</td>
 </tr>
 <tr class="odd">
 <td><code>temperature_group</code></td>
-<td>Cool, moderate, or hot day</td>
+<td>Cool, moderate, or hot</td>
 </tr>
 </tbody>
 </table>
+<p>The dataset is deliberately constructed for this exercise.</p>
+<p>That is useful because it lets us focus on the reasoning rather than
+on messy real-world measurement problems.</p>
 </div>
-<div id="part-i-start-with-the-relationship" class="section level1">
-<h1>Part I: Start With the Relationship</h1>
+<div id="part-i-the-relationship-you-see" class="section level1">
+<h1>Part I: The Relationship You See</h1>
 <p>Consider the claim:</p>
 <blockquote>
 <p><strong>Days with more ice-cream sales have more
 drownings.</strong></p>
 </blockquote>
-<div id="identify-x-and-y" class="section level2">
-<h2>1. Identify X and Y</h2>
-<p>What is X?</p>
-<p>What is Y?</p>
-<p>What is the unit of analysis?</p>
-<p>What kind of variables are X and Y?</p>
-</div>
-<div id="look-at-the-relationship" class="section level2">
-<h2>2. Look at the Relationship</h2>
+<div id="look-first" class="section level2">
+<h2>1. Look First</h2>
 <p>Create a scatterplot of ice-cream sales and drownings.</p>
 <pre class="r"><code># Ask AI for code if helpful.</code></pre>
-<p>Describe the relationship:</p>
+<p>Describe the relationship.</p>
 <p><strong>Direction:</strong></p>
 <p><strong>Strength:</strong></p>
 <p><strong>Other important features:</strong></p>
 <p>Calculate the correlation.</p>
 <pre class="r"><code># Calculate the correlation here.</code></pre>
-<p>What does the correlation tell you?</p>
+<p>What does the correlation suggest about the relationship?</p>
+<p><strong>Your answer:</strong></p>
+</div>
+<div id="what-would-you-be-tempted-to-conclude" class="section level2">
+<h2>2. What Would You Be Tempted to Conclude?</h2>
+<p>Suppose a news story reported:</p>
+<blockquote>
+<p><strong>“Days with more ice-cream sales have more
+drownings.”</strong></p>
+</blockquote>
+<p>What causal conclusion might a careless reader make?</p>
+<p><strong>Your answer:</strong></p>
+<p>Why would that conclusion be too strong?</p>
 <p><strong>Your answer:</strong></p>
 </div>
 </div>
-<div id="part-ii-what-could-explain-it" class="section level1">
-<h1>Part II: What Could Explain It?</h1>
-<p>Suppose someone says:</p>
-<blockquote>
-<p><strong>“Ice-cream sales cause drownings.”</strong></p>
-</blockquote>
-<p>Do not accept or reject this yet.</p>
-<div id="generate-alternative-explanations" class="section level2">
-<h2>3. Generate Alternative Explanations</h2>
-<p>Give two plausible explanations for why ice-cream sales and drownings
-might move together.</p>
+<div id="part-ii-look-for-another-explanation" class="section level1">
+<h1>Part II: Look for Another Explanation</h1>
+<div id="generate-alternatives" class="section level2">
+<h2>3. Generate Alternatives</h2>
+<p>Give two plausible explanations for the positive relationship between
+ice-cream sales and drownings.</p>
 <p>At least one should involve a third variable.</p>
 <p><strong>Explanation 1:</strong></p>
 <p><strong>Explanation 2:</strong></p>
-<p>Which explanation seems most plausible, and why?</p>
-</div>
-</div>
-<div id="part-iii-find-z" class="section level1">
-<h1>Part III: Find Z</h1>
-<p>A natural candidate is:</p>
-<blockquote>
-<p><strong>Temperature</strong></p>
-</blockquote>
-<p>Why might temperature matter for both ice-cream sales and
-drownings?</p>
+<p>Which third variable seems especially plausible here?</p>
 <p><strong>Your answer:</strong></p>
+</div>
+</div>
+<div id="part-iii-enter-temperature" class="section level1">
+<h1>Part III: Enter Temperature</h1>
+<p>Temperature is a natural candidate because it could be related to
+both ice-cream sales and drownings.</p>
 <div id="examine-temperature-and-ice-cream-sales" class="section level2">
 <h2>4. Examine Temperature and Ice-Cream Sales</h2>
 <p>Create a visualization of temperature and ice-cream sales.</p>
 <pre class="r"><code># Create the visualization here.</code></pre>
 <p>Describe the relationship.</p>
+<p><strong>Your answer:</strong></p>
 </div>
 <div id="examine-temperature-and-drownings" class="section level2">
 <h2>5. Examine Temperature and Drownings</h2>
 <p>Create a visualization of temperature and drownings.</p>
 <pre class="r"><code># Create the visualization here.</code></pre>
 <p>Describe the relationship.</p>
-<p>Now complete this causal diagram:</p>
-<pre class="text"><code>Temperature → __________________
-           ↘ __________________</code></pre>
-<p>What does this diagram suggest about the original ice-cream/drowning
-relationship?</p>
-</div>
-</div>
-<div id="part-iv-does-the-relationship-survive-within-groups" class="section level1">
-<h1>Part IV: Does the Relationship Survive Within Groups?</h1>
-<p>Now compare ice-cream sales and drownings separately within the three
-temperature groups.</p>
-<div id="compare-within-temperature-groups" class="section level2">
-<h2>6. Compare Within Temperature Groups</h2>
-<p>Create a visualization that shows ice-cream sales and drownings, with
-the observations separated by <code>temperature_group</code>.</p>
-<pre class="r"><code># Create the visualization here.</code></pre>
-<p>Describe what you see within the three temperature groups.</p>
 <p><strong>Your answer:</strong></p>
-<p>How does the within-group pattern differ from the overall
-pattern?</p>
+<p>Complete this diagram:</p>
+<pre class="text"><code>Temperature → ice-cream sales
+Temperature → drownings</code></pre>
+<p>What does this suggest about the original ice-cream/drowning
+relationship?</p>
+<p><strong>Your answer:</strong></p>
 </div>
-<div id="explain-the-change" class="section level2">
-<h2>7. Explain the Change</h2>
-<p>Complete the sentence:</p>
+</div>
+<div id="part-iv-the-surprise" class="section level1">
+<h1>Part IV: The Surprise</h1>
+<p>Now color the original scatterplot by temperature group.</p>
+<pre class="r"><code># Create the grouped scatterplot here.</code></pre>
+<div id="look-again" class="section level2">
+<h2>6. Look Again</h2>
+<p>First, describe the <strong>overall</strong> relationship.</p>
+<p><strong>Overall relationship:</strong></p>
+<p>Now describe the relationship <strong>within each temperature
+group</strong>.</p>
+<p><strong>Cool days:</strong></p>
+<p><strong>Moderate days:</strong></p>
+<p><strong>Hot days:</strong></p>
+<p>What do you notice?</p>
+<p><strong>Your answer:</strong></p>
+</div>
+<div id="how-can-both-be-true" class="section level2">
+<h2>7. How Can Both Be True?</h2>
+<p>The pooled data show one direction, while the within-group
+relationships show the opposite direction.</p>
+<p>Explain in your own words how that can happen.</p>
+<p><strong>Your answer:</strong></p>
+<p>The key idea is that the temperature groups occupy different parts of
+the graph:</p>
+<ul>
+<li>hotter days have more ice-cream sales;</li>
+<li>hotter days also have more drownings;</li>
+<li>within a temperature group, the relationship goes the other
+way.</li>
+</ul>
+<p>Why can the first two facts overwhelm the third when we pool all the
+observations together?</p>
+<p><strong>Your answer:</strong></p>
+</div>
+</div>
+<div id="part-v-name-the-phenomenon" class="section level1">
+<h1>Part V: Name the Phenomenon</h1>
+<p>What you have just observed is a version of:</p>
 <blockquote>
-<p><strong>Ice-cream sales and drownings are associated in the pooled
-data because…</strong></p>
+<p><strong>Simpson’s paradox</strong></p>
 </blockquote>
-<p>Why does looking within temperature groups help us interpret the
-original association?</p>
-</div>
-</div>
-<div id="part-v-audit-an-ai-explanation" class="section level1">
-<h1>Part V: Audit an AI Explanation</h1>
-<p>Suppose an AI assistant is shown the overall positive relationship
-and says:</p>
+<p>In this setting, an aggregate relationship can differ from the
+relationships observed within relevant subgroups.</p>
+<p>The name is less important than the habit of mind:</p>
 <blockquote>
-<p><strong>“The data prove that buying ice cream increases the risk of
-drowning.”</strong></p>
+<p><strong>When a relationship looks surprising, ask whether another
+variable changes the comparison.</strong></p>
+</blockquote>
+<div id="pooled-vs.-conditional-evidence" class="section level2">
+<h2>8. Pooled vs. Conditional Evidence</h2>
+<p>Complete the table.</p>
+<table>
+<thead>
+<tr class="header">
+<th>Comparison</th>
+<th>What does it show?</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Ice-cream sales vs. drownings, all days pooled</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Ice-cream sales vs. drownings, within temperature groups</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>Why is it dangerous to look only at the pooled comparison?</p>
+<p><strong>Your answer:</strong></p>
+</div>
+</div>
+<div id="part-vi-audit-an-ai-explanation" class="section level1">
+<h1>Part VI: Audit an AI Explanation</h1>
+<p>Suppose an AI assistant is shown only the pooled data and says:</p>
+<blockquote>
+<p><strong>“The strong positive relationship proves that ice-cream sales
+increase drowning risk.”</strong></p>
 </blockquote>
 <div id="audit-the-claim" class="section level2">
-<h2>8. Audit the Claim</h2>
-<p>Identify two problems with this interpretation.</p>
+<h2>9. Audit the Claim</h2>
+<p>Identify two problems.</p>
 <p><strong>Problem 1:</strong></p>
 <p><strong>Problem 2:</strong></p>
-<p>Now suppose the AI assistant instead says:</p>
+<p>Now suppose the AI assistant sees the grouped plot and says:</p>
 <blockquote>
-<p><strong>“Temperature completely proves that there is no relationship
-between ice cream and drowning.”</strong></p>
+<p><strong>“Temperature completely proves that ice-cream sales have a
+protective effect against drowning.”</strong></p>
 </blockquote>
-<p>Is that statement also too strong? Explain.</p>
+<p>Is this conclusion justified? Explain.</p>
+<p><strong>Your answer:</strong></p>
 </div>
 </div>
-<div id="part-vi-what-do-the-data-actually-support" class="section level1">
-<h1>Part VI: What Do the Data Actually Support?</h1>
-<div id="calibrated-conclusion" class="section level2">
-<h2>9. Calibrated Conclusion</h2>
-<p>Write two or three sentences explaining what the data show.</p>
-<p>Your answer should distinguish:</p>
+<div id="part-vii-calibrated-communication" class="section level1">
+<h1>Part VII: Calibrated Communication</h1>
+<div id="write-the-conclusion" class="section level2">
+<h2>10. Write the Conclusion</h2>
+<p>Write two or three sentences for a non-statistical audience.</p>
+<p>Your conclusion should:</p>
 <ul>
-<li>the observed association;</li>
-<li>the role of temperature;</li>
-<li>what the data do <strong>not</strong> establish.</li>
+<li>describe the positive pooled association;</li>
+<li>explain the role of temperature;</li>
+<li>mention the within-group pattern;</li>
+<li>avoid claiming that these data establish a causal effect of
+ice-cream sales on drowning.</li>
 </ul>
 <p><strong>Your answer:</strong></p>
 </div>
 </div>
 <div id="the-skeptics-workflow" class="section level1">
 <h1>The Skeptic’s Workflow</h1>
-<p>Complete the sequence:</p>
+<p>Complete these statements:</p>
 <blockquote>
-<p><strong>I observe an association between X and Y. Before interpreting
-it causally, I should ________________________________.</strong></p>
+<p><strong>I see an association between X and Y. Before interpreting it
+causally, I should ________________________________.</strong></p>
 </blockquote>
-<p>Then:</p>
 <blockquote>
 <p><strong>A plausible confounder is a variable that
 ________________________________.</strong></p>
 </blockquote>
-<p>And:</p>
 <blockquote>
-<p><strong>Looking at the X–Y relationship within groups of Z can help
-because ________________________________.</strong></p>
+<p><strong>Looking within groups of Z can help because
+________________________________.</strong></p>
+</blockquote>
+<blockquote>
+<p><strong>If the pooled relationship differs from the within-group
+relationships, I should ________________________________.</strong></p>
 </blockquote>
 </div>
-<div id="before-quiz-6" class="section level1">
-<h1>Before Quiz 6</h1>
-<p>You should be able to:</p>
+<div id="before-the-evidence-debate" class="section level1">
+<h1>Before the Evidence Debate</h1>
+<p>You should now be able to:</p>
 <ul>
-<li>distinguish an observed association from a causal explanation;</li>
-<li>identify plausible alternative explanations;</li>
-<li>identify a third variable that may be related to both X and Y;</li>
-<li>compare pooled and within-group relationships;</li>
-<li>explain how confounding can create or alter an observed
-association;</li>
-<li>recognize why conditional analysis is useful;</li>
-<li>audit an AI-generated causal explanation;</li>
-<li>communicate a calibrated conclusion.</li>
+<li>distinguish a pooled relationship from a conditional
+relationship;</li>
+<li>identify a plausible third variable;</li>
+<li>explain how confounding can change an observed relationship;</li>
+<li>recognize Simpson’s paradox as a case where aggregate and subgroup
+relationships differ;</li>
+<li>use subgroup analysis to interrogate an association;</li>
+<li>identify overconfident causal interpretations;</li>
+<li>communicate what the evidence shows without claiming more than it
+can establish.</li>
 </ul>
 <blockquote>
 <p><strong>Association is evidence. Explanation must be
