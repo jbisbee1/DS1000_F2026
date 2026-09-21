@@ -827,9 +827,9 @@ When you see an association, ask:
 
 ---
 
-# Next
+# Homework 6
 
-Homework 6 and Quiz 6 will practice:
+You will practice:
 
 - generating alternative explanations;
 - identifying plausible confounders;
@@ -838,8 +838,8 @@ Homework 6 and Quiz 6 will practice:
 - auditing causal interpretations from AI;
 - writing calibrated conclusions.
 
-Then:
+Next:
 
-.huge[
-**Evidence Debate 1**
+.big[
+**Relationships in Practice**
 ]
