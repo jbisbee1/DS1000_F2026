@@ -1,0 +1,164 @@
+---
+title: "What Do Text Measures Capture, and What Do They Miss?"
+subtitle: "Homework 14"
+author: "DS-1000: How Data Shape Our World"
+date: "Due before Lecture 19"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, error = TRUE, warning = FALSE, message = FALSE)
+
+library(tidyverse)
+
+tweet_words <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/main/data/Trump_tweet_words.Rds") %>%
+  mutate(PostPresident = Tweeting.date > as.Date("2016-11-06"))
+
+nrc <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/main/data/nrc.Rds")
+```
+
+# What is this homework for?
+
+In Lecture 18, you saw that a sentiment dictionary only matches a fraction of the words in a dataset, and that word-count scoring breaks down under negation and sarcasm.
+
+Now you will run that same audit yourself, using two different emotion categories:
+
+> **Before trusting a text measure, ask what share of the text it actually captured — and what kinds of sentences would fool it.**
+
+You may use AI, your notes, classmates, and the internet. AI can help you write the code. Your job is to interpret the coverage and scoring correctly, and to construct your own example of where the method fails.
+
+# Part I: Dictionary Coverage
+
+## 1. What's in the Dictionary?
+
+List the distinct emotion categories in `nrc`.
+
+```{r categories}
+# List the distinct sentiment categories here.
+
+```
+
+## 2. Measure Coverage
+
+What share of the distinct words in `tweet_words` are matched by `nrc` at all?
+
+```{r coverage}
+# Calculate the share of distinct words matched by the dictionary.
+
+```
+
+**Your answer:**
+
+
+
+# Part II: Score a Different Emotion Pair
+
+## 3. Join and Filter
+
+Using `inner_join()`, attach sentiment labels to `tweet_words`, then filter to just two emotion categories: `"anger"` and `"joy"`.
+
+```{r join-filter}
+# Join tweet_words to nrc, filtering to anger and joy.
+
+```
+
+## 4. Score Each Tweet
+
+For each tweet, count `anger` words and `joy` words, then calculate `joy - anger`.
+
+```{r score}
+# Calculate net (joy - anger) score per tweet.
+
+```
+
+## 5. Compare Before and After
+
+Plot or summarize the average `joy - anger` score by `PostPresident`.
+
+```{r compare}
+# Compare the average score across PostPresident.
+
+```
+
+**What do you find?**
+
+
+
+# Part III: Where the Method Fails
+
+## 6. Construct a Negation Example
+
+Write two short sentences of your own: one using a word that would be scored as `"joy"` or `"anger"` by the dictionary, and a negated version of the same sentence (e.g., adding "not" or "never").
+
+**Sentence 1 (no negation):**
+
+**Sentence 2 (negated):**
+
+Would a word-matching method score these two sentences differently? Should it?
+
+**Your answer:**
+
+
+
+## 7. Construct a Sarcasm Example
+
+Write one sentence that would be scored as positive (or joyful) by a dictionary method, but that a human reader would recognize as sarcastic or negative in context.
+
+**Your sentence:**
+
+
+
+**Why would the dictionary method get this wrong?**
+
+
+
+# Part IV: Audit an AI Explanation
+
+Suppose an AI assistant reports your `joy - anger` comparison and says:
+
+> **"This proves the person became a genuinely angrier communicator after this date."**
+
+## 8. Audit the Claim
+
+Identify two problems with this statement, using what you found in Parts I and III.
+
+**Problem 1:**
+
+
+
+**Problem 2:**
+
+
+
+# Part V: Calibrated Communication
+
+## 9. Write the Conclusion
+
+Write two or three sentences for a non-statistical audience, reporting your `joy - anger` comparison. Your conclusion should:
+
+- report the direction of the difference and what dictionary/coverage it's based on;
+- avoid claiming this reveals the person's actual emotional state;
+- mention at least one specific limitation (coverage, negation, or sarcasm).
+
+**Your answer:**
+
+
+
+# Before Lecture 19
+
+Complete these statements:
+
+> **A sentiment dictionary only captures the share of words that ________________________________.**
+
+
+
+> **Negation is a problem for word-count sentiment scoring because ________________________________.**
+
+
+
+> **Sarcasm is a problem for word-count sentiment scoring because ________________________________.**
+
+
+
+> **A sentiment score is best understood as a ________________________________, not a direct measurement of feeling.**
+

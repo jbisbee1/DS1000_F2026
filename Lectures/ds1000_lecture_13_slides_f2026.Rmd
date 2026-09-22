@@ -1,0 +1,383 @@
+---
+title: "Prediction vs. Explanation"
+subtitle: "DS 1000"
+author: "Prof. Bisbee"
+output:
+  xaringan::moon_reader:
+    css: ["default", "metropolis", "metropolis-fonts"]
+    nature:
+      ratio: "16:9"
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+```{r,include=F}
+set.seed(123)
+options(width=60)
+knitr::opts_chunk$set(fig.align='center',fig.width=9,fig.height=5,message=F,warning=F)
+
+library(tidyverse)
+
+gms <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/main/data/game_summary.Rds")
+
+# Linear probability model: predicting a binary outcome with lm().
+model_lpm <- lm(isWin ~ tov, data = gms)
+gms$pred_lpm <- predict(model_lpm)
+
+n_below0 <- sum(gms$pred_lpm < 0, na.rm = TRUE)
+n_above1 <- sum(gms$pred_lpm > 1, na.rm = TRUE)
+
+# A "kitchen sink" prediction-oriented model, evaluated by held-out accuracy.
+set.seed(123)
+inds <- sample(1:nrow(gms), size = round(nrow(gms) / 2), replace = FALSE)
+train <- gms %>% slice(inds)
+test <- gms %>% slice(-inds)
+
+model_predict <- lm(isWin ~ tov + pts + treb + pctFG, data = train)
+test$pred <- predict(model_predict, newdata = test)
+test$pred_class <- ifelse(test$pred >= 0.5, TRUE, FALSE)
+accuracy <- mean(test$pred_class == test$isWin, na.rm = TRUE)
+```
+
+<style>
+.big { font-size: 130%; }
+.huge { font-size: 180%; }
+.small { font-size: 80%; }
+</style>
+
+<!--
+LEARNING OBJECTIVES
+
+LO1: Interrogate empirical claims.
+LO3: Select and justify analytical approaches.
+LO4: Conduct and evaluate data analyses.
+LO5: Critically use AI as an analytical tool.
+LO6: Communicate evidence responsibly.
+
+Lecture 13 opens Unit 4. It does not teach a new model type -- it reframes
+the goal. Units 1-3 built habits for explanation (confounders, calibrated
+causal language, model summaries). This lecture argues that when the goal
+shifts to prediction, the evaluation criterion shifts too (from "is this
+variable justified?" to "does this improve held-out accuracy?"), and uses
+a linear probability model on a binary outcome (isWin) to motivate why
+Classification I needs new tools.
+
+INSTRUCTOR NOTE:
+No new lecture-adjacent homework technique is introduced here; the demo is
+deliberately a "broken" use of lm() on a 0/1 outcome, to make the case for
+classification-specific methods next class.
+-->
+
+# Prediction vs. Explanation
+
+.big[
+So far:
+
+> **What causes this relationship, and how confident should I be in that explanation?**
+
+Today:
+
+> **What if I don't need to explain anything — I just need to guess right?**
+]
+
+---
+
+# Where We Are
+
+.big[
+**Question → trustworthy variables → appropriate comparison → describe the relationship → interrogate explanations → quantify uncertainty → summarize with a model → evaluate the model → choose the right goal**
+]
+
+Today:
+
+**Choose the right goal**
+
+---
+
+# Two Different Jobs
+
+.big[
+**Explanation:** Why does this relationship exist? Which variables matter, and why?
+
+**Prediction:** Given what I know, what is my best guess for the outcome?
+]
+
+Both use models. They are not the same job.
+
+---
+
+# A Familiar Example, Revisited
+
+Units 1–3 asked:
+
+.huge[
+> **Does selectivity explain graduate earnings?**
+]
+
+We worried about confounders, calibrated our language, and avoided claiming causation from an association.
+
+That is an **explanation** question.
+
+---
+
+# A Different Kind of Question
+
+.huge[
+> **Given a team's turnovers, points, rebounds, and shooting, can I guess who wins the game?**
+]
+
+Nobody asked *why* turnovers relate to winning. The only thing that matters is: **did the guess turn out to be right?**
+
+That is a **prediction** question.
+
+---
+
+# What Changes Between the Two Goals
+
+.big[
+**For explanation:** every variable needs a justification. A confounder is a threat to the conclusion. Interpretability matters.
+
+**For prediction:** a variable earns its place by improving accuracy on new data. It doesn't need a causal story. Interpretability is nice, not required.
+]
+
+---
+
+# The Same Habit Still Applies
+
+.big[
+Whichever goal you have, you still have to **evaluate the model on data it wasn't fit to** — that's Lecture 12's cross-validation lesson, and it applies just as much to prediction as to explanation.
+]
+
+What changes is: evaluate it **for what**?
+
+---
+
+# Today's Data
+
+```{r}
+gms %>%
+  select(idGame, isWin, tov, pts, treb, pctFG) %>%
+  glimpse()
+```
+
+`isWin`: did the team win this game? `TRUE` / `FALSE`.
+
+---
+
+# A New Kind of Outcome
+
+.big[
+Every outcome we have modeled so far has been **continuous**: earnings, turnovers.
+
+`isWin` is different: it only takes two values.
+]
+
+What happens if we just plug it into `lm()` like we always have?
+
+---
+
+# Trying the Familiar Tool
+
+```{r}
+model_lpm <- lm(isWin ~ tov, data = gms)
+summary(model_lpm)$coefficients
+```
+
+.big[
+R doesn't stop us. It fits a line through 0s and 1s.
+]
+
+---
+
+# What Does the Line Predict?
+
+```{r}
+gms %>%
+  ggplot(aes(x = tov, y = isWin)) +
+  geom_jitter(height = .05, alpha = .2) +
+  geom_smooth(method = "lm", se = FALSE)
+```
+
+---
+
+# A Real Problem
+
+```{r}
+gms$pred_lpm <- predict(model_lpm)
+range(gms$pred_lpm, na.rm = TRUE)
+```
+
+.big[
+`r n_below0` predicted values are below 0. `r n_above1` are above 1.
+]
+
+A "predicted probability" of winning that is negative, or over 100%, doesn't mean anything.
+
+---
+
+# Why This Happens
+
+.big[
+`lm()` assumes $Y$ can take any value and tries to minimize squared error across the whole range.
+]
+
+A binary outcome isn't built that way — it only lives at 0 and 1. The straight-line tool from Unit 3 wasn't built for this job.
+
+<!-- Bridge slide: sets up Classification I's need for a bounded-probability model. -->
+
+---
+
+# The Goal Was Never "Fit a Line"
+
+.big[
+Step back. What did we actually want?
+]
+
+Not a coefficient to interpret. We wanted: **given a new game's stats, guess win or lose, and be right as often as possible.**
+
+That reframing is what Classification I will build tools for.
+
+---
+
+# Redefining "Good," for Prediction
+
+.big[
+For a continuous outcome, we evaluated with RMSE: how far off, on average?
+
+For a win/lose outcome, "how far off" isn't quite the right question.
+]
+
+A more natural question: **out of all the games where I made a guess, how often was I right?**
+
+---
+
+# A Rough First Pass: Accuracy
+
+Using a 50% cutoff on our (flawed) linear model's predictions, split into train and test:
+
+```{r, eval=FALSE}
+model_predict <- lm(isWin ~ tov + pts + treb + pctFG, data = train)
+test$pred <- predict(model_predict, newdata = test)
+test$pred_class <- ifelse(test$pred >= 0.5, TRUE, FALSE)
+accuracy <- mean(test$pred_class == test$isWin, na.rm = TRUE)
+```
+
+```{r}
+round(accuracy * 100, 1)
+```
+
+---
+
+# Prediction Still Needs Held-Out Evaluation
+
+.big[
+Notice: we still split into train and test, exactly like Lecture 12.
+]
+
+The goal changed (accuracy instead of RMSE). The discipline of testing on data the model hasn't seen did not change.
+
+---
+
+# Kitchen-Sink Predictors
+
+.big[
+Because the goal is prediction, not explanation, we didn't ask whether `treb` (rebounds) or `pctFG` "should" belong in the model theoretically.
+]
+
+We asked only: **does including it help the held-out guess?**
+
+That would be a very different move if our goal were explanation.
+
+---
+
+# A Genuine Tension
+
+.big[
+A model built purely to predict well can end up **uninterpretable** — dozens of predictors, no clean story.
+
+A model built purely to explain can end up a **poor predictor** — clean and justified, but not very accurate on new data.
+]
+
+Data scientists have to know which job they were hired to do.
+
+---
+
+# Consequences Are Not Symmetric
+
+.big[
+Prediction models are often used to make real decisions about people: who gets a loan, who gets flagged, who gets hired, who gets released.
+]
+
+When a model's predictions carry consequences, "it's accurate" is not automatically the same as "it's fair to use this way." We will return to this directly in Unit 5.
+
+---
+
+# Audit an AI Claim
+
+Suppose an AI assistant builds a model to predict wins from turnovers, points, rebounds, and shooting percentage, achieves 78% accuracy, and says:
+
+> "This proves that these four statistics are what cause a team to win."
+
+.big[
+**What was the model actually built to do?**
+
+**Does high predictive accuracy establish a causal mechanism?**
+
+**What would you need in order to make an explanatory claim instead?**
+]
+
+A model tuned for prediction was never asked to identify causes.
+
+---
+
+# A Calibrated Conclusion
+
+Instead of:
+
+> "These stats are what cause winning."
+
+Try:
+
+.big[
+> **A model using turnovers, points, rebounds, and shooting percentage correctly predicted the outcome of about `r round(accuracy*100,1)`% of held-out games — a measure of how useful these variables are for guessing the outcome, not a claim about what causes it.**
+]
+
+---
+
+# Before You Leave
+
+Before building any model, ask:
+
+1. Is the goal to explain *why*, or to predict *what*?
+2. If explanation: is each variable theoretically justified? What could confound it?
+3. If prediction: does each variable improve held-out performance?
+4. Does the outcome variable's type (continuous vs. categorical) match the tool I'm about to use?
+5. If the prediction will be used to make a real decision, what are the consequences of being wrong?
+
+---
+
+# The Rule to Remember
+
+.huge[
+**Explanation asks why. Prediction asks what.**
+
+**Know which question you are actually answering.**
+]
+
+---
+
+# Homework 10
+
+You will practice:
+
+- distinguishing an explanation question from a prediction question;
+- recognizing when a continuous-outcome tool has been misapplied to a categorical outcome;
+- evaluating a predictive claim using held-out performance;
+- auditing an AI claim that treats predictive accuracy as causal proof.
+
+Next:
+
+.big[
+**Classification I**
+]

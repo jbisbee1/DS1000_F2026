@@ -1,0 +1,318 @@
+---
+title: "What Should Humans Remain Responsible For?"
+subtitle: "DS 1000"
+author: "Prof. Bisbee"
+output:
+  xaringan::moon_reader:
+    css: ["default", "metropolis", "metropolis-fonts"]
+    nature:
+      ratio: "16:9"
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+```{r,include=F}
+set.seed(123)
+options(width=60)
+knitr::opts_chunk$set(fig.align='center',fig.width=9,fig.height=5,message=F,warning=F)
+
+library(tidyverse)
+```
+
+<style>
+.big { font-size: 130%; }
+.huge { font-size: 180%; }
+.small { font-size: 80%; }
+</style>
+
+<!--
+LEARNING OBJECTIVES
+
+LO1: Interrogate empirical claims.
+LO3: Select and justify analytical approaches.
+LO4: Conduct and evaluate data analyses.
+LO5: Critically use AI as an analytical tool.
+LO6: Communicate evidence responsibly.
+
+Lecture 20 closes Unit 5's instructional content and, with it, the core
+lecture sequence for the semester. It makes explicit the "human specifies,
+AI implements, human verifies" division of labor the course has practiced
+implicitly since Lecture 1, walks the full recurring workflow stage by
+stage asking what AI can help with vs. what a human must judge, and works
+through one synthesized AI-generated "mini report" on the semester's
+running college-selectivity claim as a capstone audit exercise.
+
+INSTRUCTOR NOTE:
+This is the last instructional lecture before the Unit 5 Assessment Day
+(Evidence Debate 5 + Unit Test 5). Per the established course pattern, it
+closes with a Daily Quiz callout, not a "Homework N" slide -- there is no
+HW16; the next class sessions are Project Development / Workshop, which
+carry no numbered homework in the syllabus.
+-->
+
+# What Should Humans Remain Responsible For?
+
+.big[
+Last class:
+
+> **How do misleading claims get produced?**
+
+Today:
+
+> **Given everything AI can now do, what is left that only a human can do?**
+]
+
+---
+
+# Where We Are
+
+.big[
+**Question → ... → recognize how misleading claims get produced → decide what stays human**
+]
+
+Today, and for the rest of the semester:
+
+**Decide what stays human**
+
+---
+
+# A Principle You've Already Been Using
+
+.big[
+Every homework this semester has quietly run on the same rule:
+]
+
+.huge[
+**Human specifies → AI generates or implements → Human verifies and judges.**
+]
+
+Today we say it out loud, and take it seriously as a professional practice, not just a homework policy.
+
+---
+
+# Why Say It Out Loud Now
+
+.big[
+AI can now draft code, propose analyses, explain unfamiliar syntax, and write fluent summaries — genuinely useful, genuinely fast.
+]
+
+None of that changes who is accountable for the claim that goes out the door.
+
+---
+
+# Walking the Whole Workflow
+
+Recall the recurring workflow from Lecture 1:
+
+.big[
+**Claim → Concepts → Variables → Unit of analysis → Understand each variable → Prepare the evidence → Put variables together → Evaluate → Communicate**
+]
+
+For each stage: what can AI help with, and what must a human still decide?
+
+---
+
+# Concepts → Variables
+
+.big[
+**AI can:** propose candidate variables, generate code to construct them.
+
+**A human must:** judge whether a variable is a *valid* operationalization of the concept — whether `adm_rate` really captures "selectivity," and what it leaves out.
+]
+
+AI has no way to know what you actually meant by the concept.
+
+---
+
+# Understand Each Variable / Prepare the Evidence
+
+.big[
+**AI can:** generate summary statistics, flag missing data, draft wrangling code.
+
+**A human must:** decide whether the missingness matters, whether a filtering choice changes who the conclusion is about, and whether the resulting sample still answers the original question.
+]
+
+---
+
+# Put Variables Together / Evaluate
+
+.big[
+**AI can:** fit models, calculate RMSE or AUC, generate a confusion matrix, run a bootstrap loop.
+
+**A human must:** decide whether the comparison is fair, whether a confounder is plausible, whether the evaluation used data the model wasn't fit to, and whether "better" (lower RMSE, higher AUC) is even the right goal for this question.
+]
+
+---
+
+# Communicate
+
+.big[
+**AI can:** draft a summary sentence, propose language, tighten prose.
+
+**A human must:** decide whether that sentence claims more than the evidence supports.
+]
+
+Every "audit an AI claim" exercise this semester has been practicing exactly this stage.
+
+---
+
+# The Stage AI Cannot Do For You
+
+.big[
+Notice a pattern: at every stage, AI can produce an artifact — code, a number, a sentence — but a human has to decide whether that artifact is **appropriate for this specific question**.
+]
+
+That judgment is not a technical skill you delegate. It's the actual job.
+
+---
+
+# A Synthesis Exercise
+
+Here is an AI-generated summary of this semester's running claim:
+
+> "Using the College Scorecard data, we find that more selective colleges (lower admission rate) are associated with higher graduate earnings. A regression model finds this relationship is highly confident and the model predicts outcomes accurately. This confirms that college selectivity is a key driver of financial success."
+
+.big[
+Three sentences. At least four things need verifying.
+]
+
+---
+
+# Verify Sentence by Sentence
+
+.big[
+**"Associated with higher graduate earnings"** — associated, or caused? (Unit 2)
+
+**"Highly confident"** — confident by what measure? Bootstrapped? A p-value? Compared to what baseline? (Unit 3)
+]
+
+---
+
+# Verify Sentence by Sentence
+
+.big[
+**"Predicts outcomes accurately"** — accurate on the training data, or on a held-out test set? (Unit 3/4)
+
+**"Confirms college selectivity is a key driver"** — confirms, or is consistent with? Were confounders (student preparation, family background) ruled out? (Unit 2)
+]
+
+---
+
+# What the Human Adds
+
+.big[
+Nothing in that paragraph is necessarily false. Every phrase is just slightly looser than the evidence actually supports.
+]
+
+That gap — between "consistent with" and "confirms," between "confident" and "confident by what measure" — is exactly where a human's judgment has to sit.
+
+---
+
+# Can AI Verify Itself?
+
+.big[
+You might ask a second AI system to check the first one's work. That can genuinely help.
+]
+
+But someone still has to decide whether **that** verification is trustworthy, and someone still signs their name to the final claim. The responsibility doesn't disappear into the chain — it has to land somewhere, and it lands on a person.
+
+---
+
+# Why This Isn't Optional
+
+.big[
+Recall Lecture 13: a prediction used to make a real decision — a loan, a diagnosis, a hire — carries consequences that an accuracy number alone doesn't capture.
+]
+
+When the stakes are real, "the AI said it was accurate" is not an acceptable final answer.
+
+---
+
+# What a Principled Skeptic Looks Like
+
+.big[
+Not someone who refuses to use AI.
+
+Not someone who accepts AI output uncritically.
+]
+
+.huge[
+Someone who uses AI to move faster, and remains personally responsible for what the evidence does and does not support.
+]
+
+---
+
+# Looking Ahead
+
+.big[
+For the rest of the semester, you will build your own empirical claim for the Project — with AI available at every step of implementation.
+]
+
+The habit this lecture asks you to keep is the same one: you may not personally write every line of code, but you must be able to explain, defend, and stand behind every claim.
+
+---
+
+# Before You Leave
+
+Before accepting any AI-assisted analytical output, ask:
+
+1. Did I specify the analytical decision, or did the AI make it for me by default?
+2. Have I verified the output, or just found it plausible?
+3. Does the language match what the evidence actually supports?
+4. If this informs a real decision, have I checked for the specific failure modes (bias, confounding, overfitting, fabrication) from this unit?
+5. Am I prepared to defend this claim myself, in my own words?
+
+---
+
+# The Rule to Remember
+
+.huge[
+**AI can generate the analysis.**
+
+**Only you can be responsible for it.**
+]
+
+---
+
+# The Unit 5 Workflow, Complete
+
+.big[
+**Treat text as evidence**
+
+↓
+
+**Measure meaning, not just topic**
+
+↓
+
+**Recognize how misleading claims get produced**
+
+↓
+
+**Decide what stays human**
+]
+
+This is the same reasoning pattern the Evidence Debate and Unit Test will ask you to transfer.
+
+---
+
+# Daily Quiz 20
+
+.huge[
+
+Now test yourself independently.
+
+]
+
+.big[
+
+Open **Daily Quiz 20** in Brightspace.
+
+]
+
+.small[
+
+No AI or internet access during the quiz.
+
+]

@@ -1,0 +1,153 @@
+---
+title: "How Can Data and AI Systems Produce Misleading Claims?"
+subtitle: "Homework 15"
+author: "DS-1000: How Data Shape Our World"
+date: "Due before Lecture 20"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, error = TRUE, warning = FALSE, message = FALSE)
+
+library(tidyverse)
+
+gms <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/main/data/game_summary.Rds")
+```
+
+# What is this homework for?
+
+In Lecture 19, you saw four mechanisms that can produce misleading claims without anyone intending to deceive: unrepresentative training data, spurious/confounded relationships, false precision, and AI fabrication ("hallucination").
+
+Now you will practice spotting each one:
+
+> **Misinformation is rarely a single lie. It is usually a skipped step.**
+
+You may use AI, your notes, classmates, and the internet. Your job is to correctly diagnose which mechanism (or mechanisms) is at work in each scenario, and to practice the verification habit yourself.
+
+# Part I: Unrepresentative Data, Your Own Version
+
+## 1. Train on a Different Biased Slice
+
+Lecture 19 trained a win-predictor only on home games. This time, train `isWin ~ tov + pts + treb + pctFG` only on games from a single season (`yearSeason`) of your choosing.
+
+```{r train-biased}
+# Filter to one season and fit the model here.
+
+```
+
+## 2. Evaluate on a Different Season
+
+Evaluate that model's accuracy on games from a **different** season.
+
+```{r evaluate-different}
+# Calculate accuracy on a different season's games.
+
+```
+
+**Does performance look the same as it would on more games from the training season? What does this suggest about training a model on a narrow slice of data and using it elsewhere?**
+
+
+
+# Part II: Spurious or Meaningful?
+
+## 3. Generate Your Own Spurious Pair
+
+Following Lecture 19's approach, generate two independent random sequences of the same length and calculate their correlation.
+
+```{r spurious}
+set.seed(2026)
+
+# Generate two independent random series and calculate their correlation.
+
+```
+
+**Your correlation:**
+
+
+
+## 4. Real-World Scenario
+
+A news article reports: "Counties with more ice cream shops have higher rates of sunburn. Ice cream shops may be contributing to skin damage." Using Unit 2's habits, explain what's wrong with this claim and what a more careful analyst would check first.
+
+**Your answer:**
+
+
+
+# Part III: Spotting False Precision
+
+## 5. Rewrite a Falsely Precise Claim
+
+Consider this claim: "This job candidate has an 84% culture-fit score." Rewrite this claim more honestly, describing what a "culture-fit score" built from a proxy measure (e.g., word choices in an interview transcript) can and cannot tell you.
+
+**Your rewritten claim:**
+
+
+
+# Part IV: Auditing an AI-Generated Claim
+
+Suppose an AI assistant produces this summary:
+
+> **"A 2023 study of 50,000 students found that using AI tutoring tools increased test scores by exactly 14.2%, with no downsides reported."**
+
+## 6. Diagnose the Mechanisms
+
+For each mechanism below, explain whether this claim could plausibly involve it, and why.
+
+**Unrepresentative data:**
+
+
+
+**False precision:**
+
+
+
+**Missing confounders:**
+
+
+
+**Possible fabrication:**
+
+
+
+## 7. Write a Verification Plan
+
+List three concrete steps you would take to verify this claim before repeating it.
+
+**Step 1:**
+
+**Step 2:**
+
+**Step 3:**
+
+# Part V: Calibrated Communication
+
+## 8. Write the Conclusion
+
+Write two or three sentences summarizing what you learned from Parts I and II about your own biased-training-data and spurious-correlation demonstrations. Your conclusion should:
+
+- describe what each demonstration showed;
+- avoid overclaiming what a single demonstration proves about all models or all correlations;
+- connect back to at least one specific habit from earlier in the semester (e.g., checking representativeness, auditing confounders).
+
+**Your answer:**
+
+
+
+# Before Lecture 20
+
+Complete these statements:
+
+> **A model trained on an unrepresentative slice of data can still produce ________________________________.**
+
+
+
+> **A statistically real correlation is not automatically ________________________________.**
+
+
+
+> **A precise-looking number built from a proxy measure can mislead because ________________________________.**
+
+
+
+> **Before repeating an AI-generated claim, I should ________________________________.**
+

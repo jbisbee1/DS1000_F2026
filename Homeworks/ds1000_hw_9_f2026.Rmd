@@ -1,0 +1,158 @@
+---
+title: "How Can a Model Summarize a Relationship?"
+subtitle: "Homework 9"
+author: "DS-1000: How Data Shape Our World"
+date: "Due before Lecture 12"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, error = TRUE, warning = FALSE, message = FALSE)
+
+library(tidyverse)
+
+debt <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/main/data/sc_debt.Rds") %>%
+  filter(ugds > 0, md_earn_wne_p6 > 0)
+```
+
+# What is this homework for?
+
+In Lecture 11, you saw how `lm()` finds a line of best fit and how to interpret its intercept and slope.
+
+Now you will fit and interpret a regression model yourself, on a claim the lecture didn't cover:
+
+> **A line is only a summary. Fitting it is the easy part — interpreting what it does and doesn't say is the point.**
+
+You may use AI, your notes, classmates, and the internet. AI can help you write the `lm()` call. Your job is to interpret the output correctly and decide what it does and does not establish.
+
+# The Claim
+
+> **Larger colleges (measured by undergraduate enrollment) have lower graduate earnings.**
+
+The relevant variables:
+
+| Variable | Meaning |
+|---|---|
+| `ugds` | Number of undergraduate students |
+| `md_earn_wne_p6` | Median earnings of graduates |
+
+# Part I: Visualize First
+
+## 1. Look at the Relationship
+
+```{r visualize}
+# Create a scatterplot of ugds (x) and md_earn_wne_p6 (y), with a
+# line of best fit added.
+
+```
+
+**What does the scatterplot suggest about the direction of the relationship, if any?**
+
+
+
+# Part II: Fit the Model
+
+## 2. Run the Regression
+
+```{r fit-model}
+# Fit a linear model with md_earn_wne_p6 as the outcome and ugds
+# as the predictor. Save it to an object and view it with summary().
+
+```
+
+## 3. Report the Coefficients
+
+**Intercept:**
+
+
+
+**Slope:**
+
+
+
+# Part III: Interpret in Context
+
+## 4. What Does the Intercept Mean?
+
+In your own words, what does the intercept represent here? Is `ugds = 0` a value that could describe a real college?
+
+**Your answer:**
+
+
+
+## 5. What Does the Slope Mean?
+
+In your own words, what does the slope represent? Use the actual units (students, dollars) in your explanation.
+
+**Your answer:**
+
+
+
+## 6. Does the Sign Match the Claim?
+
+Does the sign of the slope match the direction of the claim above? Explain.
+
+**Your answer:**
+
+
+
+# Part IV: What This Model Does Not Establish
+
+## 7. Plausible Confounders
+
+Name one variable that could be related to both college size and graduate earnings, and that might explain part of this slope without college size *causing* the earnings difference.
+
+**Your answer:**
+
+
+
+# Part V: Audit an AI Explanation
+
+Suppose an AI assistant sees only your regression output and says:
+
+> **"This proves that shrinking a college's enrollment would cause its graduates to earn more."**
+
+## 8. Audit the Claim
+
+Identify two problems with this statement.
+
+**Problem 1:**
+
+
+
+**Problem 2:**
+
+
+
+# Part VI: Calibrated Communication
+
+## 9. Write the Conclusion
+
+Write two or three sentences for a non-statistical audience. Your conclusion should:
+
+- report the slope's direction and approximate size, in context;
+- avoid describing the slope as a causal effect;
+- mention the confounder you identified in Part IV.
+
+**Your answer:**
+
+
+
+# Before Lecture 12
+
+Complete these statements:
+
+> **The intercept of a regression line tells me ________________________________.**
+
+
+
+> **The slope of a regression line tells me ________________________________.**
+
+
+
+> **A regression line's fit does not, by itself, tell me ________________________________.**
+
+
+
+> **Before treating a slope as causal, I should ________________________________.**
+

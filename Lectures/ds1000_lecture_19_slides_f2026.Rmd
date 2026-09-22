@@ -1,0 +1,337 @@
+---
+title: "How Can Data and AI Systems Produce Misleading Claims?"
+subtitle: "DS 1000"
+author: "Prof. Bisbee"
+output:
+  xaringan::moon_reader:
+    css: ["default", "metropolis", "metropolis-fonts"]
+    nature:
+      ratio: "16:9"
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+```{r,include=F}
+set.seed(123)
+options(width=60)
+knitr::opts_chunk$set(fig.align='center',fig.width=9,fig.height=5,message=F,warning=F)
+
+library(tidyverse)
+
+gms <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/main/data/game_summary.Rds")
+
+# Biased-training-data demo: fit only on home games, evaluate on both.
+train_home <- gms %>% filter(locationGame == "H")
+test_home <- gms %>% filter(locationGame == "H")
+test_away <- gms %>% filter(locationGame == "A")
+
+model_home_only <- lm(isWin ~ tov + pts + treb + pctFG, data = train_home)
+
+acc_on <- function(model, newdata) {
+  preds <- predict(model, newdata = newdata)
+  pred_class <- ifelse(preds >= 0.5, TRUE, FALSE)
+  mean(pred_class == newdata$isWin, na.rm = TRUE)
+}
+
+acc_home <- acc_on(model_home_only, test_home)
+acc_away <- acc_on(model_home_only, test_away)
+
+# A tiny spurious-correlation demo, generated live rather than borrowed.
+set.seed(42)
+spurious_dat <- tibble(
+  year = 2001:2020,
+  series_a = cumsum(rnorm(20)),
+  series_b = cumsum(rnorm(20))
+)
+spurious_cor <- cor(spurious_dat$series_a, spurious_dat$series_b)
+```
+
+<style>
+.big { font-size: 130%; }
+.huge { font-size: 180%; }
+.small { font-size: 80%; }
+</style>
+
+<!--
+LEARNING OBJECTIVES
+
+LO1: Interrogate empirical claims.
+LO3: Select and justify analytical approaches.
+LO4: Conduct and evaluate data analyses.
+LO5: Critically use AI as an analytical tool.
+LO6: Communicate evidence responsibly.
+
+Lecture 19 makes explicit and systematic a habit the course has practiced
+implicitly all semester: auditing how misleading claims get produced. Four
+mechanisms, each demonstrated concretely rather than via case-study images
+(keeping this lecture consistent with the course's text/code style):
+(1) unrepresentative training data, demonstrated by retraining the
+Classification unit's win-predictor on home games only; (2) confounded/
+spurious relationships, via a live-generated spurious correlation plus a
+callback to HW6's Simpson's paradox; (3) false precision from a measure
+that sounds exact but isn't (callback to Lecture 18's sentiment score);
+(4) AI hallucination -- fluency without verification.
+
+INSTRUCTOR NOTE:
+Avoid citing specific real-world statistics/studies that can't be verified
+in this environment; keep real-world framing general and qualitative
+(the mechanisms themselves are well-documented in algorithmic-bias and
+misinformation research, without needing a specific unverified figure).
+-->
+
+# How Can Data and AI Systems Produce Misleading Claims?
+
+.big[
+All semester:
+
+> **Audit the AI's claim. What's missing? What's overstated?**
+
+Today:
+
+> **Zoom out — how do misleading claims get produced in the first place?**
+]
+
+---
+
+# Where We Are
+
+.big[
+**Question → ... → measure meaning, not just topic → recognize how misleading claims get produced**
+]
+
+Today:
+
+**Recognize how misleading claims get produced**
+
+---
+
+# A Reframe
+
+.big[
+Misinformation does not require a villain.
+]
+
+Every mechanism today can happen with **no one intending to deceive anyone** — just by skipping a step this course has spent 18 lectures teaching you not to skip.
+
+---
+
+# Mechanism 1: Unrepresentative Data
+
+.huge[
+> **A model trained on one slice of the world, applied to the whole world.**
+]
+
+Let's demonstrate this directly, with a classifier we already built.
+
+---
+
+# Retraining on a Biased Slice
+
+Recall Classification I's win-predictor. This time, train it **only on home games**.
+
+```{r, eval=FALSE}
+train_home <- gms %>% filter(locationGame == "H")
+model_home_only <- lm(isWin ~ tov + pts + treb + pctFG, data = train_home)
+```
+
+Nothing about this looks malicious. It's just a modeling choice — maybe made for convenience, or without thinking about it.
+
+---
+
+# Evaluate on Both Kinds of Games
+
+```{r}
+round(acc_home, 3)
+round(acc_away, 3)
+```
+
+.big[
+Trained only on home games, does the model perform the same on away games as it does on the games like the ones it was trained on?
+]
+
+---
+
+# Why This Matters Beyond Basketball
+
+.big[
+The mechanism here — a model trained on one group performs differently for a group it rarely saw — is the same mechanism behind well-documented problems in hiring tools, lending models, and facial recognition systems trained on unrepresentative data.
+]
+
+No one has to intend harm. The training data just has to be unrepresentative of who the model will be used on.
+
+<!-- Deliberately general/qualitative framing -- no specific unverified statistic cited. -->
+
+---
+
+# The Output Still Looks Neutral
+
+.big[
+This is what makes the mechanism dangerous: the model's predictions don't come with a warning label.
+]
+
+A number is a number. Nothing about `predict()`'s output announces "this estimate is less trustworthy for this group."
+
+---
+
+# Mechanism 2: Confounded and Spurious Relationships
+
+.big[
+Recall HW6: ice-cream sales and drownings were associated in the pooled data, purely because both were driven by temperature.
+]
+
+Reported without the Unit 2 audit habit, that pooled relationship is a ready-made piece of misinformation.
+
+---
+
+# A Relationship That's Pure Coincidence
+
+```{r}
+spurious_dat %>%
+  ggplot(aes(x = series_a, y = series_b)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE)
+```
+
+---
+
+# The Correlation Is Real
+
+```{r}
+round(spurious_cor, 2)
+```
+
+.big[
+`series_a` and `series_b` are two **independently generated random sequences**. They share no cause. The correlation is not a coding error — with enough random series, some pairs will look related by chance.
+]
+
+---
+
+# The Lesson
+
+.big[
+A relationship being statistically real in the data is not the same as it being meaningful.
+]
+
+Misinformation frequently isn't a fabricated number — it's a real number, reported without the "what else could explain this?" step from Unit 2.
+
+---
+
+# Mechanism 3: False Precision
+
+.big[
+Recall Lecture 18: a "net sentiment score" sounds like a precise measurement of feeling. It is actually a count of dictionary-matched words.
+]
+
+A single clean number invites more trust than the underlying measurement deserves.
+
+---
+
+# Numbers That Sound More Certain Than They Are
+
+.big[
+"Toxicity score: 87%." "Risk score: 6.2." "Approval likelihood: 73%."
+]
+
+Each of these is a specific-sounding number built from an imperfect proxy, exactly like the sentiment score. The precision of the number does not imply precision in what it measures.
+
+<!-- LO1: Reinforce construct validity from Unit 1 in a new register. -->
+
+---
+
+# Mechanism 4: AI Fluency Without Verification
+
+.big[
+A language model is trained to produce **plausible-sounding** text — not verified-true text.
+]
+
+It can generate a specific statistic, a citation, or a quote that **sounds exactly like the real thing** and is entirely fabricated. This is often called **hallucination**.
+
+---
+
+# Why This Happens
+
+.big[
+The model is optimizing for "what would a fluent answer look like," not "is this claim actually true."
+]
+
+Confidence in the writing and accuracy of the claim are two completely different things — and a fluent, confident tone provides no evidence about which one you're getting.
+
+---
+
+# Putting It Together: Audit a Real-Looking Claim
+
+An AI-generated summary states:
+
+> "A recent study found that 73% of remote workers report higher productivity, based on a nationally representative survey."
+
+.big[
+**Mechanism check — could this involve:**
+
+Unrepresentative data? False precision? A confound the summary skipped? Simple fabrication?
+]
+
+You may not be able to tell which, from the sentence alone — which is itself the point.
+
+---
+
+# The Only Real Defense
+
+.big[
+Not "trust it" or "distrust it" — **verify it.**
+]
+
+Find the actual study. Check the sample. Check what "productivity" was operationalized as. Check whether the number even appears in the source.
+
+---
+
+# A Calibrated Habit
+
+Instead of:
+
+> "The AI said it, so it must be true (or must be fake)."
+
+Try:
+
+.big[
+> **This claim has a specific, checkable structure — a source, a sample, and a measurement. Before repeating it, I should verify each piece rather than reacting to how confidently it's stated.**
+]
+
+---
+
+# Before You Leave
+
+When you see a data-driven or AI-generated claim, ask:
+
+1. What data was the underlying model or statistic trained or calculated on — and who might be missing from it?
+2. Could this relationship be confounded or coincidental?
+3. Does a precise-looking number come from a proxy that isn't actually precise?
+4. Could this specific claim be a fabrication dressed up as fluent, confident text?
+5. Have I verified this, or just found it plausible?
+
+---
+
+# The Rule to Remember
+
+.huge[
+**Misinformation is rarely a single lie.**
+
+**It is usually a skipped step.**
+]
+
+---
+
+# Homework 15
+
+You will practice:
+
+- identifying unrepresentative training data in a real scenario;
+- distinguishing a real-but-spurious relationship from a meaningful one;
+- spotting false precision in a reported measure;
+- auditing an AI-generated claim for fabrication, and explaining how you would verify it.
+
+Next:
+
+.big[
+**AI, Judgment & Responsibility**
+]

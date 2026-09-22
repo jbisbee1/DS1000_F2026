@@ -1,0 +1,209 @@
+---
+title: "How Confident Should We Be?"
+subtitle: "Homework 7"
+author: "DS-1000: How Data Shape Our World"
+date: "Due before Lecture 10"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, error = TRUE, warning = FALSE, message = FALSE)
+
+library(tidyverse)
+
+nba <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/main/data/nba_players_2018.Rds")
+```
+
+# What is this homework for?
+
+In Lecture 9, you saw that any single sample gives one story, and that resampling (the **bootstrap**) shows how fragile that story is.
+
+Now you will run the same procedure on a new comparison, in your own hands:
+
+> **We observe a difference between two groups. How confident should we be that it isn't just an artifact of this one sample?**
+
+You may use AI, your notes, classmates, and the internet. AI can help you write the `for()` loop. Your job is to decide what the resulting confidence number does and does not tell you.
+
+# The Claim
+
+> **Non-rookies shoot free throws more accurately than rookies.**
+
+The relevant variables:
+
+| Variable | Meaning |
+|---|---|
+| `isRookie` | Whether the player is a rookie |
+| `pctFT` | Free-throw percentage |
+| `fta` | Free throws attempted |
+
+# Part I: The Observed Comparison
+
+## 1. Look First
+
+Calculate the average free-throw percentage for rookies and non-rookies.
+
+```{r observed-comparison}
+# Calculate the group means here.
+
+```
+
+**What do you observe?**
+
+
+
+# Part II: What Would "Confidence" Mean Here?
+
+## 2. Before You Resample
+
+In your own words, what would it mean to be "80% confident" that non-rookies shoot free throws more accurately?
+
+**Your answer:**
+
+
+
+What would it mean if that confidence were close to 50%?
+
+**Your answer:**
+
+
+
+# Part III: Build the Bootstrap
+
+## 3. One Resample
+
+Draw one resample of the full dataset (with replacement) and recompute the group means.
+
+```{r one-resample}
+set.seed(123)
+
+# Resample nba with replacement (same size as nba) and calculate
+# mean pctFT by isRookie.
+
+```
+
+## 4. Many Resamples
+
+Write a `for()` loop that repeats Step 3 at least 200 times, saving each resample's group means. Ask AI for help if you get stuck, but make sure you can explain every line.
+
+```{r bootstrap-loop}
+set.seed(123)
+
+# bs_ft <- NULL
+# for (i in 1:200) {
+#   ...
+# }
+
+```
+
+## 5. Turn It Into a Confidence Number
+
+For each resample, was the non-rookie mean higher than the rookie mean? What fraction of resamples say yes?
+
+```{r confidence-number}
+# Calculate the confidence percentage here.
+
+```
+
+**Your confidence percentage:**
+
+
+
+# Part IV: Interpret the Number
+
+## 6. What It Does and Doesn't Mean
+
+Write one sentence explaining what your confidence percentage actually measures.
+
+**Your answer:**
+
+
+
+Write one sentence describing a wrong way to interpret it (something it does *not* establish).
+
+**Your answer:**
+
+
+
+# Part V: Is the Comparison Fair?
+
+## 7. A Plausible Confound
+
+Free-throw percentage can be noisy for players who attempted very few free throws all season.
+
+```{r attempts-check}
+# Compare fta (free throws attempted) between rookies and non-rookies here.
+
+```
+
+Does attempt volume differ meaningfully between the two groups? Could that affect how much you trust `pctFT` as a comparison?
+
+**Your answer:**
+
+
+
+## 8. A Fairer Version (Optional Challenge)
+
+If you have time, filter to players with a reasonable minimum number of free-throw attempts (for example, `fta >= 20`) and redo the bootstrap loop from Part III.
+
+```{r fair-bootstrap}
+# Optional: repeat the bootstrap on a filtered sample.
+
+```
+
+Did your confidence number change? Why might that happen?
+
+**Your answer:**
+
+
+
+# Part VI: Audit an AI Explanation
+
+Suppose an AI assistant sees only your Part III confidence number and says:
+
+> **"This proves non-rookies are better free-throw shooters."**
+
+## 9. Audit the Claim
+
+Identify two problems with this statement.
+
+**Problem 1:**
+
+
+
+**Problem 2:**
+
+
+
+# Part VII: Calibrated Communication
+
+## 10. Write the Conclusion
+
+Write two or three sentences for a non-statistical audience. Your conclusion should:
+
+- report your confidence percentage and what comparison it is about;
+- avoid describing the confidence number as a probability that the claim is "true";
+- mention anything from Part V that should make a reader more cautious.
+
+**Your answer:**
+
+
+
+# Before Lecture 10
+
+Complete these statements:
+
+> **Bootstrap resampling helps me because ________________________________.**
+
+
+
+> **A confidence percentage near 50% tells me ________________________________.**
+
+
+
+> **A high confidence percentage still does not tell me ________________________________.**
+
+
+
+> **Before trusting a bootstrap result, I should check ________________________________.**
+
+

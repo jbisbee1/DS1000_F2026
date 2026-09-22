@@ -1,0 +1,483 @@
+---
+title: "How Do We Interpret and Evaluate Regression Evidence?"
+subtitle: "DS 1000"
+author: "Prof. Bisbee"
+output:
+  xaringan::moon_reader:
+    css: ["default", "metropolis", "metropolis-fonts"]
+    nature:
+      ratio: "16:9"
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+```{r,include=F}
+set.seed(123)
+options(width=60)
+knitr::opts_chunk$set(fig.align='center',fig.width=9,fig.height=5,message=F,warning=F)
+
+library(tidyverse)
+
+debt <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/main/data/sc_debt.Rds") %>%
+  filter(adm_rate > 0, md_earn_wne_p6 > 0, sat_avg > 0)
+
+model_adm <- lm(md_earn_wne_p6 ~ adm_rate, data = debt)
+debt$pred_adm <- predict(model_adm)
+debt$resid_adm <- debt$md_earn_wne_p6 - debt$pred_adm
+
+rmse_in_sample <- sqrt(mean(debt$resid_adm^2))
+
+# Single train/test split, for the walkthrough.
+set.seed(1021)
+inds <- sample(1:nrow(debt), size = round(nrow(debt) / 2), replace = FALSE)
+train <- debt %>% slice(inds)
+test <- debt %>% slice(-inds)
+
+model_train <- lm(md_earn_wne_p6 ~ adm_rate, data = train)
+test$pred <- predict(model_train, newdata = test)
+rmse_holdout_once <- sqrt(mean((test$md_earn_wne_p6 - test$pred)^2, na.rm = TRUE))
+
+# Repeated cross-validation, for adm_rate.
+set.seed(123)
+cv_adm <- NULL
+for (i in 1:100) {
+  inds_i <- sample(1:nrow(debt), size = round(nrow(debt) / 2), replace = FALSE)
+  train_i <- debt %>% slice(inds_i)
+  test_i <- debt %>% slice(-inds_i)
+  m_i <- lm(md_earn_wne_p6 ~ adm_rate, data = train_i)
+  test_i$pred <- predict(m_i, newdata = test_i)
+  cv_adm <- c(cv_adm, sqrt(mean((test_i$md_earn_wne_p6 - test_i$pred)^2, na.rm = TRUE)))
+}
+
+# Repeated cross-validation, for sat_avg, to compare models.
+set.seed(123)
+cv_sat <- NULL
+for (i in 1:100) {
+  inds_i <- sample(1:nrow(debt), size = round(nrow(debt) / 2), replace = FALSE)
+  train_i <- debt %>% slice(inds_i)
+  test_i <- debt %>% slice(-inds_i)
+  m_i <- lm(md_earn_wne_p6 ~ sat_avg, data = train_i)
+  test_i$pred <- predict(m_i, newdata = test_i)
+  cv_sat <- c(cv_sat, sqrt(mean((test_i$md_earn_wne_p6 - test_i$pred)^2, na.rm = TRUE)))
+}
+```
+
+<style>
+.big { font-size: 130%; }
+.huge { font-size: 180%; }
+.small { font-size: 80%; }
+</style>
+
+<!--
+LEARNING OBJECTIVES
+
+LO1: Interrogate empirical claims.
+LO3: Select and justify analytical approaches.
+LO4: Conduct and evaluate data analyses.
+LO5: Critically use AI as an analytical tool.
+LO6: Communicate evidence responsibly.
+
+Lecture 12 completes Unit 3's core instructional content. It extends the
+adm_rate model built in Lecture 11 with residual diagnostics, RMSE, and
+cross-validation -- deliberately framed as "the bootstrap idea, applied to
+model evaluation" to tie the Regression sub-unit back to Uncertainty I/II.
+
+INSTRUCTOR NOTE:
+This is the last instructional lecture before the Unit 3 Assessment Day
+(Evidence Debate 3 + Unit Test 3). Per the established course pattern, it
+closes with a Daily Quiz callout and an assessment-day tease, not a
+"Homework N" slide -- the next homework (HW10) belongs to Lecture 13
+(Prediction vs. Explanation, the Unit 4 opener).
+-->
+
+# How Do We Interpret and Evaluate Regression Evidence?
+
+.big[
+Last class:
+
+> **How can a model summarize a relationship?**
+
+Today:
+
+> **How good is that summary, and how do we know?**
+]
+
+---
+
+# Where We Are
+
+.big[
+**Question → trustworthy variables → appropriate comparison → describe the relationship → interrogate explanations → quantify uncertainty → summarize with a model → evaluate the model → communicate**
+]
+
+Today:
+
+**Evaluate the model**
+
+---
+
+# Picking Up Where We Left Off
+
+Yesterday's model:
+
+```{r}
+model_adm <- lm(md_earn_wne_p6 ~ adm_rate, data = debt)
+```
+
+.big[
+We interpreted the intercept and slope. We never asked: **is this a good model?**
+]
+
+---
+
+# Every Model Makes Mistakes
+
+.big[
+If a line fit every observation perfectly, it wouldn't be summarizing anything — it would just be tracing the data.
+]
+
+The question is not *whether* the model makes mistakes. It's **how big, and how patterned**.
+
+---
+
+# Residuals, Again
+
+For every college, the model predicts earnings. The residual is:
+
+.huge[
+$\text{residual} = Y - \hat{Y}$
+]
+
+```{r}
+debt$pred_adm <- predict(model_adm)
+debt$resid_adm <- debt$md_earn_wne_p6 - debt$pred_adm
+
+summary(debt$resid_adm)
+```
+
+---
+
+# Look at the Residuals: Univariate
+
+```{r}
+debt %>%
+  ggplot(aes(x = resid_adm)) +
+  geom_histogram(bins = 40) +
+  labs(x = "Residual (actual − predicted earnings)")
+```
+
+.big[
+Residuals average to zero by construction. Look instead at their **shape**.
+]
+
+---
+
+# Look at the Residuals: Multivariate
+
+```{r}
+debt %>%
+  ggplot(aes(x = adm_rate, y = resid_adm)) +
+  geom_point(alpha = .4) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_smooth() +
+  labs(x = "Admission rate", y = "Residual")
+```
+
+---
+
+# What Would We Want to See?
+
+.big[
+**Ideal:** residuals scattered evenly around zero across the whole range of $X$ — a formless cloud.
+
+**Warning sign:** a visible pattern — a curve, a funnel, a cluster — meaning the model systematically over- or under-predicts in some region of $X$.
+]
+
+A pattern in the residuals means there is structure left in the data that a straight line isn't capturing.
+
+<!-- LO4: Let the rendered plot drive the discussion; don't presume its exact shape here. -->
+
+---
+
+# From a Picture to a Number
+
+.big[
+Residual plots are essential, but we also want a **single number** to summarize how good the model is — especially for comparing models.
+]
+
+We already have the tool: **RMSE**.
+
+---
+
+# RMSE, Again
+
+```{r}
+rmse_in_sample <- sqrt(mean(debt$resid_adm^2))
+round(rmse_in_sample, 0)
+```
+
+.big[
+On average, this model's predictions are off by about \$`r scales::comma(round(rmse_in_sample,0))`.
+]
+
+Is that good? Good compared to **what**?
+
+---
+
+# A Hidden Problem
+
+.big[
+We calculated RMSE using the **same data** we used to fit the model.
+]
+
+The model was built to minimize error on exactly this data. Its RMSE here is close to the *best-case* performance.
+
+.big[
+That is not the same as asking: **how well would this model do on data it hasn't seen?**
+]
+
+---
+
+# This Should Sound Familiar
+
+.big[
+We faced a version of this problem in Unit 3 already.
+]
+
+A single sample can make a comparison look more solid than it really is. **Bootstrapping** asked: *would this hold up under a different sample?*
+
+Today's version of that question: **would this model's accuracy hold up on data it wasn't fit to?**
+
+---
+
+# Train and Test
+
+.big[
+**Split the data in two:**
+
+- Fit the model on a **training** set.
+- Evaluate its RMSE on a separate **test** set the model never saw.
+]
+
+This is called **cross-validation**.
+
+---
+
+# One Split
+
+```{r, eval=FALSE}
+set.seed(1021)
+inds <- sample(1:nrow(debt), size = round(nrow(debt) / 2), replace = FALSE)
+train <- debt %>% slice(inds)
+test <- debt %>% slice(-inds)
+
+model_train <- lm(md_earn_wne_p6 ~ adm_rate, data = train)
+test$pred <- predict(model_train, newdata = test)
+```
+
+```{r}
+rmse_holdout_once <- sqrt(mean((test$md_earn_wne_p6 - test$pred)^2, na.rm = TRUE))
+round(rmse_holdout_once, 0)
+```
+
+---
+
+# In-Sample vs. Held-Out RMSE
+
+.big[
+In-sample RMSE: \$`r scales::comma(round(rmse_in_sample,0))`
+
+One held-out RMSE: \$`r scales::comma(round(rmse_holdout_once,0))`
+]
+
+A single train/test split depends on which colleges happened to land in the test set — the same fragility we saw with a single bootstrap resample.
+
+---
+
+# Repeat It, Like a Bootstrap
+
+```{r, eval=FALSE}
+cv_adm <- NULL
+for (i in 1:100) {
+  inds_i <- sample(1:nrow(debt), size = round(nrow(debt) / 2), replace = FALSE)
+  train_i <- debt %>% slice(inds_i)
+  test_i <- debt %>% slice(-inds_i)
+  m_i <- lm(md_earn_wne_p6 ~ adm_rate, data = train_i)
+  test_i$pred <- predict(m_i, newdata = test_i)
+  cv_adm <- c(cv_adm, sqrt(mean((test_i$md_earn_wne_p6 - test_i$pred)^2, na.rm = TRUE)))
+}
+```
+
+.big[
+100 different train/test splits, each producing its own held-out RMSE.
+]
+
+---
+
+# The Distribution of Held-Out RMSE
+
+```{r}
+data.frame(rmse = cv_adm) %>%
+  ggplot(aes(x = rmse)) +
+  geom_density(fill = "grey70") +
+  geom_vline(xintercept = mean(cv_adm), linetype = "dashed") +
+  labs(x = "Held-out RMSE across 100 splits")
+```
+
+---
+
+# A More Honest Estimate
+
+.big[
+Average held-out RMSE: \$`r scales::comma(round(mean(cv_adm),0))`
+
+In-sample RMSE: \$`r scales::comma(round(rmse_in_sample,0))`
+]
+
+Cross-validation gives a more honest sense of how the model would perform on colleges it wasn't built from.
+
+---
+
+# Using RMSE to Compare Models
+
+Recall Lecture 11's second model, using `sat_avg` instead of `adm_rate`.
+
+.big[
+Which predictor summarizes graduate earnings more reliably?
+]
+
+Cross-validate **both** and compare their average held-out RMSE.
+
+---
+
+# Comparing Two Models
+
+```{r}
+tibble(
+  model = c("md_earn_wne_p6 ~ adm_rate", "md_earn_wne_p6 ~ sat_avg"),
+  mean_cv_rmse = c(mean(cv_adm), mean(cv_sat))
+)
+```
+
+.big[
+The model with the **lower** average held-out RMSE makes smaller predictive mistakes on data it wasn't fit to.
+]
+
+---
+
+# What a Lower RMSE Does *Not* Mean
+
+.big[
+A lower RMSE means one model's predictions are, on average, closer to the truth.
+]
+
+It does **not** mean:
+
+- that predictor is the *causal* driver of earnings;
+- the winning model is correct, only less wrong;
+- either model would generalize to colleges very different from these.
+
+<!-- LO1: Keep separating predictive performance from causal explanation. -->
+
+---
+
+# Audit an AI Claim
+
+Suppose an AI assistant compares the two RMSE values and says:
+
+> "This proves that admission rate is the true cause of earnings differences, since its model has lower error."
+
+.big[
+**What does a lower cross-validated RMSE actually measure?**
+
+**Does better prediction imply a causal mechanism?**
+
+**What Unit 2 habits still apply here?**
+]
+
+Predictive accuracy and causal explanation are different questions.
+
+---
+
+# A Calibrated Conclusion
+
+Instead of:
+
+> "This model proves what drives earnings."
+
+Try:
+
+.big[
+> **Cross-validated on 100 random splits, the admission-rate model's predictions are off by about \$`r scales::comma(round(mean(cv_adm),0))`, on average, on colleges it wasn't fit to — a measure of predictive reliability, not proof of what causes earnings differences.**
+]
+
+---
+
+# Before You Leave
+
+When someone hands you a regression's RMSE, ask:
+
+1. Was it calculated on the same data used to fit the model?
+2. Would it hold up on data the model hasn't seen?
+3. Does the residual plot show a formless cloud, or a pattern?
+4. If comparing models, which has the lower held-out error?
+5. Does a lower error imply anything about *why* the relationship exists?
+
+---
+
+# The Rule to Remember
+
+.huge[
+**A good-looking fit on the data you trained on is the easy version of the question.**
+
+**Cross-validation asks the harder, more honest one.**
+]
+
+---
+
+# The Unit 3 Workflow, Complete
+
+.big[
+**Compare in a sample**
+
+↓
+
+**Resample to measure confidence**
+
+↓
+
+**Ask what that confidence justifies**
+
+↓
+
+**Summarize with a model**
+
+↓
+
+**Evaluate the model out of sample**
+]
+
+This is the same reasoning pattern the Evidence Debate and Unit Test will ask you to transfer.
+
+---
+
+# Daily Quiz 12
+
+.huge[
+
+Now test yourself independently.
+
+]
+
+.big[
+
+Open **Daily Quiz 12** in Brightspace.
+
+]
+
+.small[
+
+No AI or internet access during the quiz.
+
+]

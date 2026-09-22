@@ -1,0 +1,178 @@
+---
+title: "How Do We Predict Categories?"
+subtitle: "Homework 11"
+author: "DS-1000: How Data Shape Our World"
+date: "Due before Lecture 15"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, error = TRUE, warning = FALSE, message = FALSE)
+
+library(tidyverse)
+
+gms <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/main/data/game_summary.Rds")
+```
+
+# What is this homework for?
+
+In Lecture 14, you turned a linear probability model's predicted scores into classified win/loss predictions, built a confusion matrix, and compared accuracy to a baseline guess.
+
+Now you will build and evaluate your own classifier:
+
+> **A single accuracy number can hide a lot. Look inside the confusion matrix before you trust it.**
+
+You may use AI, your notes, classmates, and the internet. AI can help you write the code. Your job is to interpret the confusion matrix correctly and decide what the results do and don't support.
+
+# The Claim
+
+> **A team's free-throw shooting and rest predict whether it wins.**
+
+The relevant variables:
+
+| Variable | Meaning |
+|---|---|
+| `isWin` | Whether the team won the game |
+| `pctFT` | Free-throw percentage in that game |
+| `teamrest` | Days since the team's last game |
+
+# Part I: Split, Fit, and Predict
+
+## 1. Split the Data
+
+```{r train-test-split}
+set.seed(123)
+
+# Create train and test sets here, roughly half and half.
+
+```
+
+## 2. Fit the Model
+
+Fit `isWin ~ pctFT + teamrest` on the training set.
+
+```{r fit-model}
+# Fit the model here.
+
+```
+
+## 3. Predict and Classify
+
+Generate predicted values on the test set, and classify each as `TRUE`/`FALSE` using a 0.5 threshold.
+
+```{r classify}
+# Predict on test, then threshold at 0.5.
+
+```
+
+# Part II: Build and Read the Confusion Matrix
+
+## 4. The Confusion Matrix
+
+```{r confusion-matrix}
+# Use count() to build the confusion matrix (actual isWin by pred_class).
+
+```
+
+## 5. Name the Cells
+
+How many true positives, true negatives, false positives, and false negatives does your model produce?
+
+**True positives:**
+
+**True negatives:**
+
+**False positives:**
+
+**False negatives:**
+
+# Part III: Evaluate Against a Baseline
+
+## 6. Calculate Accuracy
+
+```{r accuracy}
+# Calculate overall accuracy here.
+
+```
+
+## 7. Calculate the Baseline
+
+What accuracy would you get by always guessing the more common outcome in the test set?
+
+```{r baseline}
+# Calculate the baseline accuracy here.
+
+```
+
+**Does your model beat the baseline? By how much?**
+
+
+
+# Part IV: Look Inside the Matrix
+
+## 8. Is Performance Even?
+
+Compare your model's performance on actual wins versus actual losses (i.e., look at each row of the confusion matrix separately). Is the model equally good at both, or lopsided?
+
+**Your answer:**
+
+
+
+## 9. Why Might This Happen?
+
+If your model performs noticeably better on one class than the other, suggest one reason why.
+
+**Your answer:**
+
+
+
+# Part V: Audit an AI Explanation
+
+Suppose an AI assistant is shown only your specificity (or sensitivity) — whichever number is more favorable — and says:
+
+> **"This model is highly accurate."**
+
+## 10. Audit the Claim
+
+Identify two problems with this statement.
+
+**Problem 1:**
+
+
+
+**Problem 2:**
+
+
+
+# Part VI: Calibrated Communication
+
+## 11. Write the Conclusion
+
+Write two or three sentences for a non-statistical audience. Your conclusion should:
+
+- report overall accuracy and compare it to the baseline;
+- mention whether performance was even across wins and losses;
+- avoid overstating what the model establishes.
+
+**Your answer:**
+
+
+
+# Before Lecture 15
+
+Complete these statements:
+
+> **A confusion matrix tells me ________________________________.**
+
+
+
+> **Accuracy alone can be misleading because ________________________________.**
+
+
+
+> **Before trusting a classifier's accuracy, I should compare it to ________________________________.**
+
+
+
+> **Citing only one favorable number from a confusion matrix can ________________________________.**
+

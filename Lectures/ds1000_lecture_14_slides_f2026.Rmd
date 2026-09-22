@@ -1,0 +1,348 @@
+---
+title: "How Do We Predict Categories?"
+subtitle: "DS 1000"
+author: "Prof. Bisbee"
+output:
+  xaringan::moon_reader:
+    css: ["default", "metropolis", "metropolis-fonts"]
+    nature:
+      ratio: "16:9"
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+```{r,include=F}
+set.seed(123)
+options(width=60)
+knitr::opts_chunk$set(fig.align='center',fig.width=9,fig.height=5,message=F,warning=F)
+
+library(tidyverse)
+library(scales)
+
+gms <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/main/data/game_summary.Rds")
+
+set.seed(123)
+inds <- sample(1:nrow(gms), size = round(nrow(gms) / 2), replace = FALSE)
+train <- gms %>% slice(inds)
+test <- gms %>% slice(-inds)
+
+model_class <- lm(isWin ~ tov + pts + treb + pctFG, data = train)
+test$pred_prob <- predict(model_class, newdata = test)
+test$pred_class <- ifelse(test$pred_prob >= 0.5, TRUE, FALSE)
+
+conf_mat <- test %>%
+  count(isWin, pred_class)
+
+get_n <- function(actual, predicted) {
+  v <- conf_mat %>% filter(isWin == actual, pred_class == predicted) %>% pull(n)
+  if (length(v) == 0) 0 else v
+}
+
+tp <- get_n(TRUE, TRUE)
+tn <- get_n(FALSE, FALSE)
+fp <- get_n(FALSE, TRUE)
+fn_ <- get_n(TRUE, FALSE)
+
+accuracy <- (tp + tn) / (tp + tn + fp + fn_)
+baseline_acc <- max(mean(test$isWin), 1 - mean(test$isWin))
+```
+
+<style>
+.big { font-size: 130%; }
+.huge { font-size: 180%; }
+.small { font-size: 80%; }
+</style>
+
+<!--
+LEARNING OBJECTIVES
+
+LO1: Interrogate empirical claims.
+LO3: Select and justify analytical approaches.
+LO4: Conduct and evaluate data analyses.
+LO5: Critically use AI as an analytical tool.
+LO6: Communicate evidence responsibly.
+
+Lecture 14 turns Lecture 13's "broken" linear probability model into a real
+classification workflow: threshold the predicted values, build a confusion
+matrix, calculate accuracy, and compare against a baseline. Sensitivity /
+specificity are introduced only by name, as a teaser -- full treatment of
+evaluation tradeoffs (thresholds, ROC/AUC) is reserved for Classification II.
+
+INSTRUCTOR NOTE:
+Continues the game_summary.Rds / isWin thread from Lecture 13 rather than
+introducing a new dataset, to keep the unit's cognitive load manageable.
+-->
+
+# How Do We Predict Categories?
+
+.big[
+Last class:
+
+> **What happens when I use a continuous-outcome tool on a categorical outcome?**
+
+Today:
+
+> **How do I turn that into an actual classifier, and know if it's any good?**
+]
+
+---
+
+# Where We Are
+
+.big[
+**Question → trustworthy variables → appropriate comparison → describe the relationship → interrogate explanations → quantify uncertainty → summarize with a model → evaluate the model → choose the right goal → build a classifier**
+]
+
+Today:
+
+**Build a classifier**
+
+---
+
+# Picking Up Where We Left Off
+
+Lecture 13 fit this on the training half of the data:
+
+```{r, eval=FALSE}
+model_class <- lm(isWin ~ tov + pts + treb + pctFG, data = train)
+test$pred_prob <- predict(model_class, newdata = test)
+```
+
+.big[
+The predictions weren't real probabilities — but we can still use them to make a **decision**.
+]
+
+---
+
+# From a Number to a Decision
+
+.big[
+**Classification:** turning a predicted score into a predicted category.
+]
+
+```{r}
+test$pred_class <- ifelse(test$pred_prob >= 0.5, TRUE, FALSE)
+
+test %>%
+  select(idGame, isWin, pred_prob, pred_class) %>%
+  head(5)
+```
+
+---
+
+# Every Prediction Is One of Four Things
+
+For a binary outcome, compare the prediction to the truth:
+
+.big[
+- Predicted **win**, actually won → correct
+- Predicted **loss**, actually lost → correct
+- Predicted **win**, actually lost → wrong
+- Predicted **loss**, actually won → wrong
+]
+
+---
+
+# The Confusion Matrix
+
+```{r}
+test %>%
+  count(isWin, pred_class)
+```
+
+.big[
+A **confusion matrix**: every combination of truth and prediction, counted.
+]
+
+---
+
+# Naming the Four Cells
+
+.big[
+**True positive:** predicted win, actually a win.
+
+**True negative:** predicted loss, actually a loss.
+
+**False positive:** predicted win, actually a loss.
+
+**False negative:** predicted loss, actually a win.
+]
+
+"Positive" here just means the class we're tracking — a win.
+
+---
+
+# From Counts to Accuracy
+
+.huge[
+$$\text{Accuracy} = \frac{\text{correct predictions}}{\text{all predictions}}$$
+]
+
+```{r}
+accuracy <- (tp + tn) / (tp + tn + fp + fn_)
+round(accuracy * 100, 1)
+```
+
+---
+
+# Is That Good?
+
+.big[
+Accuracy alone means nothing without a **baseline** to compare it to.
+]
+
+The simplest possible classifier: always guess the more common outcome.
+
+```{r}
+round(baseline_acc * 100, 1)
+```
+
+.big[
+Our model should beat this "dumbest guess" baseline — if it doesn't, it isn't adding anything.
+]
+
+---
+
+# A Trap: Accuracy Can Hide Unevenness
+
+.big[
+A model can post a great overall accuracy while doing **very differently** on the two classes.
+]
+
+Imagine a classifier that is excellent at predicting losses but bad at predicting wins. Overall accuracy could still look fine, because losses may be more common.
+
+---
+
+# Looking Inside the Matrix
+
+```{r}
+conf_mat %>%
+  group_by(isWin) %>%
+  mutate(total = sum(n), pct = percent(n / total))
+```
+
+.big[
+Same accuracy number can come from very different confusion matrices. Always look inside it.
+]
+
+---
+
+# Two Names Worth Knowing
+
+.big[
+**Sensitivity:** of the games actually won, what share did we correctly predict as wins?
+
+**Specificity:** of the games actually lost, what share did we correctly predict as losses?
+]
+
+We will unpack these — and the tradeoff between them — in the next class.
+
+---
+
+# The Threshold Was a Choice
+
+.big[
+We predicted "win" whenever `pred_prob >= 0.5`. That cutoff was arbitrary.
+]
+
+```{r}
+test$pred_class_40 <- ifelse(test$pred_prob >= 0.4, TRUE, FALSE)
+
+mean(test$pred_class_40 == test$isWin)
+```
+
+Changing the threshold changes the confusion matrix — and the accuracy.
+
+---
+
+# Same Held-Out Discipline
+
+.big[
+Notice: everything today still respected the train/test split from Lecture 12.
+]
+
+We never evaluated the classifier on the same games used to fit it. That habit doesn't change just because the outcome is now categorical.
+
+---
+
+# Do It Together
+
+.blue[Claim]: **A simpler model — using only turnovers — classifies about as well as the full model.**
+
+1. Fit `isWin ~ tov` on `train`.
+2. Predict on `test`, threshold at 0.5.
+3. Build the confusion matrix.
+4. Compare its accuracy to the full model's.
+
+---
+
+# Audit an AI Claim
+
+Suppose an AI assistant is shown only the specificity of a classifier (95%) and says:
+
+> "This model is excellent — it correctly predicts the outcome 95% of the time."
+
+.big[
+**What does specificity alone measure?**
+
+**What is missing from this claim?**
+
+**What could make this misleading even if it's technically true?**
+]
+
+Quoting one favorable number from a confusion matrix is not the same as reporting overall performance.
+
+---
+
+# A Calibrated Conclusion
+
+Instead of:
+
+> "The model predicts game outcomes."
+
+Try:
+
+.big[
+> **On held-out games, the classifier correctly predicted the outcome `r round(accuracy*100,1)`% of the time, compared to `r round(baseline_acc*100,1)`% for always guessing the more common outcome — but its performance was not identical across wins and losses, which the next class will examine more closely.**
+]
+
+---
+
+# Before You Leave
+
+When you see a classification result, ask:
+
+1. What threshold turned predicted scores into predicted categories?
+2. What does the confusion matrix look like, not just the accuracy number?
+3. How does accuracy compare to the simplest possible baseline?
+4. Is performance even across both classes, or lopsided?
+5. Was this evaluated on data the model wasn't fit to?
+
+---
+
+# The Rule to Remember
+
+.huge[
+**A single accuracy number can hide a lot.**
+
+**Always look inside the confusion matrix.**
+]
+
+---
+
+# Homework 11
+
+You will practice:
+
+- turning predicted scores into classified predictions using a threshold;
+- building and reading a confusion matrix;
+- comparing a model's accuracy to a baseline guess;
+- recognizing when overall accuracy hides uneven performance;
+- auditing an AI claim that cites one favorable number in isolation.
+
+Next:
+
+.big[
+**Classification II**
+]

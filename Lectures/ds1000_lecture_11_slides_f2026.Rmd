@@ -1,0 +1,430 @@
+---
+title: "How Can a Model Summarize a Relationship?"
+subtitle: "DS 1000"
+author: "Prof. Bisbee"
+output:
+  xaringan::moon_reader:
+    css: ["default", "metropolis", "metropolis-fonts"]
+    nature:
+      ratio: "16:9"
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+```{r,include=F}
+set.seed(123)
+options(width=60)
+knitr::opts_chunk$set(fig.align='center',fig.width=9,fig.height=5,message=F,warning=F)
+
+library(tidyverse)
+
+debt <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/main/data/sc_debt.Rds") %>%
+  filter(adm_rate > 0, md_earn_wne_p6 > 0, sat_avg > 0)
+
+model_adm <- lm(md_earn_wne_p6 ~ adm_rate, data = debt)
+model_sat <- lm(md_earn_wne_p6 ~ sat_avg, data = debt)
+
+# A deliberately bad guess vs. the actual line of best fit, for the RMSE demo.
+guess_a <- 0; guess_b <- 0
+rmse_guess <- sqrt(mean((debt$md_earn_wne_p6 - (guess_a + guess_b * debt$adm_rate))^2, na.rm = TRUE))
+rmse_lm <- sqrt(mean(residuals(model_adm)^2))
+```
+
+<style>
+.big { font-size: 130%; }
+.huge { font-size: 180%; }
+.small { font-size: 80%; }
+</style>
+
+<!--
+LEARNING OBJECTIVES
+
+LO1: Interrogate empirical claims.
+LO3: Select and justify analytical approaches.
+LO4: Conduct and evaluate data analyses.
+LO5: Critically use AI as an analytical tool.
+LO6: Communicate evidence responsibly.
+
+Lecture 11 opens the Regression sub-unit of Unit 3. It returns to the
+college-selectivity running claim from Units 1-2 (sc_debt.Rds, adm_rate and
+sat_avg predicting md_earn_wne_p6) and asks how a line can summarize a
+relationship more compactly than conditional means. RMSE is introduced only
+as the criterion the line of best fit minimizes; formal model evaluation
+(RMSE for assessing fit, logs for skew, cross-validation) is reserved for
+Lecture 12 (Regression II).
+
+INSTRUCTOR NOTE:
+Keep the p-value/confidence connection brief -- one bridge slide back to
+Unit 3's bootstrap material, not a full treatment of inferential statistics.
+-->
+
+# How Can a Model Summarize a Relationship?
+
+.big[
+So far:
+
+> **How confident should I be in a comparison, given my sample?**
+
+Today:
+
+> **How can I summarize an entire relationship in just a few numbers?**
+]
+
+---
+
+# Where We Are
+
+.big[
+**Question → trustworthy variables → appropriate comparison → describe the relationship → interrogate explanations → quantify uncertainty → summarize with a model → communicate**
+]
+
+Today:
+
+**Summarize with a model**
+
+---
+
+# Back to Our Running Claim
+
+.huge[
+> **More selective colleges produce graduates who earn more.**
+]
+
+We have described this relationship. We have not yet **summarized** it.
+
+---
+
+# Conditional Means, Revisited
+
+In Unit 2, we compared groups using **conditional means**:
+
+.big[
+average earnings for **less selective** colleges
+
+vs.
+
+average earnings for **more selective** colleges
+]
+
+That required chopping a continuous variable into groups.
+
+---
+
+# The Problem With Chopping
+
+```{r}
+debt %>%
+  mutate(selectivity_group = ntile(adm_rate, 4)) %>%
+  group_by(selectivity_group) %>%
+  summarise(mean_earn = mean(md_earn_wne_p6, na.rm = TRUE))
+```
+
+.big[
+Useful, but coarse. Where exactly do the group boundaries go? What happens *within* a group?
+]
+
+---
+
+# A Smoother Summary
+
+.big[
+Instead of a few group averages, what if we fit a single **line** through the whole relationship?
+]
+
+That line is a **model**: a compact, continuous summary of how $Y$ changes as $X$ changes.
+
+---
+
+# The Scatterplot We Already Know
+
+```{r}
+debt %>%
+  ggplot(aes(x = adm_rate, y = md_earn_wne_p6)) +
+  geom_point(alpha = .4)
+```
+
+---
+
+# Adding a Line
+
+```{r}
+debt %>%
+  ggplot(aes(x = adm_rate, y = md_earn_wne_p6)) +
+  geom_point(alpha = .4) +
+  geom_smooth(method = "lm", se = FALSE)
+```
+
+.big[
+This line is the **line of best fit**.
+]
+
+---
+
+# What Makes a Line "Best"?
+
+Any straight line can be written:
+
+.huge[
+$Y = \alpha + \beta X$
+]
+
+- $\alpha$ (the **intercept**): predicted $Y$ when $X = 0$
+- $\beta$ (the **slope**): how much $Y$ changes for each one-unit increase in $X$
+
+"Best" means: the line that makes the **smallest total mistakes**.
+
+---
+
+# Errors, or Residuals
+
+For every observation, the line makes a prediction $\hat{Y}$. The **residual** is:
+
+.huge[
+$\text{residual} = Y - \hat{Y}$
+]
+
+The true value minus what the line predicted.
+
+---
+
+# Measuring Total Error: RMSE
+
+.big[
+**Root Mean Squared Error (RMSE):**
+
+1. Square every residual (so positive and negative errors don't cancel out).
+2. Average the squared residuals.
+3. Take the square root, to get back to the original units.
+]
+
+The line of best fit is the one that **minimizes RMSE**.
+
+---
+
+# A Bad Guess vs. the Best Line
+
+Suppose we guessed the flattest possible line: $\alpha = 0$, $\beta = 0$ (predict everyone earns \$0).
+
+```{r}
+round(rmse_guess, 0)
+```
+
+The actual best-fit line:
+
+```{r}
+round(rmse_lm, 0)
+```
+
+.big[
+The best-fit line makes far smaller mistakes, on average.
+]
+
+---
+
+# R Finds the Best Line For You
+
+The `lm()` function ("linear model") finds $\alpha$ and $\beta$ automatically.
+
+```{r}
+model_adm <- lm(formula = md_earn_wne_p6 ~ adm_rate, data = debt)
+```
+
+.big[
+`md_earn_wne_p6 ~ adm_rate` reads as **"Y explained by X."**
+
+The `~` is R's way of writing an equation without an `=`.
+]
+
+---
+
+# Reading the Output
+
+```{r}
+summary(model_adm)
+```
+
+---
+
+# Interpreting the Intercept
+
+```{r,echo=FALSE}
+coef_adm <- coef(model_adm)
+```
+
+.big[
+`(Intercept)` = `r round(coef_adm[1],0)`
+]
+
+Predicted earnings for a college with an admission rate of **0** (admits no one).
+
+.small[
+This is a mathematical extrapolation, not a claim about a real college — no school has `adm_rate = 0`.
+]
+
+---
+
+# Interpreting the Slope
+
+.big[
+`adm_rate` = `r round(coef_adm[2],0)`
+]
+
+For each one-unit (i.e., 100 percentage point) increase in admission rate, predicted earnings change by about \$`r round(coef_adm[2],0)`.
+
+.big[
+The sign is negative: **higher admission rate (less selective) → lower predicted earnings.**
+]
+
+This matches our running claim's direction.
+
+---
+
+# A Bridge Back to Uncertainty
+
+Look again at the last column of the summary table: `Pr(>|t|)`, the **p-value**.
+
+.big[
+Recall Unit 3: we built confidence by resampling.
+]
+
+A p-value answers a related question using a formula instead of a bootstrap loop: **how surprising would this estimate be if there were truly no relationship?**
+
+.small[
+A small p-value plays a similar role to a high bootstrap confidence. We will not derive the formula in this course — the habit of interpreting the *estimate* is what matters here.
+]
+
+---
+
+# Do It Together: A Second Predictor
+
+.blue[Claim]: **Average SAT scores also predict graduate earnings.**
+
+Follow the same steps:
+
+1. Visualize $X$ and $Y$.
+2. Add the line of best fit.
+3. Fit `lm()`.
+4. Interpret $\alpha$ and $\beta$.
+
+---
+
+# Step 1–2: Visualize
+
+```{r}
+debt %>%
+  ggplot(aes(x = sat_avg, y = md_earn_wne_p6)) +
+  geom_point(alpha = .4) +
+  geom_smooth(method = "lm", se = FALSE)
+```
+
+---
+
+# Step 3: Fit the Model
+
+```{r}
+model_sat <- lm(md_earn_wne_p6 ~ sat_avg, data = debt)
+summary(model_sat)
+```
+
+---
+
+# Step 4: Interpret
+
+```{r,echo=FALSE}
+coef_sat <- coef(model_sat)
+```
+
+.big[
+Intercept: `r round(coef_sat[1],0)` — predicted earnings when average SAT is 0 (not a real college).
+
+Slope: `r round(coef_sat[2],0)` — for each one-point increase in average SAT, predicted earnings rise by about \$`r round(coef_sat[2],0)`.
+]
+
+The sign is positive this time. Does that make sense given the claim?
+
+---
+
+# A Model Is Still Just a Summary
+
+.big[
+A regression line describes the **association** as compactly as possible.
+]
+
+It does not, by itself, tell us:
+
+- whether selectivity **causes** higher earnings;
+- whether a confounder (Unit 2!) explains part of the slope;
+- whether this line fits equally well everywhere.
+
+---
+
+# Audit an AI Claim
+
+Suppose an AI assistant sees only the `adm_rate` regression output and says:
+
+> "The negative coefficient proves that admitting fewer students causes graduates to earn more."
+
+.big[
+**What does the slope actually describe?**
+
+**What would need to be true for this to be a causal claim?**
+
+**What alternative explanations from Unit 2 still apply here?**
+]
+
+A regression coefficient is not immune to confounding.
+
+---
+
+# A Calibrated Conclusion
+
+Instead of:
+
+> "Selectivity causes higher earnings."
+
+Try:
+
+.big[
+> **In these data, a one-unit increase in admission rate is associated with about \$`r abs(round(coef_adm[2],0))` lower predicted graduate earnings — a compact summary of the association, not evidence that selectivity itself causes the difference.**
+]
+
+---
+
+# Before You Leave
+
+When you see a fitted regression line, ask:
+
+1. What does the intercept represent, and is it a meaningful value of $X$?
+2. What does the slope represent, in the original units of $Y$ and $X$?
+3. Does the sign of the slope match the claim being tested?
+4. What is this line minimizing, and what does that criterion assume?
+5. What would it take to move from "summarizes the association" to "identifies the cause"?
+
+---
+
+# The Rule to Remember
+
+.huge[
+**A regression line is a summary, not a verdict.**
+]
+
+It compresses a relationship into two numbers. It does not, on its own, resolve *why* the relationship exists.
+
+---
+
+# Homework 9
+
+You will practice:
+
+- fitting a linear model with `lm()`;
+- interpreting an intercept and a slope in context;
+- checking whether a slope's sign matches a claim;
+- auditing an AI claim that treats a coefficient as causal;
+- writing a calibrated conclusion about a regression result.
+
+Next:
+
+.big[
+**Regression II**
+]

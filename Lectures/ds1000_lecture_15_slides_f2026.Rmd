@@ -1,0 +1,452 @@
+---
+title: "How Should Classification Performance Be Evaluated?"
+subtitle: "DS 1000"
+author: "Prof. Bisbee"
+output:
+  xaringan::moon_reader:
+    css: ["default", "metropolis", "metropolis-fonts"]
+    nature:
+      ratio: "16:9"
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+```{r,include=F}
+set.seed(123)
+options(width=60)
+knitr::opts_chunk$set(fig.align='center',fig.width=9,fig.height=5,message=F,warning=F)
+
+library(tidyverse)
+library(scales)
+
+gms <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/main/data/game_summary.Rds")
+
+set.seed(123)
+inds <- sample(1:nrow(gms), size = round(nrow(gms) / 2), replace = FALSE)
+train <- gms %>% slice(inds)
+test <- gms %>% slice(-inds)
+
+model_full <- lm(isWin ~ tov + pts + treb + pctFG, data = train)
+test$pred_prob <- predict(model_full, newdata = test)
+test$pred_class <- ifelse(test$pred_prob >= 0.5, TRUE, FALSE)
+
+tp <- sum(test$pred_class == TRUE & test$isWin == TRUE)
+fn_ <- sum(test$pred_class == FALSE & test$isWin == TRUE)
+tn <- sum(test$pred_class == FALSE & test$isWin == FALSE)
+fp <- sum(test$pred_class == TRUE & test$isWin == FALSE)
+
+sensitivity_50 <- tp / (tp + fn_)
+specificity_50 <- tn / (tn + fp)
+
+# Threshold sweep, to build sensitivity/specificity curves and an ROC curve.
+sweep_thresholds <- function(probs, truth, thresholds = seq(0, 1, by = 0.02)) {
+  out <- NULL
+  for (t in thresholds) {
+    pred_t <- ifelse(probs >= t, TRUE, FALSE)
+    tp_t <- sum(pred_t == TRUE & truth == TRUE)
+    fn_t <- sum(pred_t == FALSE & truth == TRUE)
+    tn_t <- sum(pred_t == FALSE & truth == FALSE)
+    fp_t <- sum(pred_t == TRUE & truth == FALSE)
+    out <- bind_rows(out, tibble(
+      threshold = t,
+      sensitivity = tp_t / (tp_t + fn_t),
+      specificity = tn_t / (tn_t + fp_t)
+    ))
+  }
+  out
+}
+
+roc_full <- sweep_thresholds(test$pred_prob, test$isWin)
+
+# Trapezoidal AUC.
+compute_auc <- function(roc_dat) {
+  roc_sorted <- roc_dat %>%
+    mutate(fpr = 1 - specificity) %>%
+    drop_na(sensitivity, fpr) %>%
+    arrange(fpr)
+  sum(diff(roc_sorted$fpr) * (head(roc_sorted$sensitivity, -1) + tail(roc_sorted$sensitivity, -1)) / 2)
+}
+
+auc_full <- compute_auc(roc_full)
+
+# Repeated cross-validated AUC, comparing the full model to a turnovers-only model.
+set.seed(123)
+cv_auc <- NULL
+for (i in 1:100) {
+  inds_i <- sample(1:nrow(gms), size = round(nrow(gms) / 2), replace = FALSE)
+  train_i <- gms %>% slice(inds_i)
+  test_i <- gms %>% slice(-inds_i)
+
+  m_full_i <- lm(isWin ~ tov + pts + treb + pctFG, data = train_i)
+  m_simple_i <- lm(isWin ~ tov, data = train_i)
+
+  probs_full <- predict(m_full_i, newdata = test_i)
+  probs_simple <- predict(m_simple_i, newdata = test_i)
+
+  auc_full_i <- compute_auc(sweep_thresholds(probs_full, test_i$isWin))
+  auc_simple_i <- compute_auc(sweep_thresholds(probs_simple, test_i$isWin))
+
+  cv_auc <- bind_rows(
+    cv_auc,
+    tibble(sim = i, model = "Full (tov + pts + treb + pctFG)", auc = auc_full_i),
+    tibble(sim = i, model = "Simple (tov only)", auc = auc_simple_i)
+  )
+}
+
+cv_auc_summary <- cv_auc %>% group_by(model) %>% summarise(mean_auc = mean(auc, na.rm = TRUE))
+```
+
+<style>
+.big { font-size: 130%; }
+.huge { font-size: 180%; }
+.small { font-size: 80%; }
+</style>
+
+<!--
+LEARNING OBJECTIVES
+
+LO1: Interrogate empirical claims.
+LO3: Select and justify analytical approaches.
+LO4: Conduct and evaluate data analyses.
+LO5: Critically use AI as an analytical tool.
+LO6: Communicate evidence responsibly.
+
+Lecture 15 completes Unit 4's Classification material. It develops the
+sensitivity/specificity vocabulary Lecture 14 only named, builds an ROC
+curve and AUC by hand (a manual threshold sweep + trapezoidal integration,
+deliberately avoiding a tidymodels/yardstick dependency the course hasn't
+introduced), and closes by cross-validating AUC to compare two model
+specifications -- mirroring Lecture 12's cross-validated RMSE comparison,
+now applied to a classification metric.
+
+INSTRUCTOR NOTE:
+Logistic regression / GLMs are intentionally NOT introduced here. The course
+stays with the linear-probability-model classifier from Lecture 14; the
+point of this lecture is evaluation, not a new model class.
+-->
+
+# How Should Classification Performance Be Evaluated?
+
+.big[
+Last class:
+
+> **How do I build a classifier and check its overall accuracy?**
+
+Today:
+
+> **What is my classifier good and bad at, specifically — and how do I compare classifiers fairly?**
+]
+
+---
+
+# Where We Are
+
+.big[
+**Question → ... → summarize with a model → evaluate the model → choose the right goal → build a classifier → evaluate the tradeoffs**
+]
+
+Today:
+
+**Evaluate the tradeoffs**
+
+---
+
+# Picking Up the Confusion Matrix
+
+Same classifier as last class, same 0.5 threshold:
+
+```{r}
+test %>% count(isWin, pred_class)
+```
+
+Last time we asked: what's the overall accuracy? Today: what's happening **inside** each row?
+
+---
+
+# Two Questions, Not One
+
+.big[
+**Sensitivity:** of the games actually **won**, what share did the model correctly flag as wins?
+
+**Specificity:** of the games actually **lost**, what share did the model correctly flag as losses?
+]
+
+---
+
+# Calculating Both
+
+```{r}
+sensitivity_50 <- tp / (tp + fn_)
+specificity_50 <- tn / (tn + fp)
+
+round(c(sensitivity = sensitivity_50, specificity = specificity_50), 3)
+```
+
+.big[
+Are these close to each other, or far apart?
+]
+
+---
+
+# Why Both Matter
+
+.big[
+A model that predicts "loss" for almost everything can have very high specificity and terrible sensitivity — and still post a respectable overall accuracy, if losses are common.
+]
+
+Sensitivity and specificity separate "good at catching wins" from "good at catching losses."
+
+---
+
+# The Threshold Controls Both
+
+.big[
+Lecture 14 showed: change the 0.5 cutoff, and the confusion matrix changes.
+]
+
+Raising the threshold makes the model more cautious about predicting "win" — which shifts sensitivity and specificity in **opposite directions**.
+
+---
+
+# Sweeping the Threshold
+
+```{r, eval=FALSE}
+sweep_thresholds <- function(probs, truth, thresholds = seq(0, 1, by = 0.02)) {
+  out <- NULL
+  for (t in thresholds) {
+    pred_t <- ifelse(probs >= t, TRUE, FALSE)
+    tp_t <- sum(pred_t == TRUE & truth == TRUE)
+    fn_t <- sum(pred_t == FALSE & truth == TRUE)
+    tn_t <- sum(pred_t == FALSE & truth == FALSE)
+    fp_t <- sum(pred_t == TRUE & truth == FALSE)
+    out <- bind_rows(out, tibble(threshold = t,
+                                  sensitivity = tp_t / (tp_t + fn_t),
+                                  specificity = tn_t / (tn_t + fp_t)))
+  }
+  out
+}
+```
+
+---
+
+# Sensitivity and Specificity vs. Threshold
+
+```{r}
+roc_full %>%
+  pivot_longer(c(sensitivity, specificity), names_to = "metric", values_to = "value") %>%
+  ggplot(aes(x = threshold, y = value, color = metric)) +
+  geom_line()
+```
+
+---
+
+# The Tradeoff, Visualized
+
+.big[
+As the threshold rises: specificity tends to rise, sensitivity tends to fall.
+
+There is no threshold that maximizes both at once.
+]
+
+Which one matters more depends on the **cost of being wrong** in each direction — a judgment call, not a statistical one.
+
+---
+
+# From a Tradeoff to a Curve
+
+.big[
+Instead of picking one threshold, plot the whole tradeoff:
+]
+
+**x-axis:** 1 − specificity (how often we wrongly call a loss a win)
+
+**y-axis:** sensitivity (how often we correctly catch a win)
+
+This is the **ROC curve** (Receiver Operating Characteristic).
+
+---
+
+# Plotting the ROC Curve
+
+```{r}
+roc_full %>%
+  mutate(fpr = 1 - specificity) %>%
+  ggplot(aes(x = fpr, y = sensitivity)) +
+  geom_line() +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed") +
+  labs(x = "1 − specificity", y = "sensitivity")
+```
+
+---
+
+# Reading the ROC Curve
+
+.big[
+The dashed diagonal line is what a **coin flip** would produce — no ability to distinguish wins from losses at any threshold.
+
+A curve that bows **up and to the left**, away from the diagonal, means the classifier separates the two classes well across thresholds.
+]
+
+---
+
+# One Number for the Whole Curve
+
+.big[
+**AUC (Area Under the Curve):** the entire ROC curve's performance, summarized as one number.
+]
+
+- AUC of 0.5 → no better than guessing.
+- AUC of 1.0 → perfect separation at every threshold.
+- Between 0.5 and 1.0 → some real ability to distinguish the classes, evaluated across **every** threshold at once.
+
+---
+
+# Calculating AUC
+
+```{r, eval=FALSE}
+compute_auc <- function(roc_dat) {
+  roc_sorted <- roc_dat %>%
+    mutate(fpr = 1 - specificity) %>%
+    arrange(fpr)
+  sum(diff(roc_sorted$fpr) * (head(roc_sorted$sensitivity, -1) +
+                                 tail(roc_sorted$sensitivity, -1)) / 2)
+}
+```
+
+```{r}
+round(auc_full, 3)
+```
+
+---
+
+# Why AUC Is Useful for Comparison
+
+.big[
+Accuracy depends on a threshold you have to pick.
+
+AUC does not — it summarizes performance **across every possible threshold**, which makes it a fairer way to compare two different classifiers.
+]
+
+---
+
+# Comparing Models, the Lecture 12 Way
+
+Recall: to compare regression models, we cross-validated RMSE across 100 train/test splits.
+
+.big[
+Same idea, new metric: cross-validate **AUC** to compare two classifiers.
+]
+
+- Full model: `isWin ~ tov + pts + treb + pctFG`
+- Simple model: `isWin ~ tov`
+
+---
+
+# Repeated Cross-Validated AUC
+
+```{r, eval=FALSE}
+for (i in 1:100) {
+  inds_i <- sample(1:nrow(gms), size = round(nrow(gms) / 2), replace = FALSE)
+  train_i <- gms %>% slice(inds_i)
+  test_i <- gms %>% slice(-inds_i)
+
+  m_full_i <- lm(isWin ~ tov + pts + treb + pctFG, data = train_i)
+  m_simple_i <- lm(isWin ~ tov, data = train_i)
+  # ...compute AUC for each on test_i, store results...
+}
+```
+
+---
+
+# The Results
+
+```{r}
+cv_auc_summary
+```
+
+```{r}
+cv_auc %>%
+  ggplot(aes(x = auc, fill = model)) +
+  geom_density(alpha = .4)
+```
+
+---
+
+# What This Comparison Tells Us
+
+.big[
+The model with the higher average cross-validated AUC separates wins from losses more reliably, across thresholds, on data it wasn't fit to.
+]
+
+It does **not** tell us which predictor *causes* winning — same caution as every model comparison this semester.
+
+---
+
+# Audit an AI Claim
+
+Suppose an AI assistant is shown only the model's accuracy at the default 0.5 threshold and says:
+
+> "This model performs at 74% and that fully describes how good it is."
+
+.big[
+**What does a single-threshold accuracy number leave out?**
+
+**Why might AUC give a more complete picture?**
+
+**What judgment call does picking a threshold still require, even with a good AUC?**
+]
+
+---
+
+# A Calibrated Conclusion
+
+Instead of:
+
+> "The model is 74% accurate."
+
+Try:
+
+.big[
+> **Across repeated train/test splits, the full model's average AUC was `r round(cv_auc_summary$mean_auc[cv_auc_summary$model == "Full (tov + pts + treb + pctFG)"],3)`, compared to `r round(cv_auc_summary$mean_auc[cv_auc_summary$model == "Simple (tov only)"],3)` for the turnovers-only model — a more complete comparison than a single accuracy number, though neither establishes what causes winning, and any real use would still require choosing a threshold based on the cost of each kind of mistake.**
+]
+
+---
+
+# Before You Leave
+
+When you see a classifier's performance reported, ask:
+
+1. Was accuracy reported at one threshold, or across the tradeoff?
+2. What are sensitivity and specificity, separately?
+3. Does the ROC curve bow away from the diagonal?
+4. Was AUC calculated with held-out data, ideally cross-validated?
+5. What threshold would actually get used, and what does that choice cost in each direction?
+
+---
+
+# The Rule to Remember
+
+.huge[
+**One accuracy number is a snapshot.**
+
+**A full evaluation looks across every threshold.**
+]
+
+---
+
+# Homework 12
+
+You will practice:
+
+- calculating sensitivity and specificity from a confusion matrix;
+- sweeping a threshold to see the tradeoff between them;
+- building and reading an ROC curve;
+- comparing two classifiers using cross-validated AUC;
+- auditing an AI claim that treats one threshold's accuracy as the full picture.
+
+Next:
+
+.big[
+**Clustering / Unsupervised Learning**
+]

@@ -1,0 +1,441 @@
+---
+title: "What Can We Learn When Groups Aren't Given?"
+subtitle: "DS 1000"
+author: "Prof. Bisbee"
+output:
+  xaringan::moon_reader:
+    css: ["default", "metropolis", "metropolis-fonts"]
+    nature:
+      ratio: "16:9"
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+```{r,include=F}
+set.seed(123)
+options(width=60)
+knitr::opts_chunk$set(fig.align='center',fig.width=9,fig.height=5,message=F,warning=F)
+
+library(tidyverse)
+
+h97 <- read_csv("https://raw.githubusercontent.com/jbisbee1/DS1000_F2026/main/data/H097_members.csv") %>%
+  filter(chamber %in% c("House", "Senate")) %>%
+  mutate(party = case_when(
+    party_code == 100 ~ "D",
+    party_code == 200 ~ "R",
+    TRUE ~ "I"
+  )) %>%
+  select(bioname, party, nominate_dim1, nominate_dim2) %>%
+  drop_na()
+
+h117 <- read_csv("https://raw.githubusercontent.com/jbisbee1/DS1000_F2026/main/data/H117_members.csv") %>%
+  filter(chamber %in% c("House", "Senate")) %>%
+  mutate(party = case_when(
+    party_code == 100 ~ "D",
+    party_code == 200 ~ "R",
+    TRUE ~ "I"
+  )) %>%
+  select(bioname, party, nominate_dim1, nominate_dim2) %>%
+  drop_na()
+
+set.seed(123)
+km2_97 <- kmeans(h97 %>% select(nominate_dim1, nominate_dim2), centers = 2, nstart = 25)
+
+wss_97 <- NULL
+for (k in 1:8) {
+  m_k <- kmeans(h97 %>% select(nominate_dim1, nominate_dim2), centers = k, nstart = 25)
+  wss_97 <- bind_rows(wss_97, tibble(k = k, tot_wss = m_k$tot.withinss))
+}
+
+set.seed(123)
+km2_117 <- kmeans(h117 %>% select(nominate_dim1, nominate_dim2), centers = 2, nstart = 25)
+```
+
+<style>
+.big { font-size: 130%; }
+.huge { font-size: 180%; }
+.small { font-size: 80%; }
+</style>
+
+<!--
+LEARNING OBJECTIVES
+
+LO1: Interrogate empirical claims.
+LO3: Select and justify analytical approaches.
+LO4: Conduct and evaluate data analyses.
+LO5: Critically use AI as an analytical tool.
+LO6: Communicate evidence responsibly.
+
+Lecture 16 closes Unit 4. It introduces k-means clustering as a third "camp"
+distinct from explanation (Units 1-3) and prediction (Lecture 13-15): no
+outcome variable, no labeled groups, just structure. Uses DW-NOMINATE
+ideology scores (H097/H117_members.csv) so students can compare Congresses
+83 years apart on a question the course cares about (polarization).
+
+INSTRUCTOR NOTE:
+This is the last instructional lecture before the Unit 4 Assessment Day
+(Evidence Debate 4 + Unit Test 4). Per the established course pattern, it
+closes with a Daily Quiz callout, not a "Homework N" slide -- the next
+homework (HW13) belongs to Lecture 17 (Text as Data, the Unit 5 opener).
+-->
+
+# What Can We Learn When Groups Aren't Given?
+
+.big[
+So far this unit:
+
+> **Can I predict an outcome I already have labels for?**
+
+Today:
+
+> **What if nobody handed me any labels at all?**
+]
+
+---
+
+# Where We Are
+
+.big[
+**Question → ... → build a classifier → evaluate the tradeoffs → find structure without labels**
+]
+
+Today:
+
+**Find structure without labels**
+
+---
+
+# A Third Camp
+
+This semester has had two goals so far:
+
+.big[
+**Explanation** (Units 1–3): is X associated with Y, and why?
+
+**Prediction** (Lectures 13–15): given X, what is Y?
+]
+
+Both need a $Y$ — an outcome to explain or predict.
+
+---
+
+# What If There's No $Y$?
+
+.huge[
+> **Are there natural groups in this data — and what are they?**
+]
+
+No claim to test. No outcome to guess. Just: **does this data have structure we didn't put there ourselves?**
+
+This is sometimes called **unsupervised learning** — "unsupervised" because there's no known right answer to check against.
+
+---
+
+# Today's Data: Congress
+
+```{r}
+h97 %>% head(5)
+```
+
+`nominate_dim1` / `nominate_dim2`: a measure of how a member of Congress's voting record compares to everyone else's, compressed into two numbers. Higher `dim1` generally means more conservative voting.
+
+---
+
+# Look First
+
+```{r}
+h97 %>%
+  ggplot(aes(x = nominate_dim1, y = nominate_dim2)) +
+  geom_point(alpha = .5)
+```
+
+.big[
+Do you see groups? How many?
+]
+
+---
+
+# Letting an Algorithm Find Groups
+
+.big[
+**$k$-means clustering:** an algorithm that sorts observations into $k$ groups based on how close together they are.
+]
+
+"Close" means **Euclidean distance** — the straight-line distance between two points, using every variable you give it.
+
+---
+
+# Distance in Two Dimensions
+
+```{r}
+pt1 <- c(0, 0)
+pt2 <- c(3, 4)
+
+sqrt(sum((pt1 - pt2)^2))
+```
+
+.big[
+Same idea as the distance formula from geometry: $\sqrt{(x_2-x_1)^2 + (y_2-y_1)^2}$ — just applied to `nominate_dim1` and `nominate_dim2` instead of $x$ and $y$.
+]
+
+---
+
+# How $k$-means Works
+
+.big[
+1. Randomly place $k$ **centroids** (candidate group centers).
+2. Assign every observation to its **nearest** centroid.
+3. Move each centroid to the **average** position of the points assigned to it.
+4. Repeat steps 2–3 until nothing changes.
+]
+
+---
+
+# Running It
+
+```{r}
+km2_97 <- kmeans(h97 %>% select(nominate_dim1, nominate_dim2),
+                  centers = 2, nstart = 25)
+
+km2_97$centers
+```
+
+`centers = 2` asks for two groups. `nstart = 25` reruns the random start 25 times and keeps the best result — the starting points are random, so one run alone can get unlucky.
+
+---
+
+# Visualizing the Clusters
+
+```{r}
+h97 %>%
+  mutate(cluster = factor(km2_97$cluster)) %>%
+  ggplot(aes(x = nominate_dim1, y = nominate_dim2, color = cluster)) +
+  geom_point(alpha = .6)
+```
+
+---
+
+# Does This Match Something We Know?
+
+```{r}
+h97 %>%
+  mutate(cluster = factor(km2_97$cluster)) %>%
+  count(cluster, party)
+```
+
+.big[
+The algorithm was never told anyone's party. Does the structure it found line up with party anyway?
+]
+
+---
+
+# How Many Clusters Should We Ask For?
+
+.big[
+Nothing stops us from asking for 3, 5, or 20 groups. How do we choose?
+]
+
+Just like regression, we can measure **error**: how far each point sits from its own cluster's center.
+
+---
+
+# Error in Clustering: WSS
+
+.big[
+**Within Sum of Squares (WSS):** total squared distance from each point to its cluster's centroid, added up.
+]
+
+More clusters will always reduce WSS — in the extreme, every point could be its own cluster with zero error. That's not useful. We need a tradeoff.
+
+---
+
+# Looking for the "Elbow"
+
+```{r, eval=FALSE}
+wss_97 <- NULL
+for (k in 1:8) {
+  m_k <- kmeans(h97 %>% select(nominate_dim1, nominate_dim2),
+                centers = k, nstart = 25)
+  wss_97 <- bind_rows(wss_97, tibble(k = k, tot_wss = m_k$tot.withinss))
+}
+```
+
+```{r}
+wss_97 %>%
+  ggplot(aes(x = k, y = tot_wss)) +
+  geom_line() + geom_point() +
+  scale_x_continuous(breaks = 1:8)
+```
+
+---
+
+# Reading the Elbow Plot
+
+.big[
+WSS keeps falling as $k$ grows — but the *rate* of improvement slows down.
+]
+
+Look for the point where adding another cluster stops buying you much: the "elbow." Past that point, you're mostly just fitting noise.
+
+---
+
+# A Judgment Call, Not a Formula
+
+.big[
+The elbow method is a guide, not a rule. Two people can look at the same plot and reasonably pick different values of $k$.
+]
+
+The right choice also depends on what you're trying to learn — two broad groups tell a different story than five narrow ones.
+
+---
+
+# A Question the Course Cares About
+
+.huge[
+> **Has political polarization increased?**
+]
+
+Compare the 97th Congress (1981–83) to the 117th Congress (2021–23), 40 years later.
+
+---
+
+# 97th Congress, Two Clusters
+
+```{r,echo=FALSE}
+h97 %>%
+  mutate(cluster = factor(km2_97$cluster)) %>%
+  ggplot(aes(x = nominate_dim1, y = nominate_dim2, color = cluster)) +
+  geom_point(alpha = .6) +
+  labs(title = "97th Congress (1981-1983)")
+```
+
+---
+
+# 117th Congress, Two Clusters
+
+```{r,echo=FALSE}
+h117 %>%
+  mutate(cluster = factor(km2_117$cluster)) %>%
+  ggplot(aes(x = nominate_dim1, y = nominate_dim2, color = cluster)) +
+  geom_point(alpha = .6) +
+  labs(title = "117th Congress (2021-2023)")
+```
+
+---
+
+# What Changed?
+
+.big[
+Look at the two plots: are the clusters closer together, farther apart, more separated, or more overlapping?
+]
+
+Clustering didn't test the polarization claim for us. It gave us a structured way to **look**.
+
+---
+
+# What Clustering Does Not Do
+
+.big[
+It does not tell us *why* two clusters exist.
+
+It does not tell us whether the grouping is the "correct" one — a different $k$, or different variables, could reveal a different structure.
+
+It does not give us a $p$-value or a confidence percentage the way earlier units did.
+]
+
+<!-- LO1: Learning is a genuinely different epistemic mode from explanation and prediction. -->
+
+---
+
+# Audit an AI Claim
+
+Suppose an AI assistant runs $k$-means with $k = 2$ on the 117th Congress and says:
+
+> "This proves there are exactly two political ideologies in America."
+
+.big[
+**Did the algorithm test that claim, or assume it by choosing $k=2$?**
+
+**What would change if we had asked for $k=3$ instead?**
+
+**What is the difference between "the algorithm found two clusters" and "there are only two ideologies"?**
+]
+
+---
+
+# A Calibrated Conclusion
+
+Instead of:
+
+> "This proves there are two political camps."
+
+Try:
+
+.big[
+> **Using two-dimensional ideology scores, a $k$-means clustering with $k=2$ groups members of the 117th Congress in a way that closely tracks party — but this reflects one modeling choice among several reasonable ones, not proof that exactly two ideological camps exist.**
+]
+
+---
+
+# Before You Leave
+
+When someone shows you a clustering result, ask:
+
+1. What variables define "closeness" here, and why those?
+2. How was $k$ chosen — an elbow plot, a theory, or a guess?
+3. Would a different $k$ tell a meaningfully different story?
+4. Does the clustering line up with something you already understand, as a sanity check?
+5. Is this being used to *describe* structure, or overinterpreted as an *explanation*?
+
+---
+
+# The Rule to Remember
+
+.huge[
+**Clustering finds structure. It does not explain it, and it does not predict anything.**
+
+**Know which of the three jobs you're actually doing.**
+]
+
+---
+
+# The Unit 4 Workflow, Complete
+
+.big[
+**Ask: explain, predict, or learn?**
+
+↓
+
+**Explain: summarize with a model, evaluate it out of sample**
+
+↓
+
+**Predict: classify, evaluate with a confusion matrix, ROC, and AUC**
+
+↓
+
+**Learn: find structure with no labels, choose $k$ deliberately, don't overclaim what it means**
+]
+
+---
+
+# Daily Quiz 16
+
+.huge[
+
+Now test yourself independently.
+
+]
+
+.big[
+
+Open **Daily Quiz 16** in Brightspace.
+
+]
+
+.small[
+
+No AI or internet access during the quiz.
+
+]

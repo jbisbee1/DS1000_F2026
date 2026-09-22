@@ -1,0 +1,351 @@
+---
+title: "What Do Text Measures Capture, and What Do They Miss?"
+subtitle: "DS 1000"
+author: "Prof. Bisbee"
+output:
+  xaringan::moon_reader:
+    css: ["default", "metropolis", "metropolis-fonts"]
+    nature:
+      ratio: "16:9"
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+```{r,include=F}
+set.seed(123)
+options(width=60)
+knitr::opts_chunk$set(fig.align='center',fig.width=9,fig.height=5,message=F,warning=F)
+
+library(tidyverse)
+
+tweet_words <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/main/data/Trump_tweet_words.Rds") %>%
+  mutate(PostPresident = Tweeting.date > as.Date("2016-11-06"))
+
+nrc <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/main/data/nrc.Rds")
+
+n_total_words <- tweet_words %>% distinct(word) %>% nrow()
+n_matched_words <- tweet_words %>% distinct(word) %>% inner_join(nrc, by = "word") %>% distinct(word) %>% nrow()
+pct_matched <- n_matched_words / n_total_words
+
+tweet_sentiment <- tweet_words %>%
+  inner_join(nrc, by = "word") %>%
+  filter(sentiment %in% c("positive", "negative"))
+
+tweet_sentiment_summary <- tweet_sentiment %>%
+  count(document, PostPresident, sentiment) %>%
+  pivot_wider(names_from = sentiment, values_from = n, values_fill = 0) %>%
+  mutate(net_sentiment = positive - negative)
+
+sentiment_means <- tweet_sentiment_summary %>%
+  group_by(PostPresident) %>%
+  summarise(mean_sentiment = mean(net_sentiment), .groups = "drop")
+```
+
+<style>
+.big { font-size: 130%; }
+.huge { font-size: 180%; }
+.small { font-size: 80%; }
+</style>
+
+<!--
+LEARNING OBJECTIVES
+
+LO1: Interrogate empirical claims.
+LO3: Select and justify analytical approaches.
+LO4: Conduct and evaluate data analyses.
+LO5: Critically use AI as an analytical tool.
+LO6: Communicate evidence responsibly.
+
+Lecture 18 completes the text-as-data pair. Lecture 17 measured TOPIC
+(which words became more/less common). This lecture measures TONE via a
+sentiment dictionary (nrc.Rds), but the pedagogical center of gravity is
+the construct-validity audit: dictionary coverage is incomplete, negation
+and sarcasm break word-level scoring, and a crude sentiment count is not
+the same as knowing what someone felt. This is the same "what does this
+variable actually measure" habit from Unit 1, applied to text.
+
+INSTRUCTOR NOTE:
+Keep the bootstrap-confidence callback to Unit 3 light (one slide, no new
+loop needs to be built) -- the point is measurement validity, not another
+uncertainty exercise.
+-->
+
+# What Do Text Measures Capture, and What Do They Miss?
+
+.big[
+Last class:
+
+> **Which words became more common — a measure of topic.**
+
+Today:
+
+> **Can we measure tone — and what happens when we try?**
+]
+
+---
+
+# Where We Are
+
+.big[
+**Question → ... → treat text as evidence → measure meaning, not just topic**
+]
+
+Today:
+
+**Measure meaning, not just topic**
+
+---
+
+# A New Kind of Question
+
+.huge[
+> **Did this person's tone become more positive or negative after a specific date?**
+]
+
+Lecture 17's log-odds chart told us **what** shifted. It said nothing about whether the shift felt positive or negative.
+
+---
+
+# Measuring Tone: Sentiment Dictionaries
+
+.big[
+A **sentiment dictionary** is a prepared list of words, each tagged with an emotion — built by researchers, not by us.
+]
+
+```{r}
+nrc %>% distinct(sentiment)
+```
+
+---
+
+# What's Inside
+
+```{r}
+nrc %>% filter(sentiment %in% c("positive", "negative")) %>% sample_n(8)
+```
+
+.big[
+Every word in this list was hand-labeled, in advance, by people who were not looking at our tweets.
+]
+
+---
+
+# Attaching Sentiment to Our Words
+
+```{r}
+tweet_sentiment <- tweet_words %>%
+  inner_join(nrc, by = "word") %>%
+  filter(sentiment %in% c("positive", "negative"))
+
+tweet_sentiment %>% select(document, word, sentiment) %>% head(5)
+```
+
+`inner_join()` keeps only the words that appear in **both** our data and the dictionary.
+
+---
+
+# The First Problem, Immediately
+
+.big[
+What happened to every word that **isn't** in the dictionary?
+]
+
+```{r}
+round(pct_matched * 100, 1)
+```
+
+.big[
+Only about `r round(pct_matched*100,1)`% of the distinct words in our data even appear in the sentiment dictionary at all.
+]
+
+<!-- LO1: Coverage limitation surfaces before any scoring happens. -->
+
+---
+
+# Most of What Was Said Is Invisible to This Measure
+
+.big[
+Names, places, slang, numbers, most ordinary words — none of them carry a sentiment tag.
+]
+
+Whatever score we calculate next is built entirely from the small slice of words the dictionary happens to recognize.
+
+---
+
+# Scoring a Tweet
+
+.big[
+For each tweet, count positive words and negative words, then take the difference.
+]
+
+```{r}
+tweet_sentiment_summary <- tweet_sentiment %>%
+  count(document, PostPresident, sentiment) %>%
+  pivot_wider(names_from = sentiment, values_from = n, values_fill = 0) %>%
+  mutate(net_sentiment = positive - negative)
+
+tweet_sentiment_summary %>% head(5)
+```
+
+---
+
+# Comparing Before and After
+
+```{r}
+tweet_sentiment_summary %>%
+  ggplot(aes(x = PostPresident, y = net_sentiment)) +
+  geom_boxplot()
+```
+
+---
+
+# The Averages
+
+```{r}
+sentiment_means
+```
+
+.big[
+Is this a meaningful difference, or could it show up just from resampling noise? That's exactly the Unit 3 question — the tools from Lectures 9–10 apply here too, unchanged.
+]
+
+---
+
+# Before We Trust the Score: What Does It Miss?
+
+.big[
+A dictionary score counts word matches. It does not read the sentence.
+]
+
+Three specific failure modes are worth knowing by name.
+
+---
+
+# Failure 1: Negation
+
+```{r}
+tibble(text = c("This is great.", "This is not great.")) %>%
+  mutate(naive_sentiment = str_detect(text, "great"))
+```
+
+.big[
+Both sentences contain "great." A word-count method scores them **the same** — even though negation flips the meaning entirely.
+]
+
+---
+
+# Failure 2: Sarcasm and Context
+
+.big[
+"Oh, great. Another delay."
+]
+
+.big[
+Every word-matching method scores "great" as positive here, with no way to detect that the sentence is sarcastic.
+]
+
+Context, tone of voice, and shared knowledge are exactly what a bag-of-words approach throws away.
+
+---
+
+# Failure 3: Domain Mismatch
+
+.big[
+Dictionaries are built from **general** language use, not from the specific domain you're studying.
+]
+
+A word that reads as neutral or even positive in everyday speech (e.g., "aggressive marketing") might carry a different connotation in politics, sports commentary, or finance.
+
+---
+
+# This Is a Construct-Validity Question
+
+.big[
+Recall from Unit 1: before trusting a variable, ask **what it actually measures**.
+]
+
+"Net sentiment score" sounds like it measures **feeling**. What it actually measures is: **the count of dictionary-matched positive words minus dictionary-matched negative words, for the roughly `r round(pct_matched*100,1)`% of words the dictionary recognizes.**
+
+Those are not the same thing.
+
+---
+
+# So Is the Measure Useless?
+
+.big[
+No — but it is a **proxy**, not a direct read of emotion.
+]
+
+It can still be useful for large-scale comparisons, as long as you communicate what it is: an imperfect, dictionary-based approximation, not a direct measurement of what someone felt.
+
+---
+
+# Audit an AI Claim
+
+Suppose an AI assistant computes the net sentiment scores and says:
+
+> "This proves the person's true emotional state became significantly more negative."
+
+.big[
+**What does the dictionary actually measure?**
+
+**What share of the original words were even scored?**
+
+**What would negation or sarcasm do to this score, and did the AI check for it?**
+]
+
+A sentiment score is a measurement, with all the limitations any measurement has — it is not direct access to what someone felt.
+
+---
+
+# A Calibrated Conclusion
+
+Instead of:
+
+> "This proves the person felt worse."
+
+Try:
+
+.big[
+> **Using a dictionary that matched about `r round(pct_matched*100,1)`% of the words in these tweets, average net sentiment was lower after this date than before — a dictionary-based proxy for tone that cannot account for negation, sarcasm, or the words it fails to recognize at all.**
+]
+
+---
+
+# Before You Leave
+
+When you see a sentiment score, ask:
+
+1. What dictionary was used, and what share of the text did it actually match?
+2. Could negation or sarcasm be flipping some of these scores?
+3. Was the dictionary built for this domain, or a general one?
+4. Is the score being reported as a proxy, or oversold as direct access to feeling?
+5. Does a difference between groups look real, or could it be resampling noise (Unit 3)?
+
+---
+
+# The Rule to Remember
+
+.huge[
+**A sentiment score measures word matches.**
+
+**It does not measure feelings.**
+]
+
+---
+
+# Homework 14
+
+You will practice:
+
+- joining text data to a sentiment dictionary and measuring coverage;
+- calculating and comparing net sentiment across groups;
+- identifying negation or sarcasm failures in specific examples;
+- auditing an AI claim that treats a sentiment score as direct access to emotion.
+
+Next:
+
+.big[
+**Bias & Misinformation**
+]

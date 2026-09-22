@@ -1,0 +1,445 @@
+---
+title: "What Does Confidence Actually Justify?"
+subtitle: "DS 1000"
+author: "Prof. Bisbee"
+output:
+  xaringan::moon_reader:
+    css: ["default", "metropolis", "metropolis-fonts"]
+    nature:
+      ratio: "16:9"
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+```{r,include=F}
+set.seed(123)
+options(width=60)
+knitr::opts_chunk$set(fig.align='center',fig.width=9,fig.height=5,message=F,warning=F)
+
+library(tidyverse)
+
+gms <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/main/data/game_summary.Rds")
+
+# Pooled bootstrap: winning vs. losing teams' turnovers, all seasons together.
+set.seed(123)
+bs_pooled <- NULL
+for (i in 1:200) {
+  tmp <- gms %>%
+    sample_n(size = nrow(gms), replace = TRUE) %>%
+    group_by(isWin) %>%
+    summarise(mean_tov = mean(tov, na.rm = TRUE), .groups = "drop") %>%
+    mutate(sim = i)
+  bs_pooled <- bind_rows(bs_pooled, tmp)
+}
+
+pooled_diff <- bs_pooled %>%
+  pivot_wider(names_from = isWin, values_from = mean_tov, names_prefix = "win_") %>%
+  mutate(diff = win_FALSE - win_TRUE)
+
+conf_pooled <- mean(pooled_diff$diff > 0)
+
+# Season-by-season bootstrap.
+set.seed(123)
+bs_season <- NULL
+for (i in 1:200) {
+  tmp <- gms %>%
+    group_by(yearSeason) %>%
+    sample_n(size = n(), replace = TRUE) %>%
+    group_by(yearSeason, isWin) %>%
+    summarise(mean_tov = mean(tov, na.rm = TRUE), .groups = "drop") %>%
+    mutate(sim = i)
+  bs_season <- bind_rows(bs_season, tmp)
+}
+
+season_diff <- bs_season %>%
+  pivot_wider(names_from = isWin, values_from = mean_tov, names_prefix = "win_") %>%
+  mutate(diff = win_FALSE - win_TRUE)
+
+conf_by_season <- season_diff %>%
+  group_by(yearSeason) %>%
+  summarise(confidence = mean(diff > 0, na.rm = TRUE), .groups = "drop")
+```
+
+<style>
+.big { font-size: 130%; }
+.huge { font-size: 180%; }
+.small { font-size: 80%; }
+</style>
+
+<!--
+LEARNING OBJECTIVES
+
+LO1: Interrogate empirical claims.
+LO3: Select and justify analytical approaches.
+LO4: Conduct and evaluate data analyses.
+LO5: Critically use AI as an analytical tool.
+LO6: Communicate evidence responsibly.
+
+Lecture 10 completes Unit 3's core instructional content. It assumes students
+already know how to build a bootstrap loop and a confidence percentage
+(Lecture 9). This lecture's job is not to reteach the mechanics but to press
+on what that percentage is entitled to claim: it describes THIS sample's
+resampling behavior, not the population, and not a new sample.
+
+INSTRUCTOR NOTE:
+The running example moves from player-level data (Lecture 9) to game-level
+data (game_summary.Rds), reused from the archived Uncertainty Part 2 deck.
+Keep circling back to the phrase "what does this number actually justify?"
+-->
+
+# What Does Confidence Actually Justify?
+
+.big[
+Last class:
+
+> **How do I turn one sample into a confidence percentage?**
+
+Today:
+
+> **What is that percentage actually entitled to tell me?**
+]
+
+---
+
+# Where We Are
+
+.big[
+**Question → trustworthy variables → appropriate comparison → describe the relationship → interrogate explanations → quantify uncertainty → communicate**
+]
+
+Today, still:
+
+**Quantify uncertainty** — but pushed further.
+
+---
+
+# A New Comparison
+
+.huge[
+> **Do winning teams commit fewer turnovers than losing teams?**
+]
+
+New data: every NBA game played between 2016 and 2019.
+
+---
+
+# The Data
+
+```{r}
+gms %>%
+  select(idGame, yearSeason, nameTeam, isWin, tov) %>%
+  glimpse()
+```
+
+Each row is one **team's performance in one game**.
+
+---
+
+# The Observed Comparison
+
+```{r}
+gms %>%
+  group_by(isWin) %>%
+  summarise(mean_tov = mean(tov, na.rm = TRUE))
+```
+
+.big[
+Winning teams average about one fewer turnover per game.
+]
+
+---
+
+# You Already Know the Next Step
+
+From Lecture 9:
+
+.big[
+1. Resample the data, with replacement.
+2. Recompute the comparison.
+3. Repeat many times.
+4. Report the share of resamples where the pattern holds.
+]
+
+---
+
+# The Pooled Bootstrap
+
+```{r, eval=FALSE}
+bs_pooled <- NULL
+for (i in 1:200) {
+  tmp <- gms %>%
+    sample_n(size = nrow(gms), replace = TRUE) %>%
+    group_by(isWin) %>%
+    summarise(mean_tov = mean(tov, na.rm = TRUE), .groups = "drop") %>%
+    mutate(sim = i)
+  bs_pooled <- bind_rows(bs_pooled, tmp)
+}
+```
+
+```{r}
+pooled_diff %>%
+  summarise(confidence = mean(diff > 0))
+```
+
+---
+
+# A Comfortable Number
+
+.huge[
+`r round(conf_pooled*100,1)`% confidence
+]
+
+Winning teams had fewer turnovers in `r round(conf_pooled*100,1)`% of 200 resamples of the pooled 2016–2019 data.
+
+That sounds like a lot. What are we actually entitled to conclude from it?
+
+---
+
+# Two Different Questions
+
+.big[
+**Question A:** If I resampled *this same pooled dataset* again, would I likely see the same pattern?
+
+**Question B:** Would I see the same pattern in *a season this dataset doesn't contain*?
+]
+
+Bootstrap resampling directly answers only Question A.
+
+<!-- LO1: This is the central distinction the lecture is built around. -->
+
+---
+
+# Why the Difference Matters
+
+.big[
+Resampling the pooled data mixes games from 2016–17, 2017–18, and 2018–19 together.
+]
+
+A high pooled confidence could reflect:
+
+- a pattern that holds steadily in **every** season, **or**
+- a pattern driven mostly by **one big season**, diluted across the rest.
+
+The pooled number alone cannot tell these apart.
+
+---
+
+# Check Season by Season
+
+```{r}
+gms %>%
+  group_by(yearSeason, isWin) %>%
+  summarise(mean_tov = mean(tov, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(names_from = isWin, values_from = mean_tov, names_prefix = "win_")
+```
+
+The raw gap is not identical across seasons.
+
+---
+
+# Bootstrap Within Each Season
+
+```{r, eval=FALSE}
+bs_season <- NULL
+for (i in 1:200) {
+  tmp <- gms %>%
+    group_by(yearSeason) %>%
+    sample_n(size = n(), replace = TRUE) %>% #<<
+    group_by(yearSeason, isWin) %>%
+    summarise(mean_tov = mean(tov, na.rm = TRUE), .groups = "drop") %>%
+    mutate(sim = i)
+  bs_season <- bind_rows(bs_season, tmp)
+}
+```
+
+.big[
+Resampling **within** each season keeps the seasons from blending together.
+]
+
+---
+
+# Confidence, By Season
+
+```{r}
+conf_by_season
+```
+
+.big[
+Compare these to the pooled `r round(conf_pooled*100,1)`%.
+]
+
+---
+
+# What This Shows
+
+.big[
+The pooled confidence number can look strong even when the pattern is uneven across seasons.
+]
+
+A single confidence percentage can hide exactly the kind of heterogeneity Unit 2 taught you to look for.
+
+<!-- Bridge back to "condition on Z" reasoning from Lecture 7. -->
+
+---
+
+# So What Does 78% Actually Justify?
+
+Suppose the pooled confidence is 78%. It justifies:
+
+.big[
+**"In 78% of resamples of these 2016–2019 games, winning teams had fewer turnovers."**
+]
+
+It does **not** justify:
+
+.big[
+**"There is a 78% chance winning causes fewer turnovers."**
+
+**"78% of future games will follow this pattern."**
+
+**"This pattern will look the same in a season we haven't observed."**
+]
+
+---
+
+# A Useful Habit
+
+.big[
+Before trusting a single confidence number, ask:
+
+**Resampled from what?**
+]
+
+Confidence describes resampling of a specific dataset. If that dataset pools together things that differ (seasons, groups, populations), the number can average over real differences.
+
+---
+
+# Sample Size Matters Too
+
+```{r}
+gms %>%
+  count(yearSeason)
+```
+
+.big[
+Some seasons contribute far more games than others to the pooled bootstrap.
+]
+
+A season with fewer games swings around more under resampling — and contributes less to the pooled average.
+
+---
+
+# Audit an AI Claim
+
+Suppose an AI assistant is given only the pooled 78% figure and says:
+
+> "This confirms that reducing turnovers will improve any team's chances of winning in every season, including next year's."
+
+.big[
+**What does the 78% actually describe?**
+
+**What did the claim assume that the number doesn't establish?**
+
+**What would you want to see before trusting the claim about next season?**
+]
+
+---
+
+# What a Confidence Number Is Good For
+
+.big[
+It is a disciplined way to say **how fragile a specific comparison, in a specific sample, is to resampling noise.**
+]
+
+That is genuinely useful. It is also strictly limited.
+
+---
+
+# What It Cannot Do On Its Own
+
+.big[
+It cannot tell you whether the comparison reflects a real underlying process.
+
+It cannot tell you whether the pattern would replicate in a new sample.
+
+It cannot substitute for checking subgroups, as we just did with seasons.
+]
+
+---
+
+# A Calibrated Conclusion
+
+Instead of:
+
+> "We are 78% confident winning causes fewer turnovers."
+
+Try:
+
+.big[
+> **In these 2016–2019 games, winning teams had fewer turnovers in `r round(conf_pooled*100,1)`% of resamples of the pooled data, but the pattern's strength differs by season, and a single confidence number does not establish that it would hold in a season we have not observed.**
+]
+
+---
+
+# Before You Leave
+
+When someone hands you a confidence percentage, ask:
+
+1. Resampled from what data, exactly?
+2. Does that data pool together groups that might differ?
+3. Does the pattern hold up when I check within those groups separately?
+4. Am I treating this as a description of this sample, or smuggling in a claim about the population?
+5. What would I need to check before trusting this beyond the sample I have?
+
+---
+
+# The Rule to Remember
+
+.huge[
+**A confidence percentage describes this sample's resampling behavior.**
+
+**It is not a verdict about the world.**
+]
+
+---
+
+# The Unit 3 Workflow
+
+.big[
+**See a comparison**
+
+↓
+
+**Resample it**
+
+↓
+
+**Turn resamples into a confidence number**
+
+↓
+
+**Ask what that number does and does not justify**
+
+↓
+
+**Check whether it holds across relevant subgroups**
+]
+
+---
+
+# Homework 8
+
+You will practice:
+
+- bootstrapping within subgroups instead of a pooled sample;
+- comparing confidence numbers across those subgroups;
+- distinguishing what a confidence percentage justifies from what it doesn't;
+- auditing an AI claim that treats confidence as a population-level guarantee;
+- writing a calibrated conclusion about a confidence result.
+
+Next:
+
+.big[
+**Regression I**
+]

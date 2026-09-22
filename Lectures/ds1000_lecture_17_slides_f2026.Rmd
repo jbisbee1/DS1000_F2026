@@ -1,0 +1,349 @@
+---
+title: "How Can Unstructured Text Become Evidence?"
+subtitle: "DS 1000"
+author: "Prof. Bisbee"
+output:
+  xaringan::moon_reader:
+    css: ["default", "metropolis", "metropolis-fonts"]
+    nature:
+      ratio: "16:9"
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+```{r,include=F}
+set.seed(123)
+options(width=60)
+knitr::opts_chunk$set(fig.align='center',fig.width=9,fig.height=5,message=F,warning=F)
+
+library(tidyverse)
+
+tweet_words <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/main/data/Trump_tweet_words.Rds") %>%
+  mutate(PostPresident = Tweeting.date > as.Date("2016-11-06"))
+
+odds <- tweet_words %>%
+  count(word, PostPresident) %>%
+  group_by(word) %>%
+  filter(sum(n) >= 5) %>%
+  ungroup() %>%
+  pivot_wider(names_from = PostPresident, values_from = n, values_fill = 0,
+              names_prefix = "post_") %>%
+  mutate(
+    tot_false = sum(post_FALSE),
+    tot_true = sum(post_TRUE),
+    prop_false = (post_FALSE + 1) / (tot_false + 1),
+    prop_true = (post_TRUE + 1) / (tot_true + 1),
+    odds_ratio = prop_true / prop_false,
+    log_odds = log(odds_ratio)
+  )
+
+n_tweets <- tweet_words %>% distinct(document, PostPresident) %>% count(PostPresident)
+```
+
+<style>
+.big { font-size: 130%; }
+.huge { font-size: 180%; }
+.small { font-size: 80%; }
+</style>
+
+<!--
+LEARNING OBJECTIVES
+
+LO1: Interrogate empirical claims.
+LO3: Select and justify analytical approaches.
+LO4: Conduct and evaluate data analyses.
+LO5: Critically use AI as an analytical tool.
+LO6: Communicate evidence responsibly.
+
+Lecture 17 opens Unit 5. It introduces the "bag of words" idea: a tokenized
+document-word dataset can be counted, compared, and visualized using the
+exact same tools (counts, proportions, ratios, logs for skew) already
+established for numeric variables. Uses Trump_tweet_words.Rds, comparing
+pre- and post-presidency tweets. Sentiment dictionaries are deliberately
+NOT introduced here -- that is Lecture 18's job. This lecture stops at
+"which words distinguish the two groups," a measurement/description task.
+
+INSTRUCTOR NOTE:
+No new modeling machinery (lm/glm) is used today. The core move is treating
+word-group association as a variable, computed and audited the same way
+every other variable has been all semester.
+-->
+
+# How Can Unstructured Text Become Evidence?
+
+.big[
+All semester:
+
+> **How do we treat a number or a category as evidence?**
+
+Today:
+
+> **What about a paragraph, a tweet, or a transcript?**
+]
+
+---
+
+# Where We Are
+
+.big[
+**Question → ... → find structure without labels → treat text as evidence**
+]
+
+Today:
+
+**Treat text as evidence**
+
+---
+
+# A Familiar Kind of Question
+
+.huge[
+> **Did what this person talks about change after a specific event?**
+]
+
+Same structure as every claim this semester: a comparison, across a specific grouping variable.
+
+---
+
+# The Data: Before and After
+
+```{r}
+tweet_words %>%
+  select(document, word, Tweeting.date, PostPresident) %>%
+  head(6)
+```
+
+Every row is one **word**, from one **tweet**, tagged with whether it was posted before or after January 20, 2017.
+
+---
+
+# This Didn't Start as a Table
+
+.big[
+Raw text starts as a wall of characters:
+]
+
+> "Big day for Israel. Congratulations!"
+
+.big[
+To get the table on the last slide, someone had to **tokenize** it — split it into individual words, one row per word per document.
+]
+
+`tidytext::unnest_tokens()` does this automatically; we're starting from the already-tokenized result.
+
+---
+
+# The "Bag of Words"
+
+.big[
+Tokenizing throws away word order, grammar, and punctuation.
+]
+
+What's left is just: which words appeared, and how often.
+
+.big[
+That sounds like a huge loss — and it is. But it turns text into something we already know how to analyze: **counts**.
+]
+
+---
+
+# Counting Words by Group
+
+```{r}
+tweet_words %>%
+  filter(word %in% c("great", "sad", "fake", "border")) %>%
+  count(word, PostPresident)
+```
+
+.big[
+Same move as every group comparison this semester — just counting words instead of measuring a continuous variable.
+]
+
+---
+
+# A Naive Comparison
+
+.big[
+Could we just compare **raw counts** of a word before vs. after?
+]
+
+```{r}
+n_tweets
+```
+
+.big[
+No — there are different numbers of tweets in each period. Raw counts would be unfair, exactly like comparing two groups of very different sizes anywhere else in the course.
+]
+
+---
+
+# Fixing the Denominator: Proportions
+
+.big[
+Instead of "how many times," ask: **"what share of all words in this period was this word?"**
+]
+
+```{r, eval=FALSE}
+tweet_words %>%
+  count(word, PostPresident) %>%
+  group_by(PostPresident) %>%
+  mutate(prop = n / sum(n))
+```
+
+This is the same fix as turning a raw count into a rate.
+
+---
+
+# From Proportions to an Odds Ratio
+
+.big[
+To compare one word's usage across two periods in a single number:
+]
+
+.huge[
+$$\text{odds ratio} = \frac{\text{proportion post-presidency}}{\text{proportion pre-presidency}}$$
+]
+
+A ratio above 1 means the word became more common; below 1, less common.
+
+---
+
+# Why We Need Logs Again
+
+```{r}
+odds %>%
+  ggplot(aes(x = odds_ratio)) +
+  geom_histogram(bins = 30)
+```
+
+.big[
+Just like budgets and gross revenue earlier this semester: heavily skewed. A word that doubles in use and a word that is cut in half should look like mirror images — they don't, on this scale.
+]
+
+---
+
+# Logging Fixes the Asymmetry
+
+```{r}
+odds <- odds %>% mutate(log_odds = log(odds_ratio))
+
+odds %>%
+  ggplot(aes(x = log_odds)) +
+  geom_histogram(bins = 30)
+```
+
+Now doubling ($\log \approx 0.69$) and halving ($\log \approx -0.69$) are symmetric around zero.
+
+---
+
+# Which Words Distinguish the Two Periods?
+
+```{r}
+odds %>%
+  group_by(log_odds > 0) %>%
+  slice_max(abs(log_odds), n = 10) %>%
+  ungroup() %>%
+  mutate(word = reorder(word, log_odds)) %>%
+  ggplot(aes(x = log_odds, y = word, fill = log_odds < 0)) +
+  geom_col() +
+  labs(x = "Post- / pre-presidency log-odds", y = NULL) +
+  theme(legend.position = "none")
+```
+
+---
+
+# What This Chart Does and Doesn't Show
+
+.big[
+It shows: which specific words became relatively more or less common after a known date, adjusting for the different number of tweets in each period.
+]
+
+It does **not** show:
+
+- what the person **meant** by using those words;
+- whether the shift reflects the event, or just time passing;
+- anything about **tone** — only **topic**.
+
+<!-- Bridge to Lecture 18: sentiment vs. topic. -->
+
+---
+
+# Topic Is Not the Same as Tone
+
+.big[
+A word like "fake" appearing more often tells us a **topic** became more prominent.
+]
+
+It doesn't tell us whether the person's overall tone became more positive or negative — that requires a different kind of measurement, which is next class's question.
+
+---
+
+# Audit an AI Claim
+
+Suppose an AI assistant is given only the raw word counts (not proportions) and says:
+
+> "This person clearly talks about the border constantly now — look how many more times 'border' appears."
+
+.big[
+**Does a higher raw count account for the number of tweets in each period?**
+
+**What would a fair comparison require?**
+
+**Is a bigger raw count the same as a bigger share of what was said?**
+]
+
+A raw count comparison across unequal group sizes is the same mistake this course has flagged all semester — just applied to words instead of numbers.
+
+---
+
+# A Calibrated Conclusion
+
+Instead of:
+
+> "This shows what this person really thinks."
+
+Try:
+
+.big[
+> **Relative to the number of tweets in each period, certain words became substantially more or less common after this date — a measurable shift in topic, not a direct measurement of intent, tone, or meaning.**
+]
+
+---
+
+# Before You Leave
+
+When you see a claim based on text data, ask:
+
+1. Was the comparison based on raw counts, or adjusted for how much text there was in each group?
+2. Does a log transformation make an asymmetric ratio easier to compare?
+3. Does the measure capture *topic* (what's discussed) or *tone* (how it's discussed)?
+4. What did tokenizing the text throw away, and does that matter here?
+5. What would this measure not tell you, even if the numbers are calculated correctly?
+
+---
+
+# The Rule to Remember
+
+.huge[
+**Text becomes data the moment you start counting it.**
+
+**Counting is not the same as understanding.**
+]
+
+---
+
+# Homework 13
+
+You will practice:
+
+- tokenizing your intuition about what "bag of words" throws away;
+- calculating and interpreting a log-odds ratio for word usage across groups;
+- auditing an unfair raw-count comparison in text data;
+- distinguishing what a word-frequency measure captures from what it misses.
+
+Next:
+
+.big[
+**NLP / Sentiment**
+]

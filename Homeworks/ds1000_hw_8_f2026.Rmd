@@ -1,0 +1,181 @@
+---
+title: "What Does Confidence Actually Justify?"
+subtitle: "Homework 8"
+author: "DS-1000: How Data Shape Our World"
+date: "Due before Lecture 11"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, error = TRUE, warning = FALSE, message = FALSE)
+
+library(tidyverse)
+
+gms <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/main/data/game_summary.Rds")
+```
+
+# What is this homework for?
+
+In Lecture 10, you saw that a single confidence percentage can hide real differences between subgroups — a pooled bootstrap looked strong even though the pattern's strength varied by season.
+
+Now you will run that same check yourself, on a new comparison:
+
+> **A confidence percentage describes resampling of one dataset. Before trusting it, check whether that dataset pools together groups that might behave differently.**
+
+You may use AI, your notes, classmates, and the internet. AI can help you adapt the `for()` loop. Your job is to decide what the resulting numbers do and do not justify.
+
+# The Claim
+
+> **Teams that shoot well from the free-throw line win more often.**
+
+The relevant variables:
+
+| Variable | Meaning |
+|---|---|
+| `ft_80` | Team scored more than 80% of its free throws in that game |
+| `isWin` | Whether the team won the game |
+| `yearSeason` | Which season the game was played in |
+
+# Part I: The Pooled Comparison
+
+## 1. Look First
+
+Calculate the win rate for `ft_80 == TRUE` versus `ft_80 == FALSE`, pooling all seasons together.
+
+```{r observed-comparison}
+# Calculate the win rate by ft_80 here.
+
+```
+
+**What do you observe?**
+
+
+
+# Part II: Pooled Bootstrap
+
+## 2. Build the Loop
+
+Write a `for()` loop that resamples the full (pooled) dataset with replacement at least 200 times, and for each resample calculates the win rate for each `ft_80` group.
+
+```{r pooled-bootstrap}
+set.seed(123)
+
+# bs_pooled <- NULL
+# for (i in 1:200) {
+#   ...
+# }
+
+```
+
+## 3. Turn It Into a Confidence Number
+
+What fraction of resamples show `ft_80 == TRUE` teams winning more often than `ft_80 == FALSE` teams?
+
+```{r pooled-confidence}
+# Calculate the pooled confidence percentage here.
+
+```
+
+**Your pooled confidence percentage:**
+
+
+
+# Part III: Does It Hold Within Every Season?
+
+## 4. Resample Within Seasons
+
+Adapt your loop so that it resamples **within each season** (`group_by(yearSeason)` before `sample_n()`), the way Lecture 10 did for turnovers. Then calculate a separate confidence percentage for each season.
+
+```{r season-bootstrap}
+set.seed(123)
+
+# bs_season <- NULL
+# for (i in 1:200) {
+#   ...
+# }
+
+```
+
+```{r season-confidence}
+# Summarise confidence by yearSeason here.
+
+```
+
+**What do you find?**
+
+
+
+## 5. Compare
+
+Is the pattern equally strong in every season, or does it vary? Does any season look meaningfully different from the pooled result?
+
+**Your answer:**
+
+
+
+# Part IV: What Does the Number Justify?
+
+## 6. Write Two Sentences
+
+Write one sentence describing what your pooled confidence percentage **does** justify.
+
+**Your answer:**
+
+
+
+Write one sentence describing something it does **not** justify.
+
+**Your answer:**
+
+
+
+# Part V: Audit an AI Explanation
+
+Suppose an AI assistant is shown only your pooled confidence number and says:
+
+> **"This proves that any team can guarantee more wins by improving free-throw shooting, in any season, including next year's."**
+
+## 7. Audit the Claim
+
+Identify two problems with this statement, using what you found in Part III.
+
+**Problem 1:**
+
+
+
+**Problem 2:**
+
+
+
+# Part VI: Calibrated Communication
+
+## 8. Write the Conclusion
+
+Write two or three sentences for a non-statistical audience. Your conclusion should:
+
+- report the pooled confidence percentage and what comparison it describes;
+- mention whether the pattern held up consistently across seasons;
+- avoid claiming that the result guarantees anything about a future or unobserved season.
+
+**Your answer:**
+
+
+
+# Before Lecture 11
+
+Complete these statements:
+
+> **A confidence percentage only describes ________________________________.**
+
+
+
+> **Before trusting a pooled confidence number, I should check ________________________________.**
+
+
+
+> **If a pattern's strength varies a lot across subgroups, that tells me ________________________________.**
+
+
+
+> **A confidence percentage never justifies a claim about ________________________________.**
+

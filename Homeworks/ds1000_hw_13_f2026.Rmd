@@ -1,0 +1,148 @@
+---
+title: "How Can Unstructured Text Become Evidence?"
+subtitle: "Homework 13"
+author: "DS-1000: How Data Shape Our World"
+date: "Due before Lecture 18"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, error = TRUE, warning = FALSE, message = FALSE)
+
+library(tidyverse)
+
+tweet_words <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/main/data/Trump_tweet_words.Rds") %>%
+  mutate(PostPresident = Tweeting.date > as.Date("2016-11-06"))
+```
+
+# What is this homework for?
+
+In Lecture 17, you saw that a tokenized "bag of words" can be counted, turned into fair proportions, and compared across groups using a log-odds ratio — the same fair-comparison habit you've used all semester, just applied to words.
+
+Now you will run that comparison yourself and reflect on what it does and doesn't show:
+
+> **Counting words is not the same as understanding what someone meant.**
+
+You may use AI, your notes, classmates, and the internet. AI can help you write the code. Your job is to interpret the resulting words correctly and decide what the comparison does and does not establish.
+
+# Part I: A Naive Comparison
+
+## 1. Raw Counts
+
+Pick two words you're curious about (for example, `"great"`, `"sad"`, `"win"`, `"border"`, `"fake"` — or others you find in the data). Count their raw occurrences by `PostPresident`.
+
+```{r raw-counts}
+# Count your chosen words by PostPresident here.
+
+```
+
+## 2. Why This Comparison Is Unfair
+
+How many tweets are in each period? Why does that matter for interpreting the raw counts above?
+
+```{r tweet-counts}
+# Count the number of distinct documents (tweets) by PostPresident.
+
+```
+
+**Your answer:**
+
+
+
+# Part II: A Fair Comparison
+
+## 3. Calculate Proportions
+
+For all words (not just your two), calculate each word's share of all words used within its period.
+
+```{r proportions}
+# Calculate proportions by PostPresident here.
+
+```
+
+## 4. Calculate the Log-Odds Ratio
+
+Following Lecture 17's four-step process (counts → proportions → odds ratio → log), calculate the log-odds ratio for every word that appears at least 5 times total.
+
+```{r log-odds}
+# Build the odds ratio and log-odds columns here.
+
+```
+
+## 5. Plot the Result
+
+Plot the top 10 words most associated with each period, the way Lecture 17 did.
+
+```{r plot-log-odds}
+# Create the log-odds bar chart here.
+
+```
+
+# Part III: Interpret Carefully
+
+## 6. What Does This Chart Show?
+
+Pick one word near the top of your chart. What does its log-odds value tell you, precisely?
+
+**Your answer:**
+
+
+
+## 7. What Does This Chart Not Show?
+
+Does this chart tell you anything about *tone* (positive or negative feeling)? Why or why not?
+
+**Your answer:**
+
+
+
+# Part IV: Audit an AI Explanation
+
+Suppose an AI assistant is given only the **raw counts** from Part I (not the proportions or log-odds) and says:
+
+> **"The huge increase in raw mentions proves this topic completely took over their communication after this date."**
+
+## 8. Audit the Claim
+
+Identify two problems with this statement.
+
+**Problem 1:**
+
+
+
+**Problem 2:**
+
+
+
+# Part V: Calibrated Communication
+
+## 9. Write the Conclusion
+
+Write two or three sentences for a non-statistical audience, reporting one word's log-odds result. Your conclusion should:
+
+- report the word and its direction of change, using the fair (proportion-based) comparison;
+- avoid claiming this reveals intent, tone, or meaning;
+- be explicit that this measures topic, not tone.
+
+**Your answer:**
+
+
+
+# Before Lecture 18
+
+Complete these statements:
+
+> **Tokenizing text into a "bag of words" throws away ________________________________.**
+
+
+
+> **Comparing raw word counts across groups of different sizes is unfair because ________________________________.**
+
+
+
+> **A log-odds ratio near zero means ________________________________.**
+
+
+
+> **A word-frequency measure captures topic but not necessarily ________________________________.**
+

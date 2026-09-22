@@ -1,0 +1,226 @@
+---
+title: "How Should Classification Performance Be Evaluated?"
+subtitle: "Homework 12"
+author: "DS-1000: How Data Shape Our World"
+date: "Due before Lecture 16"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, error = TRUE, warning = FALSE, message = FALSE)
+
+library(tidyverse)
+
+gms <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/main/data/game_summary.Rds")
+
+sweep_thresholds <- function(probs, truth, thresholds = seq(0, 1, by = 0.02)) {
+  out <- NULL
+  for (t in thresholds) {
+    pred_t <- ifelse(probs >= t, TRUE, FALSE)
+    tp_t <- sum(pred_t == TRUE & truth == TRUE)
+    fn_t <- sum(pred_t == FALSE & truth == TRUE)
+    tn_t <- sum(pred_t == FALSE & truth == FALSE)
+    fp_t <- sum(pred_t == TRUE & truth == FALSE)
+    out <- bind_rows(out, tibble(
+      threshold = t,
+      sensitivity = tp_t / (tp_t + fn_t),
+      specificity = tn_t / (tn_t + fp_t)
+    ))
+  }
+  out
+}
+
+compute_auc <- function(roc_dat) {
+  roc_sorted <- roc_dat %>%
+    mutate(fpr = 1 - specificity) %>%
+    drop_na(sensitivity, fpr) %>%
+    arrange(fpr)
+  sum(diff(roc_sorted$fpr) * (head(roc_sorted$sensitivity, -1) +
+                                 tail(roc_sorted$sensitivity, -1)) / 2)
+}
+```
+
+# What is this homework for?
+
+In Lecture 15, you saw that one accuracy number depends on a threshold you have to choose, and that sensitivity, specificity, ROC curves, and AUC give a fuller picture. The `sweep_thresholds()` and `compute_auc()` functions above are provided so you can focus on using them correctly rather than re-deriving them.
+
+Now you will use these tools to compare two classifiers:
+
+> **A model comparison should hold up across every threshold, not just one. AUC lets you check that.**
+
+You may use AI, your notes, classmates, and the internet. Your job is to interpret the sensitivity/specificity tradeoff and the AUC comparison correctly.
+
+# The Claim
+
+> **Adding free-throw percentage to a shooting-based classifier improves its ability to predict wins.**
+
+The relevant variables:
+
+| Variable | Meaning |
+|---|---|
+| `isWin` | Whether the team won the game |
+| `pctFG` | Field-goal percentage |
+| `pctFT` | Free-throw percentage |
+
+# Part I: Build the Two Models
+
+## 1. Split the Data
+
+```{r train-test-split}
+set.seed(123)
+
+# Create train and test sets here, roughly half and half.
+
+```
+
+## 2. Fit Both Models
+
+Fit `isWin ~ pctFG` (simple) and `isWin ~ pctFG + pctFT` (augmented) on the training set.
+
+```{r fit-models}
+# Fit both models here.
+
+```
+
+# Part II: Sensitivity and Specificity at One Threshold
+
+## 3. Classify at 0.5
+
+For the **augmented** model, predict on the test set and classify at a 0.5 threshold.
+
+```{r classify}
+# Predict and classify here.
+
+```
+
+## 4. Calculate Sensitivity and Specificity
+
+```{r sens-spec}
+# Build the confusion matrix and calculate sensitivity and specificity.
+
+```
+
+**Sensitivity:**
+
+**Specificity:**
+
+**Are they close together, or far apart? What does that tell you?**
+
+
+
+# Part III: Sweep the Threshold
+
+## 5. Use `sweep_thresholds()`
+
+Apply the provided `sweep_thresholds()` function to the augmented model's predicted probabilities.
+
+```{r sweep}
+# Call sweep_thresholds() on your augmented model's predictions.
+
+```
+
+## 6. Plot the Tradeoff
+
+Plot sensitivity and specificity against threshold, the way Lecture 15 did.
+
+```{r plot-tradeoff}
+# Create the plot here.
+
+```
+
+**Describe what happens to each metric as the threshold rises.**
+
+
+
+# Part IV: ROC and AUC
+
+## 7. Plot the ROC Curve
+
+```{r roc-curve}
+# Plot 1 - specificity (x) against sensitivity (y).
+
+```
+
+## 8. Calculate AUC for Both Models
+
+Use `compute_auc()` on the threshold-swept results for **both** the simple and augmented models.
+
+```{r auc-both}
+# Calculate AUC for the simple model and the augmented model.
+
+```
+
+**Simple model AUC:**
+
+**Augmented model AUC:**
+
+# Part V: Cross-Validate the Comparison
+
+## 9. Repeat Across Many Splits
+
+Adapt Lecture 15's repeated cross-validation loop to compare the average AUC of the two models across at least 50 train/test splits.
+
+```{r cv-auc}
+set.seed(123)
+
+# cv_auc <- NULL
+# for (i in 1:50) {
+#   ...
+# }
+
+```
+
+**Which model has the higher average cross-validated AUC?**
+
+
+
+# Part VI: Audit an AI Explanation
+
+Suppose an AI assistant is shown only the augmented model's 0.5-threshold accuracy and says:
+
+> **"This single number proves the augmented model is better."**
+
+## 10. Audit the Claim
+
+Identify two problems with this statement, using what you found in Parts IV and V.
+
+**Problem 1:**
+
+
+
+**Problem 2:**
+
+
+
+# Part VII: Calibrated Communication
+
+## 11. Write the Conclusion
+
+Write two or three sentences for a non-statistical audience. Your conclusion should:
+
+- report the cross-validated AUC comparison between the two models;
+- avoid claiming the better model establishes what causes winning;
+- mention that any real use would still require choosing a threshold.
+
+**Your answer:**
+
+
+
+# Before Lecture 16
+
+Complete these statements:
+
+> **Sensitivity and specificity separate ________________________________ from ________________________________.**
+
+
+
+> **An ROC curve shows ________________________________.**
+
+
+
+> **AUC is useful for comparing models because ________________________________.**
+
+
+
+> **A higher AUC does not, by itself, establish ________________________________.**
+

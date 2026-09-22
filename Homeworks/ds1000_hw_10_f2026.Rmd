@@ -1,0 +1,167 @@
+---
+title: "Prediction vs. Explanation"
+subtitle: "Homework 10"
+author: "DS-1000: How Data Shape Our World"
+date: "Due before Lecture 14"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, error = TRUE, warning = FALSE, message = FALSE)
+
+library(tidyverse)
+
+gms <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/main/data/game_summary.Rds")
+```
+
+# What is this homework for?
+
+In Lecture 13, you saw that `lm()` can technically run on a binary outcome, but the predictions it produces don't behave like probabilities — and that "how good is this model" depends on whether your goal is explanation or prediction.
+
+Now you will run that same demonstration yourself, on a new pair of predictors:
+
+> **Rest and location. Can they help us guess who wins, even without explaining why?**
+
+You may use AI, your notes, classmates, and the internet. AI can help you write the code. Your job is to decide what kind of question you're answering, and whether your evaluation actually fits it.
+
+# The Claim
+
+> **Teams with more rest and teams playing at home are more likely to win.**
+
+The relevant variables:
+
+| Variable | Meaning |
+|---|---|
+| `isWin` | Whether the team won the game (`TRUE`/`FALSE`) |
+| `teamrest` | Days since the team's last game |
+| `locationGame` | `H` (home) or `A` (away) |
+
+# Part I: Name the Question
+
+## 1. Explanation or Prediction?
+
+Is the claim above, as written, more naturally an explanation question or a prediction question? Explain your reasoning in one or two sentences.
+
+**Your answer:**
+
+
+
+# Part II: Try the Familiar Tool
+
+## 2. Fit a Linear Model on a Binary Outcome
+
+Fit `isWin ~ teamrest`, using `lm()`, the same way you would for a continuous outcome.
+
+```{r fit-lpm}
+# Fit the model here.
+
+```
+
+## 3. Check the Predictions
+
+Generate predicted values from your model and check their range.
+
+```{r check-range}
+# Use predict() and range() to check the minimum and maximum predicted values.
+
+```
+
+**Do any predicted values fall below 0 or above 1? What does that tell you about using `lm()` this way?**
+
+
+
+# Part III: Evaluate It As a Prediction Problem
+
+## 4. Split the Data
+
+Split `gms` into a training set and a test set (roughly half and half), the same way you did in Lecture 12.
+
+```{r train-test-split}
+set.seed(123)
+
+# Create train and test sets here.
+
+```
+
+## 5. Fit and Predict
+
+Fit `isWin ~ teamrest + locationGame` on the training set, then generate predictions on the test set. Convert each predicted value into a `TRUE`/`FALSE` guess using a 0.5 cutoff.
+
+```{r fit-and-predict}
+# Fit the model on train, predict on test, and classify using a 0.5 cutoff.
+
+```
+
+## 6. Calculate Accuracy
+
+What fraction of the test set's outcomes did your classified predictions get right?
+
+```{r accuracy}
+# Calculate accuracy here.
+
+```
+
+**Your accuracy:**
+
+
+
+# Part IV: What Kind of Claim Does This Support?
+
+## 7. Explanation vs. Prediction, Revisited
+
+Does your accuracy number tell you *why* rest and location matter for winning? What would you need in order to make that kind of claim?
+
+**Your answer:**
+
+
+
+# Part V: Audit an AI Explanation
+
+Suppose an AI assistant sees your accuracy number and says:
+
+> **"This proves that extra rest causes teams to play better."**
+
+## 8. Audit the Claim
+
+Identify two problems with this statement.
+
+**Problem 1:**
+
+
+
+**Problem 2:**
+
+
+
+# Part VI: Calibrated Communication
+
+## 9. Write the Conclusion
+
+Write two or three sentences for a non-statistical audience. Your conclusion should:
+
+- report your held-out accuracy and what it measures;
+- avoid claiming that rest or location *causes* winning;
+- be clear about whether this was an explanation exercise or a prediction exercise.
+
+**Your answer:**
+
+
+
+# Before Lecture 14
+
+Complete these statements:
+
+> **An explanation question asks ________________________________.**
+
+
+
+> **A prediction question asks ________________________________.**
+
+
+
+> **Fitting `lm()` on a 0/1 outcome can produce predictions that ________________________________.**
+
+
+
+> **High predictive accuracy, by itself, does not establish ________________________________.**
+

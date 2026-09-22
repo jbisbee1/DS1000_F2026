@@ -1,0 +1,529 @@
+---
+title: "How Confident Should We Be?"
+subtitle: "DS 1000"
+author: "Prof. Bisbee"
+output:
+  xaringan::moon_reader:
+    css: ["default", "metropolis", "metropolis-fonts"]
+    nature:
+      ratio: "16:9"
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+```{r,include=F}
+set.seed(123)
+options(width=60)
+knitr::opts_chunk$set(fig.align='center',fig.width=9,fig.height=5,message=F,warning=F)
+
+library(tidyverse)
+
+nba <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/main/data/nba_players_2018.Rds")
+
+# Bootstrap distribution used later in the deck.
+set.seed(123)
+bs_tov <- NULL
+for (i in 1:200) {
+  tmp <- nba %>%
+    sample_n(size = nrow(nba), replace = TRUE) %>%
+    group_by(isRookie) %>%
+    summarise(mean_tov = mean(tov, na.rm = TRUE), .groups = "drop") %>%
+    mutate(sim = i)
+  bs_tov <- bind_rows(bs_tov, tmp)
+}
+
+bs_diff <- bs_tov %>%
+  pivot_wider(names_from = isRookie, values_from = mean_tov, names_prefix = "rookie_") %>%
+  mutate(diff = rookie_FALSE - rookie_TRUE)
+
+conf_tov <- mean(bs_diff$diff > 0)
+
+# Turnovers-per-minute version, used to audit the raw-count claim.
+nba <- nba %>% mutate(tov_rate = tov * 60 / minutes)
+
+set.seed(123)
+bs_rate <- NULL
+for (i in 1:200) {
+  tmp <- nba %>%
+    sample_n(size = nrow(nba), replace = TRUE) %>%
+    group_by(isRookie) %>%
+    summarise(mean_rate = mean(tov_rate, na.rm = TRUE), .groups = "drop") %>%
+    mutate(sim = i)
+  bs_rate <- bind_rows(bs_rate, tmp)
+}
+
+bs_rate_diff <- bs_rate %>%
+  pivot_wider(names_from = isRookie, values_from = mean_rate, names_prefix = "rookie_") %>%
+  mutate(diff = rookie_FALSE - rookie_TRUE)
+
+conf_rate <- mean(bs_rate_diff$diff > 0)
+```
+
+<style>
+.big { font-size: 130%; }
+.huge { font-size: 180%; }
+.small { font-size: 80%; }
+</style>
+
+<!--
+LEARNING OBJECTIVES
+
+LO1: Interrogate empirical claims.
+LO3: Select and justify analytical approaches.
+LO4: Conduct and evaluate data analyses.
+LO5: Critically use AI as an analytical tool.
+LO6: Communicate evidence responsibly.
+
+Lecture 9 opens Unit 3. It introduces sampling variability and bootstrap
+resampling as a way to express how much a single sample should make us
+uncertain about a conclusion, without requiring formal sampling-distribution
+theory. Lecture 10 (Uncertainty II) builds on this to ask what a confidence
+statement does and does not justify.
+
+INSTRUCTOR NOTE:
+The running example is NBA player data (nba_players_2018.Rds), reused from
+the ungraded Test 1 practice homework. Keep this deck's reasoning connected
+back to the "association vs. explanation" habits built in Unit 2.
+-->
+
+# How Confident Should We Be?
+
+.big[
+So far:
+
+> **Given this sample, what relationship do I see, and what else could explain it?**
+
+Today:
+
+> **If I had drawn a different sample, would I still see it?**
+]
+
+---
+
+# Where We Are
+
+.big[
+**Question → trustworthy variables → appropriate comparison → describe the relationship → interrogate explanations → quantify uncertainty → communicate**
+]
+
+Today:
+
+**Quantify uncertainty**
+
+---
+
+# One Sample, One Story
+
+Every analysis so far has used **one sample**:
+
+- one set of colleges;
+- one set of Michigan voters;
+- one set of movies.
+
+.big[
+What if we had happened to sample differently?
+]
+
+---
+
+# A New Question
+
+.huge[
+> **Do NBA rookies turn the ball over more than non-rookies?**
+]
+
+We have the data to check this directly.
+
+---
+
+# Look First
+
+```{r}
+nba %>%
+  select(namePlayer, isRookie, tov, minutes) %>%
+  glimpse()
+```
+
+---
+
+# The Comparison
+
+```{r}
+nba %>%
+  group_by(isRookie) %>%
+  summarise(mean_tov = mean(tov, na.rm = TRUE))
+```
+
+.big[
+Rookies average more turnovers in **this sample**.
+]
+
+---
+
+# A Skeptic's Question
+
+.big[
+Is this difference **real**, or could it easily have come out the other way with a slightly different sample?
+]
+
+This is a new kind of question.
+
+It is not "what else could explain it?" (Unit 2).
+
+It is: **how much should this one sample make us believe anything at all?**
+
+<!-- LO1: Distinguish confounding (Unit 2) from sampling uncertainty (Unit 3). -->
+
+---
+
+# Populations and Samples
+
+.big[
+**Population:** every player-season we would want to generalize to.
+
+**Sample:** the players who happen to be in our dataset.
+]
+
+Even if the population pattern is real, any one sample can look a little different just by chance.
+
+---
+
+# We Cannot Re-Run the Season
+
+To directly measure how much samples vary, we would want to:
+
+.big[
+Watch the 2018–19 NBA season play out **many times** and recompute the comparison each time.
+]
+
+That is impossible. There was only one season.
+
+---
+
+# The Next Best Thing
+
+.big[
+**Bootstrap resampling:** simulate "redoing the sample" by resampling our own data, with replacement.
+]
+
+We cannot rerun history. We can mimic the process of sampling.
+
+---
+
+# What "With Replacement" Means
+
+```{r}
+set.seed(123)
+
+nba %>%
+  sample_n(size = 5, replace = TRUE) %>%
+  select(namePlayer, isRookie, tov)
+```
+
+Some players can appear more than once. Others may not appear at all.
+
+---
+
+# One Resampled "Season"
+
+```{r}
+set.seed(123)
+
+nba %>%
+  sample_n(size = nrow(nba), replace = TRUE) %>%
+  group_by(isRookie) %>%
+  summarise(mean_tov = mean(tov, na.rm = TRUE))
+```
+
+A full resample: same size as our data, drawn with replacement.
+
+---
+
+# A Second Resampled "Season"
+
+```{r}
+set.seed(456)
+
+nba %>%
+  sample_n(size = nrow(nba), replace = TRUE) %>%
+  group_by(isRookie) %>%
+  summarise(mean_tov = mean(tov, na.rm = TRUE))
+```
+
+.big[
+A slightly different answer, just from resampling.
+]
+
+---
+
+# Doing This Many Times
+
+Repeating this by hand would take forever.
+
+A `for()` loop repeats the same block of code automatically:
+
+```{r, eval=FALSE}
+bs_tov <- NULL
+for (i in 1:200) {
+  tmp <- nba %>%
+    sample_n(size = nrow(nba), replace = TRUE) %>%
+    group_by(isRookie) %>%
+    summarise(mean_tov = mean(tov, na.rm = TRUE), .groups = "drop") %>%
+    mutate(sim = i)
+  bs_tov <- bind_rows(bs_tov, tmp)
+}
+```
+
+.big[
+200 simulated "seasons," each with its own comparison.
+]
+
+---
+
+# 200 Simulated Comparisons
+
+```{r}
+bs_tov %>%
+  head(6)
+```
+
+Each `sim` is one resampled dataset's version of the comparison.
+
+---
+
+# Visualize the Spread
+
+```{r, echo=FALSE}
+bs_tov %>%
+  ggplot(aes(x = mean_tov, fill = isRookie)) +
+  geom_density(alpha = .4) +
+  labs(x = "Mean turnovers", y = "Density across 200 resamples",
+       title = "How much does the rookie/non-rookie comparison move around?")
+```
+
+---
+
+# From Two Numbers to One Question
+
+For each resample, ask a yes/no question:
+
+.big[
+**Did rookies average more turnovers than non-rookies in this resample?**
+]
+
+```{r}
+bs_diff %>%
+  select(sim, rookie_FALSE, rookie_TRUE, diff) %>%
+  head(4)
+```
+
+`diff` = non-rookie mean − rookie mean. Positive means rookies had more turnovers.
+
+---
+
+# Turning This Into "Confidence"
+
+```{r}
+bs_diff %>%
+  summarise(confidence = mean(diff > 0))
+```
+
+.big[
+Rookies had more turnovers in `r round(conf_tov*100,1)`% of the 200 resamples.
+]
+
+That percentage **is** our confidence measure.
+
+---
+
+# What Does That Number Mean?
+
+.huge[
+`r round(conf_tov*100,1)`% confidence
+]
+
+**Not:** "there is a `r round(conf_tov*100,1)`% chance rookies turn the ball over more."
+
+**Is:** "in `r round(conf_tov*100,1)`% of plausible resamples of this data, the pattern held up."
+
+<!-- LO6: Keep the language tied to what resampling actually measures. -->
+
+---
+
+# Calibrating Against Extremes
+
+.big[
+A coin flip would give about **50%**.
+
+Confidence near 50% → the pattern is fragile; a different sample could easily flip it.
+
+Confidence near 100% → the pattern shows up almost no matter how we resample.
+]
+
+`r round(conf_tov*100,1)`% is closer to one end than the other. Which one?
+
+---
+
+# Before You Celebrate
+
+.big[
+High resampling confidence does **not** mean the explanation is right.
+]
+
+It only means: *this pattern in this sample is not fragile to resampling.*
+
+It says nothing about **why** the pattern exists.
+
+<!-- Bridge back to Unit 2 reasoning. -->
+
+---
+
+# Is the Comparison Even Fair?
+
+Rookies and non-rookies do not play the same number of minutes.
+
+```{r}
+nba %>%
+  group_by(isRookie) %>%
+  summarise(mean_minutes = mean(minutes, na.rm = TRUE))
+```
+
+.big[
+Fewer minutes → fewer *opportunities* to turn the ball over.
+]
+
+---
+
+# Re-Measuring the Claim
+
+```{r}
+nba <- nba %>%
+  mutate(tov_rate = tov * 60 / minutes)
+
+nba %>%
+  group_by(isRookie) %>%
+  summarise(mean_rate = mean(tov_rate, na.rm = TRUE))
+```
+
+Turnovers **per 60 minutes**, instead of raw counts.
+
+---
+
+# Bootstrap the Fairer Comparison
+
+```{r, eval=FALSE}
+bs_rate <- NULL
+for (i in 1:200) {
+  tmp <- nba %>%
+    sample_n(size = nrow(nba), replace = TRUE) %>%
+    group_by(isRookie) %>%
+    summarise(mean_rate = mean(tov_rate, na.rm = TRUE), .groups = "drop") %>%
+    mutate(sim = i)
+  bs_rate <- bind_rows(bs_rate, tmp)
+}
+```
+
+```{r}
+bs_rate_diff %>%
+  summarise(confidence = mean(diff > 0))
+```
+
+---
+
+# Two Confidence Numbers
+
+.big[
+Raw turnovers: `r round(conf_tov*100,1)`% confidence rookies turn it over more.
+
+Turnovers per 60 minutes: `r round(conf_rate*100,1)`% confidence rookies turn it over more.
+]
+
+Adjusting for playing time changed how confident we should be.
+
+<!-- LO1: Confounding and uncertainty compound; this is not a new bug, it's the same habit from Unit 2 applied to a resampled quantity. -->
+
+---
+
+# Audit an AI Claim
+
+Suppose an AI assistant is given only the raw-turnover bootstrap and says:
+
+> "This proves rookies are worse ball-handlers than veterans."
+
+.big[
+**What evidence supports this?**
+
+**What did the claim ignore?**
+
+**Would the AI's confidence survive adjusting for minutes played?**
+]
+
+A resampling percentage is not proof, and it does not audit itself.
+
+---
+
+# What Bootstrap Confidence Is and Isn't
+
+.big[
+**Is:** a measure of how much a specific comparison, in this specific dataset, moves around under resampling.
+
+**Is not:** a claim about the underlying causal explanation.
+
+**Is not:** a guarantee about next season, a different league, or a different set of players.
+]
+
+---
+
+# A Calibrated Conclusion
+
+Instead of:
+
+> "Rookies turn the ball over more."
+
+Try:
+
+.big[
+> **In these 2018–19 data, rookies average more turnovers per 60 minutes than non-rookies in about `r round(conf_rate*100,1)`% of resamples of this season — a pattern that is not simply an artifact of playing time, though it does not tell us whether it would hold in other seasons.**
+]
+
+---
+
+# Before You Leave
+
+When you see a comparison in a sample, ask:
+
+1. What comparison am I making, and in what sample?
+2. How much would that comparison move around if I resampled the data?
+3. What percentage of resamples support the comparison?
+4. Is that percentage close to a coin flip, or close to certainty?
+5. Have I adjusted for an obvious confound before trusting the number?
+6. What can this confidence number **not** tell me?
+
+---
+
+# The Rule to Remember
+
+.huge[
+**A sample gives one story.**
+
+**Resampling shows how fragile that story is.**
+]
+
+---
+
+# Homework 7
+
+You will practice:
+
+- writing and interpreting a bootstrap resampling loop;
+- turning resampled estimates into a confidence percentage;
+- calibrating what a confidence percentage does and does not mean;
+- checking whether a resampling result survives an obvious adjustment;
+- auditing an AI's overclaimed confidence.
+
+Next:
+
+.big[
+**Uncertainty II**
+]
