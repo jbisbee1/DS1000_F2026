@@ -1,0 +1,200 @@
+---
+title: "Putting Variables Together"
+subtitle: "Test 2 Practice (ungraded)"
+author: "Prof. Bisbee"
+institute: "Vanderbilt University"
+date: "Due before Test 2"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, error = TRUE, warning = FALSE, message = FALSE)
+```
+
+## Purpose
+
+This homework is a rehearsal for **Unit Test 2**.
+
+You may use your notes, classmates, the internet, and AI tools. The point is not to memorize R syntax. The point is to practice the reasoning process that you will need to perform independently on the test:
+
+> **Choose the comparison → See the relationship → Describe the relationship → Ask what else could explain it → Calibrate the conclusion**
+
+For this homework, you will actually use R and AI to help implement your decisions. On Test 2, you will instead be given analytical artifacts (plots, tables, summaries) and asked to evaluate them.
+
+## The Data
+
+We will use a synthetic dataset built to resemble a typical college admissions office's records. This is not real student data — using real admissions records here would raise privacy concerns — but it reflects the kinds of relationships found in real datasets.
+
+```{r}
+library(tidyverse)
+library(scales)
+
+ad <- read_rds("https://github.com/jbisbee1/DS1000_F2024/raw/main/data/admit_data.rds")
+```
+
+Every row is an **admitted** student. Some variables you may find useful:
+
+| Variable | Definition |
+|---|---|
+| `income` | Family income (AGI) |
+| `sat` | SAT/ACT score (ACT converted to SAT scale) |
+| `gpa` | High school GPA, four-point scale |
+| `visit` | Did the student visit campus? |
+| `legacy` | Did a parent of the student attend this college? |
+| `net_price` | Tuition minus aid received |
+| `yield` | Did the admitted student enroll in the fall? |
+
+Start by inspecting the data.
+
+```{r}
+glimpse(ad)
+```
+
+## The Claim
+
+An admissions officer says:
+
+> **"Getting admitted students to visit campus increases the chance they enroll."**
+
+Your job is **not** to determine whether this claim is true yet. Your job is to determine what the evidence does and does not support.
+
+## 1. Decompose the Claim
+
+What are the two main concepts in the claim?
+
+**Your answer:**
+
+
+
+Which variables operationalize those concepts, and what type is each (categorical or continuous)?
+
+**Your answer:**
+
+
+
+## 2. Choose the Right Comparison
+
+Both `visit` and `yield` are binary (yes/no) variables. Which of the following is the appropriate way to visualize their relationship — a scatterplot, a boxplot, or a grouped bar chart / proportion table? Explain why, referencing variable type.
+
+**Your answer:**
+
+
+
+## 3. See the Relationship
+
+Create the visualization or table you chose in Question 2.
+
+```{r}
+# Visualize or tabulate the relationship between visit and yield here.
+
+```
+
+Describe what you see. Does yield appear to differ by visit status, and by roughly how much?
+
+**Your answer:**
+
+
+
+## 4. Correlation — Does It Apply Here?
+
+Calculate the correlation between `visit` and `yield` directly.
+
+```{r}
+# Calculate cor(ad$visit, ad$yield) here.
+
+```
+
+Is a raw correlation coefficient the most natural or interpretable way to describe the relationship between two binary variables? What does the group-difference-in-proportions from Question 3 communicate that a bare correlation number does not?
+
+**Your answer:**
+
+
+
+## 5. What Else Could Explain It?
+
+Suppose visiting students really do enroll at a higher rate. Before concluding that visiting **causes** higher enrollment, identify a plausible confounder — a third variable that could affect both whether a student visits and whether they enroll.
+
+**Your answer:**
+
+
+
+Explain, in one or two sentences, how that variable could produce the association even if visiting itself had no effect.
+
+**Your answer:**
+
+
+
+## 6. Test the Confound
+
+Choose one variable from the dataset that could operationalize your proposed confounder (for example, `legacy`). Examine the visit-yield relationship **within** subgroups defined by that variable.
+
+```{r}
+# Examine the visit-yield relationship within subgroups of your chosen confounder.
+
+```
+
+Does the relationship between visit and yield look similar across subgroups, or does it change? What does that tell you?
+
+**Your answer:**
+
+
+
+## 7. Audit an AI Explanation
+
+Suppose an AI assistant is shown only your Question 3 result and says:
+
+> **"This proves that campus visits cause higher enrollment, so the admissions office should require all admitted students to visit."**
+
+Identify two problems with this statement.
+
+**Problem 1:**
+
+
+
+**Problem 2:**
+
+
+
+## 8. Calibrated Conclusion
+
+Write two or three sentences a non-statistical audience (e.g., an admissions director) could understand. Your conclusion should:
+
+- describe the observed association between visiting and enrolling;
+- mention the confounder you tested and whether it changed your interpretation;
+- avoid claiming that visiting causes enrollment.
+
+**Your answer:**
+
+
+
+## 9. Are We Ready?
+
+You now have:
+
+- a defined empirical claim and its operationalizations;
+- the correct comparison for two binary variables;
+- a described relationship;
+- a tested confounder;
+- a calibrated conclusion.
+
+What is the **next analytical question** you would need to answer to strengthen this analysis further (for example, involving uncertainty, a different confounder, or a different subgroup)?
+
+Do not perform that analysis yet.
+
+**Your answer:**
+
+
+
+## Before Test 2
+
+You should now be able to do the following without AI:
+
+- choose an appropriate multivariate visualization based on variable types;
+- describe a relationship in terms of direction, form, strength, or group differences;
+- interpret a correlation and recognize when it is (or isn't) the most natural summary;
+- identify a plausible confounder for an observed association;
+- reason about whether a relationship holds up within subgroups;
+- audit an AI-generated causal claim;
+- communicate a calibrated conclusion that distinguishes association from causation.
+
+The specific admissions context will **not** be on Test 2. The test will ask you to transfer this reasoning to a new empirical problem.
