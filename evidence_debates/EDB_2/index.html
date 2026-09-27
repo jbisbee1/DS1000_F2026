@@ -3,96 +3,27 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>DS-1000 Evidence Debate 1 — College Affordability</title>
+<title>DS-1000 Evidence Debate 2 — Bechdel Test &amp; Box Office</title>
 <style>
 :root{--ink:#1f2937;--muted:#6b7280;--page:#f4f6f8;--panel:#fff;--accent:#1d4ed8;--border:#d1d5db;--success:#166534;--successbg:#dcfce7;--danger:#991b1b;--dangerbg:#fee2e2;--bluebg:#eff6ff}
 *{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);background:var(--page);line-height:1.5}.wrap{max-width:1080px;margin:0 auto;padding:28px 20px 72px}header,section{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:28px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,.04)}h1{margin:0 0 6px;font-size:2rem}h2{margin-top:0;font-size:1.45rem}h3{margin-top:0;font-size:1.1rem}.muted{color:var(--muted)}.small{font-size:.9rem}.claim{font-size:1.5rem;font-weight:750;margin:18px 0;padding:18px;border-left:5px solid var(--accent);background:var(--bluebg);border-radius:8px}.notice{padding:14px 16px;background:#f9fafb;border:1px solid var(--border);border-radius:10px;margin:14px 0}.status{display:inline-flex;align-items:center;gap:8px;font-size:.9rem;padding:8px 12px;border-radius:999px;background:#eef2ff;color:#3730a3;font-weight:650}.status.good{background:var(--successbg);color:var(--success)}.status.bad{background:var(--dangerbg);color:var(--danger)}.student-code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:800;letter-spacing:.08em;font-size:1.15rem}.progress{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:20px}.step{padding:10px;text-align:center;border-radius:8px;background:#e5e7eb;color:#4b5563;font-size:.88rem}.step.active{background:var(--accent);color:#fff}.step.done{background:#bfdbfe;color:#1e3a8a}.hidden{display:none}.belief{display:grid;grid-template-columns:1fr 64px;gap:14px;align-items:center;margin:10px 0 18px}input[type=range]{width:100%}.belief-value{text-align:center;font-weight:800;font-size:1.2rem}label{display:block;font-weight:700;margin:14px 0 7px}textarea{width:100%;min-height:110px;resize:vertical;border:1px solid #9ca3af;border-radius:8px;padding:10px 12px;font:inherit}button{border:0;border-radius:8px;padding:11px 16px;font:inherit;font-weight:750;color:#fff;background:var(--accent);cursor:pointer}button:disabled{cursor:not-allowed;opacity:.55}.success,.error{padding:14px 16px;border-radius:10px;margin-top:14px}.success{background:var(--successbg);color:var(--success)}.error{background:var(--dangerbg);color:var(--danger)}.evidence{margin:18px 0;padding:18px;border:1px solid var(--border);border-radius:12px;background:#fbfdff}.evidence img{display:block;width:100%;height:auto;border:1px solid var(--border);border-radius:8px;background:#fff}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px}.role{padding:16px;border:2px solid var(--border);border-radius:12px;background:#fafafa}.role strong{font-size:1.1rem}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:18px}.footer-note{font-size:.88rem;color:var(--muted);margin-top:18px}@media(min-width:700px){.progress{grid-template-columns:repeat(6,1fr)}}@media(max-width:680px){.two-col{grid-template-columns:1fr}}
-
-    .claim-reminder {
-      margin: 14px 0 18px;
-      padding: 14px 16px;
-      border-left: 4px solid var(--accent);
-      background: #eff6ff;
-      border-radius: 8px;
-      font-weight: 700;
-    }
-
-    .evidence-image {
-      display: block;
-      width: 100%;
-      max-width: 100%;
-      height: auto;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      cursor: zoom-in;
-      background: white;
-      transition: box-shadow .15s ease, transform .15s ease;
-    }
-
-    .evidence-image:hover {
-      box-shadow: 0 4px 16px rgba(0,0,0,.12);
-    }
-
-    .image-note {
-      margin-top: 8px;
-      color: var(--muted);
-      font-size: .85rem;
-    }
-
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 1000;
-      inset: 0;
-      background: rgba(0,0,0,.78);
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-    }
-
-    .modal.open { display: flex; }
-
-    .modal-content {
-      position: relative;
-      max-width: 96vw;
-      max-height: 94vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .modal-content img {
-      max-width: 96vw;
-      max-height: 94vh;
-      width: auto;
-      height: auto;
-      object-fit: contain;
-      border-radius: 10px;
-      background: white;
-      box-shadow: 0 8px 40px rgba(0,0,0,.35);
-    }
-
-    .modal-close {
-      position: absolute;
-      top: -42px;
-      right: 0;
-      color: white;
-      font-size: 30px;
-      line-height: 1;
-      border: 0;
-      background: transparent;
-      cursor: pointer;
-      padding: 4px 8px;
-    }
-
-  </style>
+.claim-reminder{margin:14px 0 18px;padding:14px 16px;border-left:4px solid var(--accent);background:var(--bluebg);border-radius:8px;font-weight:700}
+.evidence-image{display:block;width:100%;max-width:100%;height:auto;border:1px solid var(--border);border-radius:10px;cursor:zoom-in;background:#fff;transition:box-shadow .15s ease}
+.evidence-image:hover{box-shadow:0 4px 16px rgba(0,0,0,.12)}
+.image-note{margin-top:8px;color:var(--muted);font-size:.85rem}
+.modal{display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.78);align-items:center;justify-content:center;padding:24px}
+.modal.open{display:flex}
+.modal-content{position:relative;max-width:96vw;max-height:94vh;display:flex;align-items:center;justify-content:center}
+.modal-content img{max-width:96vw;max-height:94vh;width:auto;height:auto;object-fit:contain;border-radius:10px;background:#fff;box-shadow:0 8px 40px rgba(0,0,0,.35)}
+.modal-close{position:absolute;top:-42px;right:0;color:#fff;font-size:30px;line-height:1;border:0;background:transparent;cursor:pointer;padding:4px 8px}
+</style>
 </head>
 <body>
 <div class="wrap">
 <header>
-<h1>Evidence Debate 1</h1>
-<div class="muted">DS-1000 · Unit 1: From Claims to Evidence</div>
-<div class="claim">“College has become unaffordable for the average American.”</div>
+<h1>Evidence Debate 2</h1>
+<div class="muted">DS-1000 · Unit 2: Relationships</div>
+<div class="claim">“Feminist movies fail at the box office.”</div>
 <p><strong>Your job is not to defend what you personally believe.</strong> Your job is to record what you think the evidence warrants at each stage.</p>
 <div class="notice"><strong>Your student code:</strong> <span id="studentCode" class="student-code">Generating...</span><div class="small muted">This anonymous code connects your responses during the activity. Refreshing the page will preserve it.</div></div>
 <div id="status" class="status">Connecting to response database...</div>
@@ -103,10 +34,11 @@
 
 <section id="s0">
 <h2>Stage 0: What does the claim mean?</h2>
-<p>Before seeing any evidence, decide what would have to be measured for this claim to be meaningful.</p>
+<p>For this exercise, we will operationalize <strong>“feminist movie”</strong> using the Bechdel test.</p>
+<div class="notice"><strong>The Bechdel test:</strong> a movie passes if it contains at least two named women who talk to each other about something other than a man.</div>
 <div class="two-col">
-<div><label for="m1">What does “college” mean in this claim? Name at least one choice that could change the answer.</label><textarea id="m1"></textarea></div>
-<div><label for="m2">How would you operationalize “unaffordable”? What quantity would you want to observe?</label><textarea id="m2"></textarea></div>
+<div><label for="m1">What is one limitation of using the Bechdel test to measure “feminist movies”?</label><textarea id="m1"></textarea></div>
+<div><label for="m2">What is one ambiguity in the phrase “fail at the box office”?</label><textarea id="m2"></textarea></div>
 </div>
 <label>Initial confidence in the claim</label>
 <div class="belief"><input type="range" id="c0" min="0" max="100" value="50"><div class="belief-value" id="c0v">50</div></div>
@@ -114,42 +46,38 @@
 </section>
 
 <section id="s1" class="hidden">
-<h2>Stage 1: Evidence A — Published tuition over time</h2>
-<div class="evidence"><img src="assets/evidence_A_published_tuition.png" class="evidence-image" onclick="openImageModal(this.src, this.alt)" alt="Inflation-adjusted published tuition and fees over time by college sector"><div class="image-note">Click the figure to view it larger.</div></div>
-<p>These are enrollment-weighted published tuition and fees in constant 2025 dollars.</p>
-<label>What does this evidence show?</label><textarea id="a1"></textarea>
-<label>What does it <em>not</em> establish about “affordability”?</label><textarea id="a2"></textarea>
-<label>What additional information would you want before deciding whether college is unaffordable?</label><textarea id="a3"></textarea>
-<div class="claim-reminder">Claim: “College has become unaffordable for the average American.”</div>
+<h2>Stage 1: Evidence A — The initial comparison</h2>
+<div class="evidence"><img src="assets/evidence_A_bechdel_gross.png" class="evidence-image" onclick="openImageModal(this.src,this.alt)" alt="Box-office revenue by Bechdel test result"><div class="image-note">Click the figure to view it larger.</div></div>
+<p>Use the evidence before you to evaluate the claim.</p>
+<label>What does the evidence show?</label><textarea id="a1"></textarea>
+<label>What does it <em>not</em> establish?</label><textarea id="a2"></textarea>
+<label>What else could explain the pattern?</label><textarea id="a3"></textarea>
 <label>Update your confidence in the claim</label>
 <div class="belief"><input type="range" id="c1" min="0" max="100" value="50"><div class="belief-value" id="c1v">50</div></div>
 <button id="b1">Record Evidence A</button><div id="msg1"></div>
 </section>
 
 <section id="s2" class="hidden">
-<h2>Stage 2: Evidence B — What counts as “the price of college”?</h2>
-<p>The same College Board data permit several defensible definitions of college cost.</p>
+<h2>Stage 2: Evidence B — Another variable</h2>
+<p>Now consider production budget.</p>
 <div class="grid">
-<div class="evidence"><h3>Evidence B1: Institution type</h3><img src="assets/evidence_B1_sector_tuition.png" class="evidence-image" onclick="openImageModal(this.src, this.alt)" alt="Published tuition and fees by college sector in 2025-26"><div class="image-note">Click the figure to view it larger.</div></div>
-<div class="evidence"><h3>Evidence B2: Tuition versus attending</h3><img src="assets/evidence_B2_tuition_vs_total.png" class="evidence-image" onclick="openImageModal(this.src, this.alt)" alt="Published tuition compared with tuition plus housing and food in 2025-26"><div class="image-note">Click the figure to view it larger.</div></div>
+<div class="evidence"><h3>Evidence B1: Bechdel status and budget</h3><img src="assets/evidence_B1_bechdel_budget.png" class="evidence-image" onclick="openImageModal(this.src,this.alt)" alt="Production budget by Bechdel test result"><div class="image-note">Click the figure to view it larger.</div></div>
+<div class="evidence"><h3>Evidence B2: Budget and box office</h3><img src="assets/evidence_B2_budget_gross.png" class="evidence-image" onclick="openImageModal(this.src,this.alt)" alt="Box-office revenue and production budget"><div class="image-note">Click the figure to view it larger.</div></div>
 </div>
-<label>Does the phrase “the price of college” identify one unambiguous variable? Explain.</label><textarea id="b21"></textarea>
-<label>Which measure would you use to evaluate the original claim, and why?</label><textarea id="b22"></textarea>
-<label>Who is the relevant population for “the average American”? What population do these data actually describe?</label><textarea id="b23"></textarea>
-<div class="claim-reminder">Claim: “College has become unaffordable for the average American.”</div>
+<label>Is budget related to Bechdel status? Explain.</label><textarea id="b21"></textarea>
+<label>Is budget related to box-office gross? Explain.</label><textarea id="b22"></textarea>
+<label>Could budget be a confounding variable? Explain why or why not.</label><textarea id="b23"></textarea>
 <label>Update your confidence in the claim</label>
 <div class="belief"><input type="range" id="c2" min="0" max="100" value="50"><div class="belief-value" id="c2v">50</div></div>
 <button id="b2">Record Evidence B</button><div id="msg2"></div>
 </section>
 
 <section id="s3" class="hidden">
-<h2>Stage 3: Evidence C — An average can hide substantial variation</h2>
-<div class="evidence"><img src="assets/evidence_C_state_variation.png" class="evidence-image" onclick="openImageModal(this.src, this.alt)" alt="Public four-year in-state tuition and fees by state in 2025-26"><div class="image-note">Click the figure to view it larger.</div></div>
-<p>This figure shows average published public four-year in-state tuition and fees by state, in 2025 dollars.</p>
-<label>What does the state variation add to your interpretation of the national average?</label><textarea id="c31"></textarea>
-<label>What unit of analysis and population would produce the most defensible test of the original claim?</label><textarea id="c32"></textarea>
-<label>Using only the evidence supplied so far, what crucial quantity is still missing if we want to measure “affordability” rather than simply “price”?</label><textarea id="c33"></textarea>
-<div class="claim-reminder">Claim: “College has become unaffordable for the average American.”</div>
+<h2>Stage 3: Evidence C — Compare like with like</h2>
+<div class="evidence"><img src="assets/evidence_C_bechdel_gross_by_budget.png" class="evidence-image" onclick="openImageModal(this.src,this.alt)" alt="Box-office revenue by Bechdel result within budget groups"><div class="image-note">Click the figure to view it larger.</div></div>
+<label>How does the relationship change?</label><textarea id="c31"></textarea>
+<label>How can the pooled and conditional results both be true?</label><textarea id="c32"></textarea>
+<label>What important limitation or unresolved question remains?</label><textarea id="c33"></textarea>
 <label>Update your confidence one final time before the debate</label>
 <div class="belief"><input type="range" id="c3" min="0" max="100" value="50"><div class="belief-value" id="c3v">50</div></div>
 <button id="b3">Record Evidence C</button><div id="msg3"></div>
@@ -168,8 +96,8 @@
 <section id="s5" class="hidden">
 <h2>Stage 5: Final adjudication</h2>
 <div class="success"><strong>Your advocacy role is over.</strong> You are now the analyst. Decide what you actually believe.</div>
-<div class="claim-reminder">Claim: “College has become unaffordable for the average American.”</div>
-    <label>Final confidence in the claim</label><div class="belief"><input type="range" id="cf" min="0" max="100" value="50"><div class="belief-value" id="cfv">50</div></div>
+<div class="claim-reminder">Claim: “Feminist movies fail at the box office.”</div>
+<label>Final confidence in the claim</label><div class="belief"><input type="range" id="cf" min="0" max="100" value="50"><div class="belief-value" id="cfv">50</div></div>
 <div class="grid">
 <div><label>Strongest evidence supporting the claim</label><textarea id="f1"></textarea></div>
 <div><label>Strongest evidence challenging the claim</label><textarea id="f2"></textarea></div>
@@ -181,16 +109,23 @@
 </section>
 </div>
 
-<script id="supabase-cdn" src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<div class="modal" id="imageModal" role="dialog" aria-modal="true" aria-label="Expanded evidence figure">
+<div class="modal-content">
+<button class="modal-close" onclick="closeImageModal()" aria-label="Close expanded figure">&times;</button>
+<img id="modalImage" src="" alt="">
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-// WORKING PILOT CONFIGURATION: same initialization pattern as the verified two-stage pilot.
+// Same Supabase project used by the other DS-1000 Evidence Debate pages.
 const SUPABASE_URL="https://syjgkatbxjiyjiosacdr.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable_dpOWSyvPGnRtpef9UYMvgg_I2x-hSnG";
-let supabaseClient=null;
+const supabaseClient=supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
 
-const DEBATE_ID="college-affordability-debate-2026";
+const DEBATE_ID="bechdel-debate-2026";
 const STUDENT_KEY="ds1000_evidence_debate1_student_code_v1";
-const STAGE_KEY=`ds1000_evidence_debate1_college_stage_${DEBATE_ID}`;
+const STAGE_KEY=`ds1000_evidence_debate1_bechdel_stage_${DEBATE_ID}`;
 function makeCode(){const chars="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";const b=new Uint32Array(6);crypto.getRandomValues(b);return Array.from(b,x=>chars[x%chars.length]).join("")}
 let studentCode=localStorage.getItem(STUDENT_KEY);if(!studentCode){studentCode=makeCode();localStorage.setItem(STUDENT_KEY,studentCode)}document.getElementById('studentCode').textContent=studentCode;
 
@@ -205,28 +140,12 @@ function getStage(){return Number(localStorage.getItem(STAGE_KEY)||0)}
 function setStage(stage){localStorage.setItem(STAGE_KEY,String(stage))}
 function lock(ids){ids.forEach(id=>{const el=document.getElementById(id);if(el)el.disabled=true})}
 
-function initSupabase(){
-  const missing=(SUPABASE_URL.includes('PASTE_YOUR')||SUPABASE_PUBLISHABLE_KEY.includes('PASTE_YOUR'));
-  if(missing){
-    setStatus('Student code ready. Add your Supabase URL and publishable key.',false,true);
-    return;
-  }
-  if(!window.supabase || typeof window.supabase.createClient !== 'function'){
-    setStatus('Supabase JavaScript library did not load.',false,true);
-    console.error('Supabase client library unavailable.', window.supabase);
-    return;
-  }
-  try{
-    supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
-    setStatus('Ready. Your student code is active.',true);
-  }catch(err){
-    console.error(err);
-    setStatus('Supabase client could not be initialized.',false,true);
-  }
-}
+function openImageModal(src,alt){document.getElementById('modalImage').src=src;document.getElementById('modalImage').alt=alt;document.getElementById('imageModal').classList.add('open')}
+function closeImageModal(){document.getElementById('imageModal').classList.remove('open')}
+document.getElementById('imageModal').addEventListener('click',e=>{if(e.target.id==='imageModal')closeImageModal()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeImageModal()});
 
 async function save(stage,confidence,response_json){
-  if(!supabaseClient){return {error:{message:'Supabase client is not available. Check that the Supabase JavaScript library loaded and that the URL/key are set.',code:'CLIENT_NOT_READY'}}}
   const {error}=await supabaseClient.from('debate_responses').upsert({debate_id:DEBATE_ID,student_code:studentCode,stage,confidence,response_json},{onConflict:'debate_id,student_code,stage'});
   return {error};
 }
@@ -267,7 +186,7 @@ async function submit3(){
   setStage(4);done('p3');active('p4');setStatus('Evidence C saved.',true);msg('msg3','Evidence C saved. Prepare your team argument.');lock(['c31','c32','c33','c3','b3']);assignRole();document.getElementById('s4').classList.remove('hidden');document.getElementById('s4').scrollIntoView({behavior:'smooth'});
 }
 
-function assignRole(){let h=0;for(const ch of studentCode)h=(h*31+ch.charCodeAt(0))>>>0;document.getElementById('roleText').textContent=(h%2===0)?'AFFIRMATIVE — argue that the evidence supports the claim as a useful generalization':'SKEPTIC — argue that the broad claim is not established by the available measurements'}
+function assignRole(){let h=0;for(const ch of studentCode)h=(h*31+ch.charCodeAt(0))>>>0;document.getElementById('roleText').textContent=(h%2===0)?'AFFIRMATIVE — argue that the claim is supported':'SKEPTIC — argue that the claim is not established'}
 
 async function submit4(){
   const d1=document.getElementById('d1').value.trim(),d2=document.getElementById('d2').value.trim(),d3=document.getElementById('d3').value.trim(),d4=document.getElementById('d4').value.trim();
@@ -290,7 +209,9 @@ async function submitFinal(){
 
 b0.addEventListener('click',submit0);b1.addEventListener('click',submit1);b2.addEventListener('click',submit2);b3.addEventListener('click',submit3);b4.addEventListener('click',submit4);bf.addEventListener('click',submitFinal);
 
-initSupabase();
+const missing=(SUPABASE_URL.includes('PASTE_YOUR')||SUPABASE_PUBLISHABLE_KEY.includes('PASTE_YOUR'));
+if(missing){setStatus('Student code ready. Add your Supabase URL and publishable key.',false,true);}
+else{setStatus('Ready. Your student code is active.',true)}
 
 // Resume the visible stage from the browser's saved progress.
 (function resume(){
@@ -303,40 +224,5 @@ initSupabase();
   if(stage>=6){done('p5');lock(['f1','f2','f3','f4','cf','bf'])}
 })();
 </script>
-
-  <div class="modal" id="imageModal" role="dialog" aria-modal="true" aria-label="Expanded evidence figure">
-    <div class="modal-content">
-      <button class="modal-close" onclick="closeImageModal()" aria-label="Close expanded figure">&times;</button>
-      <img id="modalImage" src="" alt="">
-    </div>
-  </div>
-
-<script>
-function openImageModal(src, alt) {
-  const modal = document.getElementById("imageModal");
-  const image = document.getElementById("modalImage");
-  image.src = src;
-  image.alt = alt || "Expanded evidence figure";
-  modal.classList.add("open");
-  document.body.style.overflow = "hidden";
-}
-
-function closeImageModal() {
-  const modal = document.getElementById("imageModal");
-  const image = document.getElementById("modalImage");
-  modal.classList.remove("open");
-  image.src = "";
-  document.body.style.overflow = "";
-}
-
-document.getElementById("imageModal").addEventListener("click", function(event) {
-  if (event.target === this) closeImageModal();
-});
-
-document.addEventListener("keydown", function(event) {
-  if (event.key === "Escape") closeImageModal();
-});
-</script>
-
 </body>
 </html>

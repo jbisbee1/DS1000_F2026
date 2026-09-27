@@ -1,0 +1,17 @@
+bechdel_pass,budget_bin,med_gross,evidence,med_budg
+FALSE,"Low budget
+$1m-$10m",12143756.330570541,evidence_C,NA
+FALSE,"Medium budget
+$10m-$100m",93212640.46814354,evidence_C,NA
+FALSE,"Big budget
+$100m+",359926980.9965475,evidence_C,NA
+TRUE,"Low budget
+$1m-$10m",17866263.83008007,evidence_C,NA
+TRUE,"Medium budget
+$10m-$100m",90872645.96630451,evidence_C,NA
+TRUE,"Big budget
+$100m+",510510440.84831196,evidence_C,NA
+TRUE,NA,75920488.89754938,evidence_A,NA
+FALSE,NA,97088693.01512152,evidence_A,NA
+TRUE,NA,NA,evidence_B1,36313659.653255686
+FALSE,NA,NA,evidence_B1,57464313.96201145
