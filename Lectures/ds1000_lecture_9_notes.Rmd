@@ -1,0 +1,156 @@
+---
+title: "Lecture 9 Notes"
+output: html_document
+date: "2026-09-30"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Looking at confidence
+
+```{r}
+require(tidyverse)
+
+nba <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/nba_players_2018.Rds")
+```
+
+# Look at the relevant variables
+
+```{r}
+nba %>%
+  select(isRookie,tov)
+```
+
+# Visualize the relationship
+
+```{r}
+nba %>%
+  ggplot(aes(x = isRookie,
+             y = tov)) + 
+  geom_boxplot()
+```
+
+# Introducing probability
+
+- Step 1: calculate the difference
+
+```{r}
+nba %>%
+  filter(isRookie == TRUE) %>%
+  summarise(avg_tov = mean(tov))
+
+nba %>%
+  filter(isRookie != TRUE) %>%
+  summarise(avg_tov = mean(tov))
+
+# Introducing group_by()
+nba %>%
+  group_by(isRookie) %>%
+  summarise(avg_tov = mean(tov))
+```
+
+- Step 2: simulate reality
+
+```{r}
+nba %>%
+  sample_n(size = 530,replace = TRUE) %>%
+  group_by(isRookie) %>%
+  summarise(avg_tov = mean(tov))
+```
+
+# Calculating the probability
+
+```{r}
+nba %>%
+  group_by(isRookie) %>%
+  summarise(avg_tov = mean(tov)) %>%
+  spread(isRookie,avg_tov,sep = "_") %>%
+  mutate(diff = isRookie_TRUE - isRookie_FALSE) %>%
+  mutate(rookies_tov_more = diff > 0)
+```
+
+# Boostrapping everything
+
+```{r}
+nba %>%
+  sample_n(size = 530,replace = TRUE) %>%
+  group_by(isRookie) %>%
+  summarise(avg_tov = mean(tov)) %>%
+  spread(isRookie,avg_tov,sep = "_") %>%
+  mutate(diff = isRookie_TRUE - isRookie_FALSE) %>%
+  mutate(rookies_tov_more = diff > 0) %>%
+  select(rookies_tov_more)
+```
+
+# Introducing the for() loop
+
+```{r}
+bsRes <- NULL
+for(i in 1:100) {
+  bsRes <- nba %>%
+  sample_n(size = 530,replace = TRUE) %>%
+  group_by(isRookie) %>%
+  summarise(avg_tov = mean(tov)) %>%
+  spread(isRookie,avg_tov,sep = "_") %>%
+  mutate(diff = isRookie_TRUE - isRookie_FALSE) %>%
+  mutate(rookies_tov_more = diff > 0,
+         bsInd = i) %>%
+    bind_rows(bsRes)
+}
+```
+
+# Calculate confidence
+
+```{r}
+bsRes %>%
+  summarise(conf = mean(rookies_tov_more))
+```
+
+```{r}
+bsRes %>%
+  ggplot(aes(x = diff)) + 
+  geom_density() + geom_vline(xintercept = 0)
+```
+
+# Controlling for minutes
+
+```{r}
+bsRes <- NULL
+for(i in 1:10000) {
+  bsRes <- nba %>%
+  sample_n(size = 530,replace = TRUE) %>%
+  group_by(isRookie) %>%
+  summarise(avg_tov = mean(tov / minutes)) %>%
+  spread(isRookie,avg_tov,sep = "_") %>%
+  mutate(diff = isRookie_TRUE - isRookie_FALSE) %>%
+  mutate(rookies_tov_more = diff > 0,
+         bsInd = i) %>%
+    bind_rows(bsRes)
+}
+```
+
+```{r}
+bsRes %>%
+  summarise(conf = mean(rookies_tov_more))
+```
+
+```{r}
+bsRes %>%
+  ggplot(aes(x = diff)) + 
+  geom_density() + 
+  geom_vline(xintercept = 0)
+```
+
+
+
+
+
+
+
+
+
+
+
+

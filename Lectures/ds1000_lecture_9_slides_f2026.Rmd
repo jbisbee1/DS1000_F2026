@@ -93,7 +93,11 @@ back to the "association vs. explanation" habits built in Unit 2.
 So far:
 
 > **Given this sample, what relationship do I see, and what else could explain it?**
+]
 
+--
+
+.big[
 Today:
 
 > **If I had drawn a different sample, would I still see it?**
