@@ -35,7 +35,7 @@ for (i in 1:200) {
 
 bs_diff <- bs_tov %>%
   pivot_wider(names_from = isRookie, values_from = mean_tov, names_prefix = "rookie_") %>%
-  mutate(diff = rookie_FALSE - rookie_TRUE)
+  mutate(diff = rookie_TRUE - rookie_FALSE)
 
 conf_tov <- mean(bs_diff$diff > 0)
 
@@ -55,7 +55,7 @@ for (i in 1:200) {
 
 bs_rate_diff <- bs_rate %>%
   pivot_wider(names_from = isRookie, values_from = mean_rate, names_prefix = "rookie_") %>%
-  mutate(diff = rookie_FALSE - rookie_TRUE)
+  mutate(diff = rookie_TRUE - rookie_FALSE)
 
 conf_rate <- mean(bs_rate_diff$diff > 0)
 ```
@@ -156,7 +156,7 @@ nba %>%
 ```
 
 .big[
-Rookies average more turnovers in **this sample**.
+Rookies average less turnovers in **this sample**.
 ]
 
 ---
@@ -318,7 +318,7 @@ bs_diff %>%
   head(4)
 ```
 
-`diff` = non-rookie mean − rookie mean. Positive means rookies had more turnovers.
+`diff` = rookie mean − non-rookie mean. Positive means rookies had more turnovers.
 
 ---
 

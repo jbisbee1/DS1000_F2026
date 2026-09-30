@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>How Confident Should We Be?</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Prof. Bisbee" />
+    <script src="ds1000_lecture_9_slides_f2026_files/header-attrs-2.31/header-attrs.js"></script>
+    <link href="ds1000_lecture_9_slides_f2026_files/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="ds1000_lecture_9_slides_f2026_files/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
+    <link href="ds1000_lecture_9_slides_f2026_files/remark-css-0.0.1/metropolis-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# How Confident Should We Be?
+]
+.subtitle[
+## DS 1000
+]
+.author[
+### Prof. Bisbee
+]
+
+---
+
+
+
+
+&lt;style&gt;
+.big { font-size: 130%; }
+.huge { font-size: 180%; }
+.small { font-size: 80%; }
+&lt;/style&gt;
+
+&lt;!--
+LEARNING OBJECTIVES
+
+LO1: Interrogate empirical claims.
+LO3: Select and justify analytical approaches.
+LO4: Conduct and evaluate data analyses.
+LO5: Critically use AI as an analytical tool.
+LO6: Communicate evidence responsibly.
+
+Lecture 9 opens Unit 3. It introduces sampling variability and bootstrap
+resampling as a way to express how much a single sample should make us
+uncertain about a conclusion, without requiring formal sampling-distribution
+theory. Lecture 10 (Uncertainty II) builds on this to ask what a confidence
+statement does and does not justify.
+
+INSTRUCTOR NOTE:
+The running example is NBA player data (nba_players_2018.Rds), reused from
+the ungraded Test 1 practice homework. Keep this deck's reasoning connected
+back to the "association vs. explanation" habits built in Unit 2.
+--&gt;
+
+# How Confident Should We Be?
+
+.big[
+So far:
+
+&gt; **Given this sample, what relationship do I see, and what else could explain it?**
+
+Today:
+
+&gt; **If I had drawn a different sample, would I still see it?**
+]
+
+---
+
+# Where We Are
+
+.big[
+**Question → trustworthy variables → appropriate comparison → describe the relationship → interrogate explanations → quantify uncertainty → communicate**
+]
+
+Today:
+
+**Quantify uncertainty**
+
+---
+
+# One Sample, One Story
+
+Every analysis so far has used **one sample**:
+
+- one set of colleges;
+- one set of Michigan voters;
+- one set of movies.
+
+.big[
+What if we had happened to sample differently?
+]
+
+---
+
+# A New Question
+
+.huge[
+&gt; **Do NBA rookies turn the ball over more than non-rookies?**
+]
+
+We have the data to check this directly.
+
+---
+
+# Look First
+
+
+``` r
+nba %&gt;%
+  select(namePlayer, isRookie, tov, minutes) %&gt;%
+  glimpse()
+```
+
+```
+## Rows: 530
+## Columns: 4
+## $ namePlayer &lt;chr&gt; "LaMarcus Aldridge", "Quincy Acy", "Ste…
+## $ isRookie   &lt;lgl&gt; FALSE, FALSE, FALSE, FALSE, FALSE, TRUE…
+## $ tov        &lt;dbl&gt; 144, 4, 135, 14, 121, 8, 33, 6, 28, 2, …
+## $ minutes    &lt;dbl&gt; 2687, 123, 2669, 588, 1913, 120, 416, 1…
+```
+
+---
+
+# The Comparison
+
+
+``` r
+nba %&gt;%
+  group_by(isRookie) %&gt;%
+  summarise(mean_tov = mean(tov, na.rm = TRUE))
+```
+
+```
+## # A tibble: 2 × 2
+##   isRookie mean_tov
+##   &lt;lgl&gt;       &lt;dbl&gt;
+## 1 FALSE        70.8
+## 2 TRUE         30.3
+```
+
+.big[
+Rookies average less turnovers in **this sample**.
+]
+
+---
+
+# A Skeptic's Question
+
+.big[
+Is this difference **real**, or could it easily have come out the other way with a slightly different sample?
+]
+
+This is a new kind of question.
+
+It is not "what else could explain it?" (Unit 2).
+
+It is: **how much should this one sample make us believe anything at all?**
+
+&lt;!-- LO1: Distinguish confounding (Unit 2) from sampling uncertainty (Unit 3). --&gt;
+
+---
+
+# Populations and Samples
+
+.big[
+**Population:** every player-season we would want to generalize to.
+
+**Sample:** the players who happen to be in our dataset.
+]
+
+Even if the population pattern is real, any one sample can look a little different just by chance.
+
+---
+
+# We Cannot Re-Run the Season
+
+To directly measure how much samples vary, we would want to:
+
+.big[
+Watch the 2018–19 NBA season play out **many times** and recompute the comparison each time.
+]
+
+That is impossible. There was only one season.
+
+---
+
+# The Next Best Thing
+
+.big[
+**Bootstrap resampling:** simulate "redoing the sample" by resampling our own data, with replacement.
+]
+
+We cannot rerun history. We can mimic the process of sampling.
+
+---
+
+# What "With Replacement" Means
+
+
+``` r
+set.seed(123)
+
+nba %&gt;%
+  sample_n(size = 5, replace = TRUE) %&gt;%
+  select(namePlayer, isRookie, tov)
+```
+
+```
+## # A tibble: 5 × 3
+##   namePlayer        isRookie   tov
+##   &lt;chr&gt;             &lt;lgl&gt;    &lt;dbl&gt;
+## 1 Moritz Wagner     TRUE        39
+## 2 Sam Dekker        FALSE       24
+## 3 Joe Harris        FALSE      121
+## 4 Jonas Valanciunas FALSE       90
+## 5 John Holland      FALSE        0
+```
+
+Some players can appear more than once. Others may not appear at all.
+
+---
+
+# One Resampled "Season"
+
+
+``` r
+set.seed(123)
+
+nba %&gt;%
+  sample_n(size = nrow(nba), replace = TRUE) %&gt;%
+  group_by(isRookie) %&gt;%
+  summarise(mean_tov = mean(tov, na.rm = TRUE))
+```
+
+```
+## # A tibble: 2 × 2
+##   isRookie mean_tov
+##   &lt;lgl&gt;       &lt;dbl&gt;
+## 1 FALSE        68.6
+## 2 TRUE         36.9
+```
+
+A full resample: same size as our data, drawn with replacement.
+
+---
+
+# A Second Resampled "Season"
+
+
+``` r
+set.seed(456)
+
+nba %&gt;%
+  sample_n(size = nrow(nba), replace = TRUE) %&gt;%
+  group_by(isRookie) %&gt;%
+  summarise(mean_tov = mean(tov, na.rm = TRUE))
+```
+
+```
+## # A tibble: 2 × 2
+##   isRookie mean_tov
+##   &lt;lgl&gt;       &lt;dbl&gt;
+## 1 FALSE        69.3
+## 2 TRUE         21.9
+```
+
+.big[
+A slightly different answer, just from resampling.
+]
+
+---
+
+# Doing This Many Times
+
+Repeating this by hand would take forever.
+
+A `for()` loop repeats the same block of code automatically:
+
+
+``` r
+bs_tov &lt;- NULL
+for (i in 1:200) {
+  tmp &lt;- nba %&gt;%
+    sample_n(size = nrow(nba), replace = TRUE) %&gt;%
+    group_by(isRookie) %&gt;%
+    summarise(mean_tov = mean(tov, na.rm = TRUE), .groups = "drop") %&gt;%
+    mutate(sim = i)
+  bs_tov &lt;- bind_rows(bs_tov, tmp)
+}
+```
+
+.big[
+200 simulated "seasons," each with its own comparison.
+]
+
+---
+
+# 200 Simulated Comparisons
+
+
+``` r
+bs_tov %&gt;%
+  head(6)
+```
+
+```
+## # A tibble: 6 × 3
+##   isRookie mean_tov   sim
+##   &lt;lgl&gt;       &lt;dbl&gt; &lt;int&gt;
+## 1 FALSE        68.6     1
+## 2 TRUE         36.9     1
+## 3 FALSE        65.6     2
+## 4 TRUE         28.5     2
+## 5 FALSE        62.5     3
+## 6 TRUE         26.5     3
+```
+
+Each `sim` is one resampled dataset's version of the comparison.
+
+---
+
+# Visualize the Spread
+
+&lt;img src="ds1000_lecture_9_slides_f2026_files/figure-html/unnamed-chunk-9-1.png" alt="" style="display: block; margin: auto;" /&gt;
+
+---
+
+# From Two Numbers to One Question
+
+For each resample, ask a yes/no question:
+
+.big[
+**Did rookies average more turnovers than non-rookies in this resample?**
+]
+
+
+``` r
+bs_diff %&gt;%
+  select(sim, rookie_FALSE, rookie_TRUE, diff) %&gt;%
+  head(4)
+```
+
+```
+## # A tibble: 4 × 4
+##     sim rookie_FALSE rookie_TRUE  diff
+##   &lt;int&gt;        &lt;dbl&gt;       &lt;dbl&gt; &lt;dbl&gt;
+## 1     1         68.6        36.9 -31.7
+## 2     2         65.6        28.5 -37.1
+## 3     3         62.5        26.5 -36.0
+## 4     4         67.5        29.9 -37.6
+```
+
+`diff` = rookie mean − non-rookie mean. Positive means rookies had more turnovers.
+
+---
+
+# Turning This Into "Confidence"
+
+
+``` r
+bs_diff %&gt;%
+  summarise(confidence = mean(diff &gt; 0))
+```
+
+```
+## # A tibble: 1 × 1
+##   confidence
+##        &lt;dbl&gt;
+## 1          0
+```
+
+.big[
+Rookies had more turnovers in 0% of the 200 resamples.
+]
+
+That percentage **is** our confidence measure.
+
+---
+
+# What Does That Number Mean?
+
+.huge[
+0% confidence
+]
+
+**Not:** "there is a 0% chance rookies turn the ball over more."
+
+**Is:** "in 0% of plausible resamples of this data, the pattern held up."
+
+&lt;!-- LO6: Keep the language tied to what resampling actually measures. --&gt;
+
+---
+
+# Calibrating Against Extremes
+
+.big[
+A coin flip would give about **50%**.
+
+Confidence near 50% → the pattern is fragile; a different sample could easily flip it.
+
+Confidence near 100% → the pattern shows up almost no matter how we resample.
+]
+
+0% is closer to one end than the other. Which one?
+
+---
+
+# Before You Celebrate
+
+.big[
+High resampling confidence does **not** mean the explanation is right.
+]
+
+It only means: *this pattern in this sample is not fragile to resampling.*
+
+It says nothing about **why** the pattern exists.
+
+&lt;!-- Bridge back to Unit 2 reasoning. --&gt;
+
+---
+
+# Is the Comparison Even Fair?
+
+Rookies and non-rookies do not play the same number of minutes.
+
+
+``` r
+nba %&gt;%
+  group_by(isRookie) %&gt;%
+  summarise(mean_minutes = mean(minutes, na.rm = TRUE))
+```
+
+```
+## # A tibble: 2 × 2
+##   isRookie mean_minutes
+##   &lt;lgl&gt;           &lt;dbl&gt;
+## 1 FALSE           1263.
+## 2 TRUE             549.
+```
+
+.big[
+Fewer minutes → fewer *opportunities* to turn the ball over.
+]
+
+---
+
+# Re-Measuring the Claim
+
+
+``` r
+nba &lt;- nba %&gt;%
+  mutate(tov_rate = tov * 60 / minutes)
+
+nba %&gt;%
+  group_by(isRookie) %&gt;%
+  summarise(mean_rate = mean(tov_rate, na.rm = TRUE))
+```
+
+```
+## # A tibble: 2 × 2
+##   isRookie mean_rate
+##   &lt;lgl&gt;        &lt;dbl&gt;
+## 1 FALSE         3.24
+## 2 TRUE          2.78
+```
+
+Turnovers **per 60 minutes**, instead of raw counts.
+
+---
+
+# Bootstrap the Fairer Comparison
+
+
+``` r
+bs_rate &lt;- NULL
+for (i in 1:200) {
+  tmp &lt;- nba %&gt;%
+    sample_n(size = nrow(nba), replace = TRUE) %&gt;%
+    group_by(isRookie) %&gt;%
+    summarise(mean_rate = mean(tov_rate, na.rm = TRUE), .groups = "drop") %&gt;%
+    mutate(sim = i)
+  bs_rate &lt;- bind_rows(bs_rate, tmp)
+}
+```
+
+
+``` r
+bs_rate_diff %&gt;%
+  summarise(confidence = mean(diff &gt; 0))
+```
+
+```
+## # A tibble: 1 × 1
+##   confidence
+##        &lt;dbl&gt;
+## 1       0.01
+```
+
+---
+
+# Two Confidence Numbers
+
+.big[
+Raw turnovers: 0% confidence rookies turn it over more.
+
+Turnovers per 60 minutes: 1% confidence rookies turn it over more.
+]
+
+Adjusting for playing time changed how confident we should be.
+
+&lt;!-- LO1: Confounding and uncertainty compound; this is not a new bug, it's the same habit from Unit 2 applied to a resampled quantity. --&gt;
+
+---
+
+# Audit an AI Claim
+
+Suppose an AI assistant is given only the raw-turnover bootstrap and says:
+
+&gt; "This proves rookies are worse ball-handlers than veterans."
+
+.big[
+**What evidence supports this?**
+
+**What did the claim ignore?**
+
+**Would the AI's confidence survive adjusting for minutes played?**
+]
+
+A resampling percentage is not proof, and it does not audit itself.
+
+---
+
+# What Bootstrap Confidence Is and Isn't
+
+.big[
+**Is:** a measure of how much a specific comparison, in this specific dataset, moves around under resampling.
+
+**Is not:** a claim about the underlying causal explanation.
+
+**Is not:** a guarantee about next season, a different league, or a different set of players.
+]
+
+---
+
+# A Calibrated Conclusion
+
+Instead of:
+
+&gt; "Rookies turn the ball over more."
+
+Try:
+
+.big[
+&gt; **In these 2018–19 data, rookies average more turnovers per 60 minutes than non-rookies in about 1% of resamples of this season — a pattern that is not simply an artifact of playing time, though it does not tell us whether it would hold in other seasons.**
+]
+
+---
+
+# Before You Leave
+
+When you see a comparison in a sample, ask:
+
+1. What comparison am I making, and in what sample?
+2. How much would that comparison move around if I resampled the data?
+3. What percentage of resamples support the comparison?
+4. Is that percentage close to a coin flip, or close to certainty?
+5. Have I adjusted for an obvious confound before trusting the number?
+6. What can this confidence number **not** tell me?
+
+---
+
+# The Rule to Remember
+
+.huge[
+**A sample gives one story.**
+
+**Resampling shows how fragile that story is.**
+]
+
+---
+
+# Homework 7
+
+You will practice:
+
+- writing and interpreting a bootstrap resampling loop;
+- turning resampled estimates into a confidence percentage;
+- calibrating what a confidence percentage does and does not mean;
+- checking whether a resampling result survives an obvious adjustment;
+- auditing an AI's overclaimed confidence.
+
+Next:
+
+.big[
+**Uncertainty II**
+]
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+  "ratio": "16:9",
+  "highlightStyle": "github",
+  "highlightLines": true,
+  "countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
