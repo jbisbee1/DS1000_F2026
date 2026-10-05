@@ -16,3 +16,6 @@ evidence_debates/*
 !evidence_debates/EDB_1/**
 !evidence_debates/EDB_2
 !evidence_debates/EDB_2/**
+
+# Answer keys (keep private)
+*answer_key*

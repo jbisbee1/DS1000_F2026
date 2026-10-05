@@ -84,7 +84,7 @@ What fraction of resamples show `ft_80 == TRUE` teams winning more often than `f
 
 ## 4. Resample Within Seasons
 
-Adapt your loop so that it resamples **within each season** (`group_by(yearSeason)` before `sample_n()`), the way Lecture 10 did for turnovers. Then calculate a separate confidence percentage for each season.
+Adapt your loop so that it resamples **within each season** (`group_by(yearSeason)` before `sample_n()`), the way Lecture 10 did for offensive rebounds. Then calculate a separate confidence percentage for each season.
 
 ```{r season-bootstrap}
 set.seed(123)

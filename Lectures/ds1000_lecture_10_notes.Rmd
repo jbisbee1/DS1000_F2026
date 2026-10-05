@@ -1,0 +1,75 @@
+---
+title: "Untitled"
+output: html_document
+date: "2026-10-05"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Descriptive Difference
+
+```{r}
+require(tidyverse)
+gms <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/main/data/game_summary.Rds")
+
+gms %>%
+  group_by(isWin) %>%
+  summarise(avg_oreb = mean(oreb))
+```
+
+# Bootstrap refresher
+
+```{r}
+set.seed(123)
+bsRes <- NULL
+for(i in 1:200) {
+  bsRes <- bsRes %>%
+    bind_rows(gms %>%
+  sample_n(size = nrow(gms),
+           replace = T) %>%
+  group_by(isWin) %>%
+  summarise(avg_oreb = mean(oreb)) %>%
+    spread(isWin,avg_oreb,sep = '_') %>%
+    mutate(diff = isWin_TRUE - isWin_FALSE))
+}
+
+bsRes %>%
+  summarise(conf = mean(diff > 0))
+
+```
+
+# Looking within seasons
+
+```{r}
+gms %>%
+  group_by(yearSeason,isWin) %>%
+  summarise(avg_oreb = mean(oreb))
+```
+
+# Bootstrapping by season
+
+```{r}
+set.seed(123)
+bsRes <- NULL
+for(i in 1:200) {
+  bsRes <- bsRes %>%
+    bind_rows(gms %>%
+  sample_n(size = nrow(gms),
+           replace = T) %>%
+  group_by(yearSeason,isWin) %>%
+  summarise(avg_oreb = mean(oreb),.groups = 'drop_last') %>%
+    spread(isWin,avg_oreb,sep = "_") %>%
+    mutate(diff = isWin_TRUE - isWin_FALSE) %>%
+    mutate(bsIndex = i))
+}
+
+bsRes %>%
+  group_by(yearSeason) %>%
+  summarise(conf = mean(diff < 0))
+```
+
+
+
+
