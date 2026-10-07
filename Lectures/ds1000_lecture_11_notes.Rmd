@@ -1,0 +1,64 @@
+---
+title: "Lecture 11 Notes"
+output: html_document
+date: "2026-10-07"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Regression
+
+```{r}
+require(tidyverse)
+
+debt <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/main/data/sc_debt.Rds") %>%
+  filter(adm_rate > 0, md_earn_wne_p6 > 0, sat_avg > 0)
+```
+
+# Visualizing the relationship
+
+```{r}
+debt %>%
+  ggplot(aes(x = adm_rate,
+             y = md_earn_wne_p6)) + 
+  geom_point() + 
+  geom_smooth(method = 'lm',se = F)
+
+# calculate group averages by dividing the adm_rate
+debt %>%
+  mutate(above_50 = adm_rate > .5) %>%
+  group_by(above_50) %>%
+  summarise(avg_earn = mean(md_earn_wne_p6))
+```
+
+
+# Using the linear model function lm()
+
+```{r}
+debt <- debt %>%
+  mutate(adm_rate_percentage = adm_rate * 100)
+
+lm(formula = md_earn_wne_p6 ~ adm_rate_percentage,
+   data = debt)
+
+debt %>%
+  ggplot(aes(x = adm_rate_percentage,
+             y = md_earn_wne_p6)) + 
+  geom_point() + 
+  geom_smooth(method = 'lm')
+```
+
+
+```{r}
+debt %>%
+  ggplot(aes(x = sat_avg,
+             y = md_earn_wne_p6)) +
+  geom_point() +
+  geom_smooth(method = 'lm',se = F)
+
+lm(formula = md_earn_wne_p6 ~ sat_avg,
+   data = debt)
+```
+
