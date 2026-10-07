@@ -57,7 +57,7 @@ deck should read as one coherent argument built from concepts they have already
 encountered in this semester.
 --&gt;
 
-# What Else Could Explain It?
+# Today's Question
 
 .big[
 Last class:
@@ -366,8 +366,8 @@ Age becomes our third variable, Z.
 
 ``` r
 mi_final %&gt;%
-  filter(!is.na(SEX)) %&gt;%
-  group_by(SEX) %&gt;%
+  filter(!is.na(Gender)) %&gt;%
+  group_by(Gender) %&gt;%
   summarise(
     TrumpSupport = mean(TrumpVoter),
     .groups = "drop"
@@ -376,10 +376,10 @@ mi_final %&gt;%
 
 ```
 ## # A tibble: 2 × 2
-##     SEX TrumpSupport
-##   &lt;dbl&gt;        &lt;dbl&gt;
-## 1     1        0.448
-## 2     2        0.336
+##   Gender TrumpSupport
+##   &lt;chr&gt;         &lt;dbl&gt;
+## 1 Men           0.448
+## 2 Women         0.336
 ```
 
 .big[
@@ -393,38 +393,21 @@ This gives us an overall relationship between gender and vote choice.
 
 ``` r
 mi_final %&gt;%
-  filter(!is.na(SEX), !is.na(AGE10)) %&gt;%
-  group_by(SEX, AGE10) %&gt;%
-  summarise(
-    TrumpSupport = mean(TrumpVoter),
-    .groups = "drop"
-  )
+  filter(!is.na(Gender), !is.na(AgeGroup)) %&gt;%
+  group_by(AgeGroup, Gender) %&gt;%
+  summarise(TrumpSupport = mean(TrumpVoter), .groups = "drop") %&gt;%
+  pivot_wider(names_from = Gender, values_from = TrumpSupport) %&gt;%
+  mutate(Gap = Men - Women)
 ```
 
 ```
-## # A tibble: 20 × 3
-##      SEX AGE10 TrumpSupport
-##    &lt;dbl&gt; &lt;dbl&gt;        &lt;dbl&gt;
-##  1     1     1       0.438 
-##  2     1     2       0.417 
-##  3     1     3       0.423 
-##  4     1     4       0.241 
-##  5     1     5       0.419 
-##  6     1     6       0.583 
-##  7     1     7       0.537 
-##  8     1     8       0.443 
-##  9     1     9       0.395 
-## 10     1    10       0.425 
-## 11     2     1       0.0625
-## 12     2     2       0.0714
-## 13     2     3       0.308 
-## 14     2     4       0.294 
-## 15     2     5       0.484 
-## 16     2     6       0.4   
-## 17     2     7       0.367 
-## 18     2     8       0.263 
-## 19     2     9       0.311 
-## 20     2    10       0.387
+## # A tibble: 4 × 4
+##   AgeGroup   Men  Women     Gap
+##   &lt;chr&gt;    &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt;
+## 1 18-29    0.429 0.0667  0.362 
+## 2 30-44    0.367 0.393  -0.0261
+## 3 45-64    0.518 0.342   0.176 
+## 4 65+      0.408 0.341   0.0672
 ```
 
 Now ask:
@@ -780,23 +763,7 @@ Data scientists should notice the jump.
 # The Unit 2 Workflow
 
 .big[
-**Choose the comparison**
-
-↓
-
-**See the relationship**
-
-↓
-
-**Describe the relationship**
-
-↓
-
-**Ask what else could explain it**
-
-↓
-
-**Calibrate the conclusion**
+**Choose the comparison** → **See the relationship** → **Describe the relationship** → **Ask what else could explain it** → **Calibrate the conclusion**
 ]
 
 That is the reasoning Test 2 asks you to transfer.

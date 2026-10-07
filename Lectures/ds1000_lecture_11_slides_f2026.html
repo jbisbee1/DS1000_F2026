@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>How Can a Model Summarize a Relationship?</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Prof. Bisbee" />
+    <script src="ds1000_lecture_11_slides_f2026_files/header-attrs-2.31/header-attrs.js"></script>
+    <link href="ds1000_lecture_11_slides_f2026_files/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="ds1000_lecture_11_slides_f2026_files/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
+    <link href="ds1000_lecture_11_slides_f2026_files/remark-css-0.0.1/metropolis-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# How Can a Model Summarize a Relationship?
+]
+.subtitle[
+## DS 1000
+]
+.author[
+### Prof. Bisbee
+]
+
+---
+
+
+
+
+&lt;style&gt;
+.big { font-size: 130%; }
+.huge { font-size: 180%; }
+.small { font-size: 80%; }
+.blue { color: #007bff; }
+.red { color: #E74A2F; }
+.leftcol { float: left; width: 49%; }
+.rightcol { float: right; width: 49%; }
+&lt;/style&gt;
+
+&lt;!--
+LEARNING OBJECTIVES
+
+LO1: Interrogate empirical claims.
+LO3: Select and justify analytical approaches.
+LO4: Conduct and evaluate data analyses.
+LO5: Critically use AI as an analytical tool.
+LO6: Communicate evidence responsibly.
+
+Lecture 11 opens the Regression sub-unit of Unit 3. It returns to the
+college-selectivity running claim from Units 1-2 (sc_debt.Rds, adm_rate and
+sat_avg predicting md_earn_wne_p6) and asks how a line can summarize a
+relationship more compactly than group averages. The middle of the deck builds
+visual intuition for the line of best fit: residuals, RMSE for competing
+lines, the animated search, and the RMSE curve whose minimum lm() finds.
+Formal model evaluation (RMSE for assessing fit, logs for skew,
+cross-validation) is reserved for Lecture 12 (Regression II).
+
+INSTRUCTOR NOTE:
+Keep the p-value/confidence connection brief -- one bridge slide back to
+Unit 3's bootstrap material, not a full treatment of inferential statistics.
+--&gt;
+
+# How Can a Model Summarize a Relationship?
+
+.big[
+So far:
+
+&gt; **How confident should I be in a comparison, given my sample?**
+
+Today:
+
+&gt; **How can I summarize an entire relationship in just a few numbers?**
+]
+
+---
+
+# Where We Are
+
+.big[
+**Question → trustworthy variables → appropriate comparison → describe the relationship → interrogate explanations → quantify uncertainty → summarize with a model → communicate**
+]
+
+Today:
+
+**Summarize with a model**
+
+---
+
+# Back to Our Running Claim
+
+.huge[
+&gt; **More selective colleges produce graduates who earn more.**
+]
+
+We have described this relationship. We have not yet **summarized** it.
+
+---
+
+# Group Averages, Revisited
+
+In Unit 2, we compared groups using averages:
+
+.big[
+average earnings for **less selective** colleges
+
+vs.
+
+average earnings for **more selective** colleges
+]
+
+That required chopping a continuous variable into groups.
+
+---
+
+# The Problem With Chopping
+
+&lt;img src="ds1000_lecture_11_slides_f2026_files/figure-html/unnamed-chunk-2-1.png" alt="" style="display: block; margin: auto;" /&gt;
+
+---
+
+# The Problem With Chopping
+
+- Useful, but coarse
+
+--
+
+- Where exactly do the group boundaries go?
+
+--
+
+- Everyone in a group gets the **same** prediction, no matter where they sit within it
+
+--
+
+- And the jumps between groups are artifacts of where we drew the lines
+
+---
+
+# A Smoother Summary
+
+&lt;img src="ds1000_lecture_11_slides_f2026_files/figure-html/unnamed-chunk-3-1.png" alt="" style="display: block; margin: auto;" /&gt;
+
+---
+
+# A Smoother Summary
+
+.big[
+Instead of a few group averages, fit a single **line** through the whole relationship.
+]
+
+That line is a **model**: a compact, continuous summary of how `\(Y\)` changes as `\(X\)` changes.
+
+--
+
+- Any straight line can be written:
+
+.huge[
+`\(Y = \alpha + \beta X\)`
+]
+
+- `\(\alpha\)` (the **intercept**): predicted `\(Y\)` when `\(X = 0\)`
+- `\(\beta\)` (the **slope**): how much `\(Y\)` changes for each one-unit increase in `\(X\)`
+
+--
+
+- But there are infinitely many lines. **Which one?**
+
+---
+
+# Building Intuition
+
+.leftcol[
+
+&lt;img src="ds1000_lecture_11_slides_f2026_files/figure-html/unnamed-chunk-4-1.png" alt="" width="100%" style="display: block; margin: auto;" /&gt;
+
+]
+
+.rightcol[
+
+- Set the real data aside for a moment
+
+- A toy dataset: 12 observations of `\(X\)` and `\(Y\)`
+
+- Which straight line best summarizes them?
+
+]
+
+---
+
+# A First Guess
+
+.leftcol[
+
+&lt;img src="ds1000_lecture_11_slides_f2026_files/figure-html/unnamed-chunk-5-1.png" alt="" width="100%" style="display: block; margin: auto;" /&gt;
+
+]
+
+.rightcol[
+
+- Try `\(\alpha = 0\)`, `\(\beta = 2\)`
+
+- Is this a good line?
+
+- How would we even know?
+
+]
+
+---
+
+# Every Line Makes Mistakes
+
+.leftcol[
+
+&lt;img src="ds1000_lecture_11_slides_f2026_files/figure-html/unnamed-chunk-6-1.png" alt="" width="100%" style="display: block; margin: auto;" /&gt;
+
+]
+
+.rightcol[
+
+- For every observation, the line makes a prediction `\(\hat{Y}\)`
+
+- The **residual** is the mistake:
+
+.big[
+`\(u_i = Y_i - \hat{Y}_i\)`
+]
+
+- The true value minus what the line predicted
+
+]
+
+---
+
+# Every Line Makes Mistakes
+
+.leftcol[
+
+&lt;img src="ds1000_lecture_11_slides_f2026_files/figure-html/unnamed-chunk-7-1.png" alt="" width="100%" style="display: block; margin: auto;" /&gt;
+
+]
+
+.rightcol[
+
+- Every point has a residual
+
+- Some are positive (point above the line), some negative (below)
+
+- We need **one number** that summarizes how big all of these mistakes are
+
+]
+
+---
+
+# Measuring Total Error: RMSE
+
+.leftcol[
+
+&lt;img src="ds1000_lecture_11_slides_f2026_files/figure-html/unnamed-chunk-8-1.png" alt="" width="100%" style="display: block; margin: auto;" /&gt;
+
+]
+
+.rightcol[
+
+**R**oot **M**ean **S**quared **E**rror:
+
+1. **Square** every residual (so positive and negative errors don't cancel out)
+
+2. Take their **mean**
+
+3. Take the square **root** (to get back to the units of `\(Y\)`)
+
+- **RMSE** = 1.44
+
+]
+
+---
+
+# Try Another Line
+
+.leftcol[
+
+&lt;img src="ds1000_lecture_11_slides_f2026_files/figure-html/unnamed-chunk-9-1.png" alt="" width="100%" style="display: block; margin: auto;" /&gt;
+
+]
+
+.rightcol[
+
+- `\(\alpha = 1\)`, `\(\beta = -0.5\)`
+
+- **RMSE** = 1.17
+
+- Worse! The line slopes the wrong way.
+
+]
+
+---
+
+# Try Another Line
+
+.leftcol[
+
+&lt;img src="ds1000_lecture_11_slides_f2026_files/figure-html/unnamed-chunk-10-1.png" alt="" width="100%" style="display: block; margin: auto;" /&gt;
+
+]
+
+.rightcol[
+
+- `\(\alpha = 0.5\)`, `\(\beta = 0.5\)`
+
+- **RMSE** = 0.63
+
+- Better. The red lines are getting shorter.
+
+]
+
+---
+
+# The Search for the Best Line
+
+.big[
+Imagine trying **every** possible line and keeping track of the RMSE of each one.
+]
+
+---
+
+# The Search for the Best Line
+
+&lt;center&gt;&lt;img src="figs/raw.png" width = 75%&gt;&lt;/center&gt;
+
+---
+
+# The Search for the Best Line
+
+&lt;center&gt;&lt;img src="figs/regression-line.gif" width = 75%&gt;&lt;/center&gt;
+
+---
+
+# Tracing the RMSE
+
+&lt;img src="ds1000_lecture_11_slides_f2026_files/figure-html/unnamed-chunk-11-1.png" alt="" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Tracing the RMSE
+
+&lt;img src="ds1000_lecture_11_slides_f2026_files/figure-html/unnamed-chunk-12-1.png" alt="" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Tracing the RMSE
+
+&lt;img src="ds1000_lecture_11_slides_f2026_files/figure-html/unnamed-chunk-13-1.png" alt="" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Tracing the RMSE
+
+&lt;img src="ds1000_lecture_11_slides_f2026_files/figure-html/unnamed-chunk-14-1.png" alt="" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Tracing the RMSE
+
+&lt;img src="ds1000_lecture_11_slides_f2026_files/figure-html/unnamed-chunk-15-1.png" alt="" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Tracing the RMSE
+
+&lt;img src="ds1000_lecture_11_slides_f2026_files/figure-html/unnamed-chunk-16-1.png" alt="" style="display: block; margin: auto;" /&gt;
+
+---
+
+# The Bottom of the Curve
+
+&lt;img src="ds1000_lecture_11_slides_f2026_files/figure-html/unnamed-chunk-17-1.png" alt="" style="display: block; margin: auto;" /&gt;
+
+.big[
+The **line of best fit** is the line at the **bottom** of the RMSE curve.
+]
+
+---
+
+# The Bottom of the Curve
+
+- Steeper or flatter than the best line? The mistakes **grow**
+
+--
+
+- Shift it up or down? The mistakes **grow**
+
+--
+
+- The line of best fit is the unique line with the **smallest RMSE**
+
+--
+
+- You never have to search by hand: `R` solves for it directly
+
+---
+
+# Back to the Real Data
+
+&lt;img src="ds1000_lecture_11_slides_f2026_files/figure-html/unnamed-chunk-18-1.png" alt="" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Back to the Real Data
+
+- Same logic, just more points
+
+--
+
+- The flat line says selectivity doesn't matter: RMSE of $9,389
+
+--
+
+- The too-steep line overreacts: RMSE of $11,588
+
+--
+
+- The line of best fit: RMSE of $8,956
+
+--
+
+- No other straight line does better on these data
+
+---
+
+# R Finds the Best Line For You
+
+The `lm()` function ("linear model") finds `\(\alpha\)` and `\(\beta\)` automatically.
+
+
+``` r
+model_adm &lt;- lm(formula = md_earn_wne_p6 ~ adm_rate, data = debt)
+```
+
+.big[
+`md_earn_wne_p6 ~ adm_rate` reads as **"Y explained by X."**
+
+The `~` is R's way of writing an equation without an `=`.
+]
+
+---
+
+# What Is `lm()` Actually Doing?
+
+.big[
+Out of **all possible lines**, `lm()` picks the one that makes the **smallest squared mistakes**.
+]
+
+--
+
+- Squared residuals → averaged → square-rooted = **RMSE**
+
+--
+
+- The line with the smallest RMSE is the line at the **bottom of the curve** we just traced
+
+--
+
+- This is why it's called **least squares** regression
+
+--
+
+.small[
+Technically `lm()` minimizes the *sum* of squared residuals, but the same line also minimizes RMSE.
+]
+
+---
+
+# Reading the Output
+
+
+``` r
+summary(model_adm)
+```
+
+```
+## 
+## Call:
+## lm(formula = md_earn_wne_p6 ~ adm_rate, data = debt)
+## 
+## Residuals:
+##    Min     1Q Median     3Q    Max 
+## -19720  -5102   -902   3742  87303 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)  45790.7      890.8   51.40   &lt;2e-16 ***
+## adm_rate    -13847.1     1273.3  -10.88   &lt;2e-16 ***
+## ---
+## Signif. codes:  
+## 0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 8964 on 1196 degrees of freedom
+## Multiple R-squared:  0.08998,	Adjusted R-squared:  0.08922 
+## F-statistic: 118.3 on 1 and 1196 DF,  p-value: &lt; 2.2e-16
+```
+
+---
+
+# Interpreting the Intercept
+
+.big[
+`(Intercept)` = 45,791
+]
+
+Predicted earnings for a college with an admission rate of **0** (admits no one).
+
+.small[
+This is a mathematical extrapolation, not a claim about a real college — no school has `adm_rate = 0`.
+]
+
+---
+
+# Interpreting the Slope
+
+.big[
+`adm_rate` = -13,847
+]
+
+For each one-unit increase in admission rate, predicted earnings fall by about \$13,847.
+
+--
+
+- Careful with the units! `adm_rate` runs from 0 to 1
+
+--
+
+  - A "one-unit increase" means going from 0% to **100%** admitted — the entire range
+
+--
+
+  - A more realistic comparison: **10 percentage points** (0.1) higher → about \$1,385 **lower** predicted earnings
+
+--
+
+.big[
+The sign is negative: **higher admission rate (less selective) → lower predicted earnings.**
+]
+
+This matches our running claim's direction.
+
+---
+
+# A Bridge Back to Uncertainty
+
+Look again at the last column of the summary table: `Pr(&gt;|t|)`, the **p-value**.
+
+.big[
+Recall Unit 3: we built confidence by resampling.
+]
+
+A p-value answers a related question using a formula instead of a bootstrap loop: **how surprising would this estimate be if there were truly no relationship?**
+
+.small[
+A small p-value plays a similar role to a high bootstrap confidence. We will not derive the formula in this course — the habit of interpreting the *estimate* is what matters here.
+]
+
+---
+
+# Do It Together: A Second Predictor
+
+.blue[Claim]: **Average SAT scores also predict graduate earnings.**
+
+1. Plot `\(X\)` and `\(Y\)`, and add the line of best fit.
+2. Fit `lm()`.
+3. Interpret `\(\alpha\)` and `\(\beta\)`.
+
+---
+
+# Visualize
+
+
+``` r
+debt %&gt;%
+  ggplot(aes(x = sat_avg, y = md_earn_wne_p6)) +
+  geom_point(alpha = .4) +
+  geom_smooth(method = "lm", se = FALSE)
+```
+
+&lt;img src="ds1000_lecture_11_slides_f2026_files/figure-html/unnamed-chunk-21-1.png" alt="" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Fit
+
+
+``` r
+model_sat &lt;- lm(md_earn_wne_p6 ~ sat_avg, data = debt)
+coef(model_sat)
+```
+
+```
+##  (Intercept)      sat_avg 
+## -12053.86755     42.59812
+```
+
+--
+
+.big[
+`\(\widehat{\text{Earnings}} = -12,053.87 + 42.60 \times \text{SAT}\)`
+]
+
+---
+
+# Communicating the Slope
+
+- The slope is 42.60
+
+--
+
+- A good interpretation sentence has four parts:
+
+  1. the **change in X** (with its units)
+  2. the **direction** of the change in Y
+  3. the **size** of the change in Y (with its units)
+  4. the word **"associated"** or **"predicted"** — not "causes"
+
+--
+
+.big[
+&gt; **Colleges whose average SAT score is one point higher are associated with about \$42.60 higher median graduate earnings.**
+]
+
+--
+
+- Or, on a more meaningful scale: a **100-point** higher average SAT → about \$4,260 higher predicted earnings
+
+--
+
+- The sign is positive. Does that make sense given the claim?
+
+---
+
+# Communicating the Intercept
+
+- The intercept is -12,053.87
+
+--
+
+- Literally: the predicted median earnings for a college whose average SAT score is **0**
+
+--
+
+.big[
+&gt; **A college with an average SAT score of 0 would be predicted to have graduates earning about −\$12,054.**
+]
+
+--
+
+- Does this make sense?
+
+--
+
+  - **No!** Earnings can't be negative, and no college has an average SAT of 0
+
+--
+
+  - (The minimum possible SAT score is 400; the lowest school average in our data is 737)
+
+---
+
+# Why the Intercept Is Nonsense Here
+
+&lt;img src="ds1000_lecture_11_slides_f2026_files/figure-html/unnamed-chunk-23-1.png" alt="" style="display: block; margin: auto;" /&gt;
+
+--
+
+- The intercept is an **extrapolation**: the line is extended far outside the data
+
+- It's a mathematical anchor for the line, **not** a meaningful prediction
+
+---
+
+# A Model Is Still Just a Summary
+
+.big[
+A regression line describes the **association** as compactly as possible.
+]
+
+It does not, by itself, tell us:
+
+- whether selectivity **causes** higher earnings;
+- whether a confounder (Unit 2!) explains part of the slope;
+- whether this line fits equally well everywhere.
+
+.big[
+A small p-value makes us confident the association is **not zero**. It does **not** make it causal.
+]
+
+---
+
+# Audit an AI Claim
+
+Suppose an AI assistant sees only the `adm_rate` regression output and says:
+
+&gt; "The negative coefficient proves that admitting fewer students causes graduates to earn more."
+
+.big[
+**What does the slope actually describe?**
+
+**What would need to be true for this to be a causal claim?**
+
+**What alternative explanations from Unit 2 still apply here?**
+]
+
+A regression coefficient is not immune to confounding.
+
+---
+
+# A Calibrated Conclusion
+
+Instead of:
+
+&gt; "Selectivity causes higher earnings."
+
+Try:
+
+.big[
+&gt; **In these data, a one-unit increase in admission rate is associated with about \$13,847 lower predicted graduate earnings — a compact summary of the association, not evidence that selectivity itself causes the difference.**
+]
+
+---
+
+# Before You Leave
+
+When you see a fitted regression line, ask:
+
+1. What does the intercept represent, and is it a meaningful value of `\(X\)`?
+2. What does the slope represent, in the original units of `\(Y\)` and `\(X\)`?
+3. Does the sign of the slope match the claim being tested?
+4. What is this line minimizing, and what does that criterion assume?
+5. What would it take to move from "summarizes the association" to "identifies the cause"?
+
+---
+
+# The Rule to Remember
+
+.huge[
+**A regression line is a summary, not a verdict.**
+]
+
+It compresses a relationship into two numbers. It does not, on its own, resolve *why* the relationship exists.
+
+---
+
+# Homework 9
+
+You will practice:
+
+- fitting a linear model with `lm()`;
+- interpreting an intercept and a slope in context;
+- checking whether a slope's sign matches a claim;
+- auditing an AI claim that treats a coefficient as causal;
+- writing a calibrated conclusion about a regression result.
+
+Next:
+
+.big[
+**Regression II**
+]
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+  "ratio": "16:9",
+  "highlightStyle": "github",
+  "highlightLines": true,
+  "countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

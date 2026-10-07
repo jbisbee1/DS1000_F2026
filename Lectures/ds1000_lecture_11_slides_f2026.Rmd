@@ -18,23 +18,96 @@ options(width=60)
 knitr::opts_chunk$set(fig.align='center',fig.width=9,fig.height=5,message=F,warning=F)
 
 library(tidyverse)
+library(patchwork)
 
 debt <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/main/data/sc_debt.Rds") %>%
   filter(adm_rate > 0, md_earn_wne_p6 > 0, sat_avg > 0)
 
 model_adm <- lm(md_earn_wne_p6 ~ adm_rate, data = debt)
 model_sat <- lm(md_earn_wne_p6 ~ sat_avg, data = debt)
+coef_adm <- coef(model_adm)
+coef_sat <- coef(model_sat)
 
-# A deliberately bad guess vs. the actual line of best fit, for the RMSE demo.
-guess_a <- 0; guess_b <- 0
-rmse_guess <- sqrt(mean((debt$md_earn_wne_p6 - (guess_a + guess_b * debt$adm_rate))^2, na.rm = TRUE))
-rmse_lm <- sqrt(mean(residuals(model_adm)^2))
+# ---- Toy data for building visual intuition ----
+set.seed(123)
+toy <- tibble(X = rnorm(12)) %>%
+  mutate(Y = .5 + .8*X + rnorm(12, sd = .7))
+
+toy_rmse <- function(a, b) sqrt(mean((toy$Y - (a + b*toy$X))^2))
+
+# For any slope b, the best intercept passes through (mean X, mean Y).
+# Tracing RMSE across slopes gives a curve whose bottom is the lm() slope.
+toy_fit <- coef(lm(Y ~ X, data = toy))
+best_a <- function(b) mean(toy$Y) - b*mean(toy$X)
+rmse_curve <- tibble(b = seq(-1, 2.5, by = .01)) %>%
+  mutate(a = best_a(b), rmse = map2_dbl(a, b, toy_rmse))
+
+# Scatter of the toy data with a candidate line and (optionally) residuals.
+toy_line <- function(a = NULL, b = NULL, resid = c("none", "one", "all")) {
+  resid <- match.arg(resid)
+  p <- ggplot(toy, aes(x = X, y = Y)) +
+    geom_vline(xintercept = 0, linetype = 'dashed', color = 'grey60') +
+    geom_hline(yintercept = 0, linetype = 'dashed', color = 'grey60')
+  if (!is.null(a)) {
+    if (resid == "one") {
+      i <- which.max(abs(toy$Y - (a + b*toy$X)))
+      p <- p + annotate('segment', x = toy$X[i], xend = toy$X[i], y = toy$Y[i],
+                        yend = a + b*toy$X[i], color = 'red', linewidth = 1.3) +
+        annotate('text', x = toy$X[i] + .25, y = (toy$Y[i] + a + b*toy$X[i])/2,
+                 label = 'residual', color = 'red', size = 5)
+    }
+    if (resid == "all") {
+      p <- p + annotate('segment', x = toy$X, xend = toy$X, y = toy$Y,
+                        yend = a + b*toy$X, color = 'red', linewidth = 1.1)
+    }
+    p <- p + geom_abline(intercept = a, slope = b, color = 'blue', linewidth = 1.5)
+  }
+  p + geom_point(size = 3) +
+    coord_cartesian(xlim = c(-2.5, 2.5), ylim = c(-3, 4)) +
+    theme_minimal(base_size = 16)
+}
+
+# Left: the candidate line with residuals. Right: where that line sits on the RMSE curve.
+toy_pair <- function(b, show_curve_to = b) {
+  force(show_curve_to)
+  a <- best_a(b)
+  left <- toy_line(a, b, "all") +
+    labs(title = paste0("Slope = ", round(b, 2), "   RMSE = ", round(toy_rmse(a, b), 2)))
+  right <- ggplot(rmse_curve %>% filter(b <= show_curve_to | b == min(b)), aes(x = b, y = rmse)) +
+    geom_line(linewidth = 1.2, color = 'grey40') +
+    annotate('point', x = b, y = toy_rmse(a, b), color = 'red', size = 5) +
+    coord_cartesian(xlim = range(rmse_curve$b), ylim = c(0, max(rmse_curve$rmse))) +
+    labs(x = "Slope of the line", y = "RMSE", title = "How big are the mistakes?") +
+    theme_minimal(base_size = 16)
+  left + right
+}
+
+# ---- Real data: three candidate lines through the running claim ----
+earn_rmse <- function(a, b) sqrt(mean((debt$md_earn_wne_p6 - (a + b*debt$adm_rate))^2))
+cands <- tribble(
+  ~label,                          ~a,                            ~b,
+  "Flat: selectivity is irrelevant", mean(debt$md_earn_wne_p6),     0,
+  "Too steep",                      70000,                          -50000,
+  "Line of best fit",               unname(coef_adm[1]),            unname(coef_adm[2])
+) %>%
+  mutate(rmse = map2_dbl(a, b, earn_rmse),
+         panel = factor(paste0(label, "\nRMSE = $", scales::comma(round(rmse))),
+                        levels = paste0(label, "\nRMSE = $", scales::comma(round(rmse)))))
+
+cand_points <- cands %>%
+  select(panel, a, b) %>%
+  crossing(debt %>% select(adm_rate, md_earn_wne_p6)) %>%
+  mutate(yhat = a + b*adm_rate)
 ```
 
 <style>
 .big { font-size: 130%; }
 .huge { font-size: 180%; }
 .small { font-size: 80%; }
+.blue { color: #007bff; }
+.red { color: #E74A2F; }
+.leftcol { float: left; width: 49%; }
+.rightcol { float: right; width: 49%; }
 </style>
 
 <!--
@@ -49,10 +122,11 @@ LO6: Communicate evidence responsibly.
 Lecture 11 opens the Regression sub-unit of Unit 3. It returns to the
 college-selectivity running claim from Units 1-2 (sc_debt.Rds, adm_rate and
 sat_avg predicting md_earn_wne_p6) and asks how a line can summarize a
-relationship more compactly than conditional means. RMSE is introduced only
-as the criterion the line of best fit minimizes; formal model evaluation
-(RMSE for assessing fit, logs for skew, cross-validation) is reserved for
-Lecture 12 (Regression II).
+relationship more compactly than group averages. The middle of the deck builds
+visual intuition for the line of best fit: residuals, RMSE for competing
+lines, the animated search, and the RMSE curve whose minimum lm() finds.
+Formal model evaluation (RMSE for assessing fit, logs for skew,
+cross-validation) is reserved for Lecture 12 (Regression II).
 
 INSTRUCTOR NOTE:
 Keep the p-value/confidence connection brief -- one bridge slide back to
@@ -95,9 +169,9 @@ We have described this relationship. We have not yet **summarized** it.
 
 ---
 
-# Conditional Means, Revisited
+# Group Averages, Revisited
 
-In Unit 2, we compared groups using **conditional means**:
+In Unit 2, we compared groups using averages:
 
 .big[
 average earnings for **less selective** colleges
@@ -113,57 +187,66 @@ That required chopping a continuous variable into groups.
 
 # The Problem With Chopping
 
-```{r}
-debt %>%
-  mutate(selectivity_group = ntile(adm_rate, 4)) %>%
-  group_by(selectivity_group) %>%
-  summarise(mean_earn = mean(md_earn_wne_p6, na.rm = TRUE))
+```{r,echo=F}
+quart <- debt %>%
+  mutate(group = ntile(adm_rate, 4)) %>%
+  group_by(group) %>%
+  summarise(xmin = min(adm_rate), xmax = max(adm_rate),
+            mean_earn = mean(md_earn_wne_p6))
+
+p_chop <- debt %>%
+  ggplot(aes(x = adm_rate, y = md_earn_wne_p6)) +
+  geom_point(alpha = .3) +
+  geom_segment(data = quart, aes(x = xmin, xend = xmax, y = mean_earn, yend = mean_earn),
+               inherit.aes = FALSE, color = 'red', linewidth = 2) +
+  scale_y_continuous(labels = scales::dollar) +
+  labs(x = "Admission rate", y = "Median earnings 6 years after entry",
+       title = "Average earnings within each quarter of admission rates") +
+  theme_minimal(base_size = 16)
+p_chop
 ```
 
-.big[
-Useful, but coarse. Where exactly do the group boundaries go? What happens *within* a group?
-]
+---
+
+# The Problem With Chopping
+
+- Useful, but coarse
+
+--
+
+- Where exactly do the group boundaries go?
+
+--
+
+- Everyone in a group gets the **same** prediction, no matter where they sit within it
+
+--
+
+- And the jumps between groups are artifacts of where we drew the lines
+
+---
+
+# A Smoother Summary
+
+```{r,echo=F}
+p_chop +
+  geom_smooth(method = 'lm', se = FALSE, color = 'blue', linewidth = 2) +
+  labs(title = "Group averages (red) vs. a single line (blue)")
+```
 
 ---
 
 # A Smoother Summary
 
 .big[
-Instead of a few group averages, what if we fit a single **line** through the whole relationship?
+Instead of a few group averages, fit a single **line** through the whole relationship.
 ]
 
 That line is a **model**: a compact, continuous summary of how $Y$ changes as $X$ changes.
 
----
+--
 
-# The Scatterplot We Already Know
-
-```{r}
-debt %>%
-  ggplot(aes(x = adm_rate, y = md_earn_wne_p6)) +
-  geom_point(alpha = .4)
-```
-
----
-
-# Adding a Line
-
-```{r}
-debt %>%
-  ggplot(aes(x = adm_rate, y = md_earn_wne_p6)) +
-  geom_point(alpha = .4) +
-  geom_smooth(method = "lm", se = FALSE)
-```
-
-.big[
-This line is the **line of best fit**.
-]
-
----
-
-# What Makes a Line "Best"?
-
-Any straight line can be written:
+- Any straight line can be written:
 
 .huge[
 $Y = \alpha + \beta X$
@@ -172,53 +255,311 @@ $Y = \alpha + \beta X$
 - $\alpha$ (the **intercept**): predicted $Y$ when $X = 0$
 - $\beta$ (the **slope**): how much $Y$ changes for each one-unit increase in $X$
 
-"Best" means: the line that makes the **smallest total mistakes**.
+--
+
+- But there are infinitely many lines. **Which one?**
 
 ---
 
-# Errors, or Residuals
+# Building Intuition
 
-For every observation, the line makes a prediction $\hat{Y}$. The **residual** is:
+.leftcol[
 
-.huge[
-$\text{residual} = Y - \hat{Y}$
+```{r,echo=F,fig.width=5,fig.height=5,out.width='100%'}
+toy_line()
+```
+
 ]
 
-The true value minus what the line predicted.
+.rightcol[
+
+- Set the real data aside for a moment
+
+- A toy dataset: 12 observations of $X$ and $Y$
+
+- Which straight line best summarizes them?
+
+]
+
+---
+
+# A First Guess
+
+.leftcol[
+
+```{r,echo=F,fig.width=5,fig.height=5,out.width='100%'}
+toy_line(a = 0, b = 2)
+```
+
+]
+
+.rightcol[
+
+- Try $\alpha = 0$, $\beta = 2$
+
+- Is this a good line?
+
+- How would we even know?
+
+]
+
+---
+
+# Every Line Makes Mistakes
+
+.leftcol[
+
+```{r,echo=F,fig.width=5,fig.height=5,out.width='100%'}
+toy_line(a = 0, b = 2, resid = "one")
+```
+
+]
+
+.rightcol[
+
+- For every observation, the line makes a prediction $\hat{Y}$
+
+- The **residual** is the mistake:
+
+.big[
+$u_i = Y_i - \hat{Y}_i$
+]
+
+- The true value minus what the line predicted
+
+]
+
+---
+
+# Every Line Makes Mistakes
+
+.leftcol[
+
+```{r,echo=F,fig.width=5,fig.height=5,out.width='100%'}
+toy_line(a = 0, b = 2, resid = "all")
+```
+
+]
+
+.rightcol[
+
+- Every point has a residual
+
+- Some are positive (point above the line), some negative (below)
+
+- We need **one number** that summarizes how big all of these mistakes are
+
+]
 
 ---
 
 # Measuring Total Error: RMSE
 
-.big[
-**Root Mean Squared Error (RMSE):**
+.leftcol[
 
-1. Square every residual (so positive and negative errors don't cancel out).
-2. Average the squared residuals.
-3. Take the square root, to get back to the original units.
+```{r,echo=F,fig.width=5,fig.height=5,out.width='100%'}
+toy_line(a = 0, b = 2, resid = "all") +
+  labs(title = paste0("RMSE = ", round(toy_rmse(0, 2), 2)))
+```
+
 ]
 
-The line of best fit is the one that **minimizes RMSE**.
+.rightcol[
+
+**R**oot **M**ean **S**quared **E**rror:
+
+1. **Square** every residual (so positive and negative errors don't cancel out)
+
+2. Take their **mean**
+
+3. Take the square **root** (to get back to the units of $Y$)
+
+- **RMSE** = `r round(toy_rmse(0, 2), 2)`
+
+]
 
 ---
 
-# A Bad Guess vs. the Best Line
+# Try Another Line
 
-Suppose we guessed the flattest possible line: $\alpha = 0$, $\beta = 0$ (predict everyone earns \$0).
+.leftcol[
 
-```{r}
-round(rmse_guess, 0)
+```{r,echo=F,fig.width=5,fig.height=5,out.width='100%'}
+toy_line(a = 1, b = -.5, resid = "all") +
+  labs(title = paste0("RMSE = ", round(toy_rmse(1, -.5), 2)))
 ```
 
-The actual best-fit line:
+]
 
-```{r}
-round(rmse_lm, 0)
+.rightcol[
+
+- $\alpha = 1$, $\beta = -0.5$
+
+- **RMSE** = `r round(toy_rmse(1, -.5), 2)`
+
+- Worse! The line slopes the wrong way.
+
+]
+
+---
+
+# Try Another Line
+
+.leftcol[
+
+```{r,echo=F,fig.width=5,fig.height=5,out.width='100%'}
+toy_line(a = .5, b = .5, resid = "all") +
+  labs(title = paste0("RMSE = ", round(toy_rmse(.5, .5), 2)))
+```
+
+]
+
+.rightcol[
+
+- $\alpha = 0.5$, $\beta = 0.5$
+
+- **RMSE** = `r round(toy_rmse(.5, .5), 2)`
+
+- Better. The red lines are getting shorter.
+
+]
+
+---
+
+# The Search for the Best Line
+
+.big[
+Imagine trying **every** possible line and keeping track of the RMSE of each one.
+]
+
+---
+
+# The Search for the Best Line
+
+<center><img src="figs/raw.png" width = 75%></center>
+
+---
+
+# The Search for the Best Line
+
+<center><img src="figs/regression-line.gif" width = 75%></center>
+
+---
+
+# Tracing the RMSE
+
+```{r,echo=F,fig.width=12,fig.height=5}
+toy_pair(-.75)
+```
+
+---
+
+# Tracing the RMSE
+
+```{r,echo=F,fig.width=12,fig.height=5}
+toy_pair(0)
+```
+
+---
+
+# Tracing the RMSE
+
+```{r,echo=F,fig.width=12,fig.height=5}
+toy_pair(.5)
+```
+
+---
+
+# Tracing the RMSE
+
+```{r,echo=F,fig.width=12,fig.height=5}
+toy_pair(unname(toy_fit[2]))
+```
+
+---
+
+# Tracing the RMSE
+
+```{r,echo=F,fig.width=12,fig.height=5}
+toy_pair(1.5)
+```
+
+---
+
+# Tracing the RMSE
+
+```{r,echo=F,fig.width=12,fig.height=5}
+toy_pair(2.25)
+```
+
+---
+
+# The Bottom of the Curve
+
+```{r,echo=F,fig.width=12,fig.height=5}
+toy_pair(unname(toy_fit[2]), show_curve_to = Inf) &
+  theme(plot.title = element_text(color = 'blue'))
 ```
 
 .big[
-The best-fit line makes far smaller mistakes, on average.
+The **line of best fit** is the line at the **bottom** of the RMSE curve.
 ]
+
+---
+
+# The Bottom of the Curve
+
+- Steeper or flatter than the best line? The mistakes **grow**
+
+--
+
+- Shift it up or down? The mistakes **grow**
+
+--
+
+- The line of best fit is the unique line with the **smallest RMSE**
+
+--
+
+- You never have to search by hand: `R` solves for it directly
+
+---
+
+# Back to the Real Data
+
+```{r,echo=F,fig.width=13,fig.height=5.5}
+cand_points %>%
+  ggplot(aes(x = adm_rate, y = md_earn_wne_p6)) +
+  geom_segment(aes(xend = adm_rate, yend = yhat), color = 'red', alpha = .15) +
+  geom_point(alpha = .3, size = .8) +
+  geom_abline(data = cands, aes(intercept = a, slope = b), color = 'blue', linewidth = 1.5) +
+  facet_wrap(~panel) +
+  scale_y_continuous(labels = scales::dollar) +
+  labs(x = "Admission rate", y = "Median earnings") +
+  theme_minimal(base_size = 15)
+```
+
+---
+
+# Back to the Real Data
+
+- Same logic, just more points
+
+--
+
+- The flat line says selectivity doesn't matter: RMSE of $`r scales::comma(round(cands$rmse[1]))`
+
+--
+
+- The too-steep line overreacts: RMSE of $`r scales::comma(round(cands$rmse[2]))`
+
+--
+
+- The line of best fit: RMSE of $`r scales::comma(round(cands$rmse[3]))`
+
+--
+
+- No other straight line does better on these data
 
 ---
 
@@ -238,6 +579,32 @@ The `~` is R's way of writing an equation without an `=`.
 
 ---
 
+# What Is `lm()` Actually Doing?
+
+.big[
+Out of **all possible lines**, `lm()` picks the one that makes the **smallest squared mistakes**.
+]
+
+--
+
+- Squared residuals → averaged → square-rooted = **RMSE**
+
+--
+
+- The line with the smallest RMSE is the line at the **bottom of the curve** we just traced
+
+--
+
+- This is why it's called **least squares** regression
+
+--
+
+.small[
+Technically `lm()` minimizes the *sum* of squared residuals, but the same line also minimizes RMSE.
+]
+
+---
+
 # Reading the Output
 
 ```{r}
@@ -248,12 +615,8 @@ summary(model_adm)
 
 # Interpreting the Intercept
 
-```{r,echo=FALSE}
-coef_adm <- coef(model_adm)
-```
-
 .big[
-`(Intercept)` = `r round(coef_adm[1],0)`
+`(Intercept)` = `r scales::comma(round(coef_adm[1]))`
 ]
 
 Predicted earnings for a college with an admission rate of **0** (admits no one).
@@ -267,10 +630,24 @@ This is a mathematical extrapolation, not a claim about a real college — no sc
 # Interpreting the Slope
 
 .big[
-`adm_rate` = `r round(coef_adm[2],0)`
+`adm_rate` = `r scales::comma(round(coef_adm[2]))`
 ]
 
-For each one-unit (i.e., 100 percentage point) increase in admission rate, predicted earnings change by about \$`r round(coef_adm[2],0)`.
+For each one-unit increase in admission rate, predicted earnings fall by about \$`r scales::comma(abs(round(coef_adm[2])))`.
+
+--
+
+- Careful with the units! `adm_rate` runs from 0 to 1
+
+--
+
+  - A "one-unit increase" means going from 0% to **100%** admitted — the entire range
+
+--
+
+  - A more realistic comparison: **10 percentage points** (0.1) higher → about \$`r scales::comma(abs(round(coef_adm[2]/10)))` **lower** predicted earnings
+
+--
 
 .big[
 The sign is negative: **higher admission rate (less selective) → lower predicted earnings.**
@@ -300,16 +677,13 @@ A small p-value plays a similar role to a high bootstrap confidence. We will not
 
 .blue[Claim]: **Average SAT scores also predict graduate earnings.**
 
-Follow the same steps:
-
-1. Visualize $X$ and $Y$.
-2. Add the line of best fit.
-3. Fit `lm()`.
-4. Interpret $\alpha$ and $\beta$.
+1. Plot $X$ and $Y$, and add the line of best fit.
+2. Fit `lm()`.
+3. Interpret $\alpha$ and $\beta$.
 
 ---
 
-# Step 1–2: Visualize
+# Visualize
 
 ```{r}
 debt %>%
@@ -320,28 +694,104 @@ debt %>%
 
 ---
 
-# Step 3: Fit the Model
+# Fit
 
 ```{r}
 model_sat <- lm(md_earn_wne_p6 ~ sat_avg, data = debt)
-summary(model_sat)
+coef(model_sat)
 ```
+
+--
+
+.big[
+$\widehat{\text{Earnings}} = `r scales::comma(coef_sat[1], accuracy = .01)` + `r sprintf("%.2f", coef_sat[2])` \times \text{SAT}$
+]
 
 ---
 
-# Step 4: Interpret
+# Communicating the Slope
 
-```{r,echo=FALSE}
-coef_sat <- coef(model_sat)
-```
+- The slope is `r sprintf("%.2f", coef_sat[2])`
+
+--
+
+- A good interpretation sentence has four parts:
+
+  1. the **change in X** (with its units)
+  2. the **direction** of the change in Y
+  3. the **size** of the change in Y (with its units)
+  4. the word **"associated"** or **"predicted"** — not "causes"
+
+--
 
 .big[
-Intercept: `r round(coef_sat[1],0)` — predicted earnings when average SAT is 0 (not a real college).
-
-Slope: `r round(coef_sat[2],0)` — for each one-point increase in average SAT, predicted earnings rise by about \$`r round(coef_sat[2],0)`.
+> **Colleges whose average SAT score is one point higher are associated with about \$`r sprintf("%.2f", coef_sat[2])` higher median graduate earnings.**
 ]
 
-The sign is positive this time. Does that make sense given the claim?
+--
+
+- Or, on a more meaningful scale: a **100-point** higher average SAT → about \$`r scales::comma(round(coef_sat[2]*100))` higher predicted earnings
+
+--
+
+- The sign is positive. Does that make sense given the claim?
+
+---
+
+# Communicating the Intercept
+
+- The intercept is `r scales::comma(coef_sat[1], accuracy = .01)`
+
+--
+
+- Literally: the predicted median earnings for a college whose average SAT score is **0**
+
+--
+
+.big[
+> **A college with an average SAT score of 0 would be predicted to have graduates earning about −\$`r scales::comma(abs(round(coef_sat[1])))`.**
+]
+
+--
+
+- Does this make sense?
+
+--
+
+  - **No!** Earnings can't be negative, and no college has an average SAT of 0
+
+--
+
+  - (The minimum possible SAT score is 400; the lowest school average in our data is `r min(debt$sat_avg)`)
+
+---
+
+# Why the Intercept Is Nonsense Here
+
+```{r,echo=F,fig.width=11,fig.height=5}
+debt %>%
+  ggplot(aes(x = sat_avg, y = md_earn_wne_p6)) +
+  geom_point(alpha = .3) +
+  geom_abline(intercept = coef_sat[1], slope = coef_sat[2], color = 'blue', linewidth = 1.5, linetype = 'dashed') +
+  geom_smooth(method = 'lm', se = FALSE, color = 'blue', linewidth = 2) +
+  geom_hline(yintercept = 0, color = 'grey40') +
+  annotate('point', x = 0, y = coef_sat[1], color = 'red', size = 5) +
+  annotate("label", x = 0, y = coef_sat[1], hjust = -.1, vjust = -.4,
+           label = paste0("Intercept: at SAT = 0, predicted earnings = -$", scales::comma(abs(round(coef_sat[1])))), color = 'red') +
+  annotate('rect', xmin = min(debt$sat_avg), xmax = max(debt$sat_avg), ymin = -Inf, ymax = Inf,
+           alpha = .1, fill = 'blue') +
+  annotate('text', x = mean(range(debt$sat_avg)), y = 115000, label = "Where our data actually are", color = 'blue') +
+  scale_y_continuous(labels = scales::dollar) +
+  coord_cartesian(xlim = c(0, 1600), ylim = c(-15000, 125000)) +
+  labs(x = "Average SAT score", y = "Median earnings") +
+  theme_minimal(base_size = 15)
+```
+
+--
+
+- The intercept is an **extrapolation**: the line is extended far outside the data
+
+- It's a mathematical anchor for the line, **not** a meaningful prediction
 
 ---
 
@@ -356,6 +806,10 @@ It does not, by itself, tell us:
 - whether selectivity **causes** higher earnings;
 - whether a confounder (Unit 2!) explains part of the slope;
 - whether this line fits equally well everywhere.
+
+.big[
+A small p-value makes us confident the association is **not zero**. It does **not** make it causal.
+]
 
 ---
 
@@ -386,7 +840,7 @@ Instead of:
 Try:
 
 .big[
-> **In these data, a one-unit increase in admission rate is associated with about \$`r abs(round(coef_adm[2],0))` lower predicted graduate earnings — a compact summary of the association, not evidence that selectivity itself causes the difference.**
+> **In these data, a one-unit increase in admission rate is associated with about \$`r scales::comma(abs(round(coef_adm[2])))` lower predicted graduate earnings — a compact summary of the association, not evidence that selectivity itself causes the difference.**
 ]
 
 ---

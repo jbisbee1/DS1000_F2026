@@ -33,7 +33,15 @@ mi_final <- mi_ep %>%
   mutate(
     BidenVoter = ifelse(preschoice == "Joe Biden, the Democrat", 1, 0),
     TrumpVoter = 1 - BidenVoter,
-    AGE10 = ifelse(AGE10 == 99, NA, AGE10)
+    AGE10 = ifelse(AGE10 == 99, NA, AGE10),
+    Gender = case_when(SEX == 1 ~ "Men", SEX == 2 ~ "Women"),
+    # Collapse the 10 exit-poll age brackets into 4 so each cell has enough respondents
+    AgeGroup = case_when(
+      AGE10 %in% 1:2 ~ "18-29",
+      AGE10 %in% 3:5 ~ "30-44",
+      AGE10 %in% 6:8 ~ "45-64",
+      AGE10 %in% 9:10 ~ "65+"
+    )
   )
 
 # Synthetic Simpson's-paradox example.
@@ -83,7 +91,7 @@ deck should read as one coherent argument built from concepts they have already
 encountered in this semester.
 -->
 
-# What Else Could Explain It?
+# Today's Question
 
 .big[
 Last class:
@@ -391,8 +399,8 @@ Age becomes our third variable, Z.
 
 ```{r}
 mi_final %>%
-  filter(!is.na(SEX)) %>%
-  group_by(SEX) %>%
+  filter(!is.na(Gender)) %>%
+  group_by(Gender) %>%
   summarise(
     TrumpSupport = mean(TrumpVoter),
     .groups = "drop"
@@ -409,12 +417,11 @@ This gives us an overall relationship between gender and vote choice.
 
 ```{r}
 mi_final %>%
-  filter(!is.na(SEX), !is.na(AGE10)) %>%
-  group_by(SEX, AGE10) %>%
-  summarise(
-    TrumpSupport = mean(TrumpVoter),
-    .groups = "drop"
-  )
+  filter(!is.na(Gender), !is.na(AgeGroup)) %>%
+  group_by(AgeGroup, Gender) %>%
+  summarise(TrumpSupport = mean(TrumpVoter), .groups = "drop") %>%
+  pivot_wider(names_from = Gender, values_from = TrumpSupport) %>%
+  mutate(Gap = Men - Women)
 ```
 
 Now ask:
@@ -455,11 +462,13 @@ This is known as:
 
 # The Pooled Data
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, fig.height=4.5}
 simpson %>%
   ggplot(aes(x = practice, y = score)) +
-  geom_point() +
-  geom_smooth(method = "lm", se = FALSE)
+  geom_point(size = 2.5, alpha = 0.7) +
+  geom_smooth(method = "lm", se = FALSE, color = "black") +
+  labs(x = "Hours of practice per week", y = "Exam score") +
+  theme_bw(base_size = 18)
 ```
 
 .big[
@@ -470,11 +479,15 @@ Looking only at the pooled data, what relationship do you see?
 
 # Now Reveal the Groups
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, fig.height=4.5}
 simpson %>%
-  ggplot(aes(x = practice, y = score, shape = group)) +
-  geom_point() +
-  geom_smooth(aes(group = group), method = "lm", se = FALSE)
+  ggplot(aes(x = practice, y = score, color = group, shape = group)) +
+  geom_point(size = 2.5, alpha = 0.7) +
+  geom_smooth(method = "lm", se = FALSE) +
+  scale_color_manual(values = c("Advanced course" = "#1b6ca8", "Intro course" = "#d1495b")) +
+  labs(x = "Hours of practice per week", y = "Exam score", color = NULL, shape = NULL) +
+  theme_bw(base_size = 18) +
+  theme(legend.position = "top")
 ```
 
 .big[
@@ -780,23 +793,7 @@ Data scientists should notice the jump.
 # The Unit 2 Workflow
 
 .big[
-**Choose the comparison**
-
-↓
-
-**See the relationship**
-
-↓
-
-**Describe the relationship**
-
-↓
-
-**Ask what else could explain it**
-
-↓
-
-**Calibrate the conclusion**
+**Choose the comparison** → **See the relationship** → **Describe the relationship** → **Ask what else could explain it** → **Calibrate the conclusion**
 ]
 
 That is the reasoning Test 2 asks you to transfer.

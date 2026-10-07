@@ -27,7 +27,7 @@ You may use AI, your notes, classmates, and the internet. AI can help you write 
 
 # The Claim
 
-> **Larger colleges (measured by undergraduate enrollment) have lower graduate earnings.**
+> **Larger colleges (measured by undergraduate enrollment) have higher graduate earnings.**
 
 The relevant variables:
 
@@ -110,7 +110,7 @@ Name one variable that could be related to both college size and graduate earnin
 
 Suppose an AI assistant sees only your regression output and says:
 
-> **"This proves that shrinking a college's enrollment would cause its graduates to earn more."**
+> **"This proves that growing a college's enrollment would cause its graduates to earn more."**
 
 ## 8. Audit the Claim
 
