@@ -1,0 +1,144 @@
+---
+title: "Untitled"
+output: html_document
+date: "2026-10-12"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+require(tidyverse)
+debt <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/main/data/sc_debt.Rds") %>%
+  filter(adm_rate > 0, md_earn_wne_p6 > 0, sat_avg > 0)
+```
+
+# Run the linear regression
+
+```{r}
+m1 <- lm(md_earn_wne_p6 ~ adm_rate,
+   data = debt)
+
+m1
+
+summary(m1)
+```
+
+# Predicting Y-hat 
+
+```{r}
+preds <- predict(m1)
+```
+
+# Compare the predicted Y to the true Y
+
+```{r}
+errors <- debt %>%
+  select(md_earn_wne_p6,adm_rate) %>%
+  mutate(predicted_Y = preds) %>%
+  mutate(residual = md_earn_wne_p6 - predicted_Y) %>%
+  mutate(squared_error = residual^2)
+  
+```
+
+# Finish calculating RMSE
+
+```{r}
+errors %>%
+  summarise(mse = mean(squared_error)) %>%
+  mutate(rmse = sqrt(mse))
+```
+
+# Looking at the errors themselves
+
+```{r}
+# Univariate visualization: 
+errors %>%
+  ggplot(aes(x = residual)) + 
+  geom_histogram()
+
+# Multivariate visualization:
+errors %>%
+  ggplot(aes(x = adm_rate,
+             y = residual))+ 
+  geom_point() + 
+  geom_smooth()
+```
+
+# Student Live coding space
+
+```{r}
+m2 <- lm(md_earn_wne_p6 ~ sat_avg,
+         data = debt)
+
+preds2 <- predict(m2)
+
+errors2 <- debt %>%
+  select(md_earn_wne_p6, sat_avg) %>%
+  mutate(predicted_Y = predict(m2),
+         residual = md_earn_wne_p6 - predicted_Y,
+         squared_error = residual^2)
+
+errors2 %>%
+  summarise(mse = mean(squared_error)) %>%
+  mutate(rmse = sqrt(mse))
+
+errors2 %>%
+  ggplot(aes(x = residual)) +
+  geom_histogram()
+
+errors2 %>%
+  ggplot(aes(x = sat_avg,
+             y = residual)) +
+  geom_point() +
+  geom_smooth()
+```
+
+# Complicated model
+
+```{r}
+debt %>%
+  ggplot(aes(x = adm_rate,
+             y = md_earn_wne_p6)) + 
+  geom_point(alpha = .1) + 
+  geom_line() + 
+  theme_bw()
+  geom_smooth(method = 'lm',
+              formula = 'y ~ poly(x,20)', se = F)
+```
+
+# Cross-validation
+
+```{r}
+
+cvRes <- NULL
+
+for(i in 1:200) {
+  inds <- sample(1:nrow(debt),
+               size = round(.2*nrow(debt)),
+               replace = F)
+
+train <- debt %>%
+  slice(inds)
+
+test <- debt %>%
+  slice(-inds)
+
+mcv <- lm(md_earn_wne_p6 ~ sat_avg,train)
+
+tmpRes <- test %>%
+  mutate(preds = predict(mcv,newdata = test)) %>%
+  mutate(error = md_earn_wne_p6 - preds) %>%
+  mutate(se = error^2) %>%
+  summarise(mse = mean(se)) %>%
+  mutate(rmse = sqrt(mse))
+
+cvRes <- cvRes %>% bind_rows(tmpRes)
+}
+
+cvRes %>%
+  ggplot(aes(x = rmse)) + 
+  geom_histogram()
+```
+

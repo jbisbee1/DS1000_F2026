@@ -1,0 +1,366 @@
+---
+title: "Uncertainty, Regression, and Competing Explanations"
+subtitle: "Test 3 Practice (ungraded)"
+author: "Prof. Bisbee"
+institute: "Vanderbilt University"
+date: "Due before Test 3"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, error = TRUE, warning = FALSE, message = FALSE)
+```
+
+## Purpose
+
+This homework is a rehearsal for **Unit Test 3**.
+
+You may use your notes, classmates, the internet, and AI tools. The point is not to memorize R syntax. The point is to practice the reasoning process that you will need to perform independently on the test:
+
+> **See the pattern in a sample → Ask how much it would change with a different sample → Summarize it with a model → Check how well the model does → Ask what else could explain it → Calibrate the conclusion**
+
+For this homework, you will actually use R and AI to help implement your decisions. On Test 3, you will instead be given analytical artifacts (bootstrap results, regression output, plots) and asked to evaluate them.
+
+## The Data
+
+We will use data on the physical and chemical properties of 1,599 red wines, along with a quality rating (0-10) assigned by professional tasters.
+
+```{r}
+library(tidyverse)
+
+wine <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/main/data/wine_quality_red.rds")
+```
+
+Some variables that may be useful are:
+
+| Variable | Definition |
+|---|---|
+| `quality` | Median taster rating (0-10) |
+| `alcohol` | Alcohol content (% by volume) |
+| `volatile_acidity` | Acetic acid content (high levels give a vinegar taste) |
+| `residual_sugar` | Sugar left after fermentation |
+| `sulphates` | Sulphate additive (preservative) |
+| `density` | Density of the wine |
+| `pH` | Acidity level |
+
+Start by inspecting the data.
+
+```{r}
+glimpse(wine)
+```
+
+## The Claim
+
+A wine writer says:
+
+> **"Wines with higher alcohol content are rated as higher quality, because alcohol makes wine taste better."**
+
+Your job is **not** to decide whether this claim is true. Your job is to decide how much confidence the evidence deserves.
+
+## 1. See the Pattern in This Sample
+
+Create a visualization of the relationship between `alcohol` and `quality`, with a line of best fit.
+
+```{r}
+# Visualize alcohol (x) and quality (y) here, with a line of best fit.
+
+```
+
+Describe the direction and rough strength of the relationship.
+
+**Your answer:**
+
+
+
+## 2. Fit the Model
+
+Fit a regression with `quality` as the outcome and `alcohol` as the predictor, and view the output.
+
+```{r}
+# Fit the model and view it with summary().
+
+```
+
+Report the intercept and the slope.
+
+**Intercept:**
+
+
+
+**Slope:**
+
+
+
+Interpret the slope in a sentence, using the actual units of both variables. Be careful with the wording: this is a comparison between wines, not something that happens to a single wine.
+
+**Your answer:**
+
+
+
+## 3. Is the Intercept Meaningful?
+
+Does the intercept describe a wine that could actually exist in these data? Check the range of `alcohol` before answering.
+
+```{r}
+# Check the range of alcohol.
+
+```
+
+**Your answer:**
+
+
+
+## 4. Predict
+
+Use your model to predict the `quality` of a wine with 10% alcohol. You may do it by hand from the coefficients or with `predict()`.
+
+```{r}
+# Predict quality for alcohol = 10.
+
+```
+
+**Your predicted quality:**
+
+
+
+Would you feel comfortable using the model to predict the quality of a wine with 30% alcohol? Why or why not?
+
+**Your answer:**
+
+
+
+## 5. How Much Would a Different Sample Change the Result?
+
+Your slope comes from one set of 1,599 wines. A different set of wines would have produced a somewhat different slope.
+
+Use the bootstrap to see how much. Write a loop that repeats the following at least 200 times:
+
+1. resample the rows of `wine` **with replacement**, keeping the same number of rows;
+2. fit the same regression on the resample;
+3. save the slope.
+
+```{r}
+set.seed(123)
+
+# bs_slopes <- NULL
+# for (i in 1:200) {
+#   ...
+# }
+
+```
+
+Visualize the 200 slopes.
+
+```{r}
+# Plot the distribution of bootstrapped slopes.
+
+```
+
+What is the range of slopes that the middle 95% of resamples produced? What fraction of resamples produced a **positive** slope?
+
+```{r}
+# Calculate the 2.5th and 97.5th percentiles, and the share of positive slopes.
+
+```
+
+**Your answer:**
+
+
+
+## 6. What Does That Number Mean?
+
+In one sentence, explain what "the slope was positive in X% of resamples" tells us.
+
+**Your answer:**
+
+
+
+In one sentence, explain what it does **not** tell us.
+
+**Your answer:**
+
+
+
+## 7. Sample Size and Precision
+
+Repeat the bootstrap loop, but this time first take a random sample of only **50** wines and bootstrap from that small sample.
+
+```{r}
+set.seed(123)
+
+# small <- wine %>% sample_n(50)
+# Then repeat the bootstrap loop on `small`.
+
+```
+
+Compare the spread of the bootstrapped slopes to what you found in Question 5.
+
+```{r}
+# Plot or summarize the small-sample bootstrapped slopes.
+
+```
+
+**What changed, and why?**
+
+
+
+## 8. How Well Does the Model Do?
+
+A line can show the right direction and still make large mistakes.
+
+Calculate the residuals from your Question 2 model, visualize them, and calculate the RMSE.
+
+```{r}
+# Calculate residuals, plot them, and calculate RMSE.
+
+```
+
+What does the RMSE mean in the units of `quality`? Given that quality ratings in these data run only from about 3 to 8, would you call this model's predictions precise?
+
+**Your answer:**
+
+
+
+Look at your residual plot. Do you see anything that suggests the straight-line summary is missing something?
+
+**Your answer:**
+
+
+
+## 9. In-Sample vs. Held-Out Performance
+
+Your RMSE in Question 8 was calculated on the same wines used to fit the model. Split the data in two: use a random 80% to fit the model (**train**) and the remaining 20% to evaluate it (**test**).
+
+```{r}
+set.seed(123)
+
+# train <- wine %>% sample_frac(0.8)
+# test <- wine %>% anti_join(train)   # or any equivalent approach
+#
+# Fit the model on train, predict on test, and calculate the held-out RMSE.
+
+```
+
+Report the held-out RMSE and compare it with the in-sample RMSE.
+
+**Your answer:**
+
+
+
+Why is the held-out RMSE the more honest estimate of how the model would do on new wines?
+
+**Your answer:**
+
+
+
+## 10. What Else Could Explain It?
+
+The writer claims alcohol *causes* higher ratings. Identify a plausible third variable that could be related to both a wine's alcohol content and its rating.
+
+**Your answer:**
+
+
+
+Explain in one or two sentences how that variable could produce the association even if alcohol itself did not change tasters' ratings.
+
+**Your answer:**
+
+
+
+## 11. Test the Competing Explanation
+
+Add your chosen variable (or one of `volatile_acidity`, `sulphates`, `density`) to the model alongside `alcohol`.
+
+```{r}
+# Fit a model with both predictors and view it with summary().
+
+```
+
+Did the alcohol slope change? By how much?
+
+**Your answer:**
+
+
+
+Does the new model have a lower held-out RMSE than the alcohol-only model? You may use the same train/test split from Question 9.
+
+```{r}
+# Compare held-out RMSE for the two models.
+
+```
+
+**Your answer:**
+
+
+
+A lower RMSE means the model predicts better. Does it also mean that the added variable is a *cause* of quality? Explain.
+
+**Your answer:**
+
+
+
+## 12. Audit an AI Explanation
+
+Suppose an AI assistant is shown only your bootstrap result from Question 5 and says:
+
+> **"Because the slope was positive in 100% of resamples, we can be 100% certain that alcohol causes higher wine ratings."**
+
+Identify two problems with this statement.
+
+**Problem 1:**
+
+
+
+**Problem 2:**
+
+
+
+## 13. Calibrated Conclusion
+
+Write two or three sentences that a general reader (for example, the wine writer) could understand. Your conclusion should:
+
+- report the direction and approximate size of the alcohol-quality relationship, in context;
+- say how much the pattern holds up across resamples, and what that does and does not mean;
+- mention the competing explanation you tested and whether it changed your interpretation;
+- avoid claiming that alcohol causes higher ratings.
+
+**Your answer:**
+
+
+
+## 14. Are We Ready?
+
+You now have:
+
+- a relationship in one sample;
+- a sense of how much it would change in a different sample;
+- a regression summary, interpreted in context;
+- a measure of how well the model predicts, in-sample and held-out;
+- a competing explanation, and what happened when you accounted for it;
+- and a calibrated conclusion.
+
+What is the **next question** you would need to answer before recommending that winemakers add alcohol to improve their ratings?
+
+Do not perform that analysis yet.
+
+**Your answer:**
+
+
+
+## Before Test 3
+
+You should now be able to do the following without AI:
+
+- explain why a sample result would differ if the sample were drawn again;
+- explain how sample size affects the precision of an estimate;
+- describe what a bootstrap does, and interpret "X% of resamples" correctly;
+- recognize that a high resampling percentage describes the stability of a pattern, not the truth of a causal explanation;
+- read a regression equation or output, and interpret the intercept and slope in context;
+- use a regression equation to make a prediction, and recognize when a prediction goes beyond the data;
+- read residual plots and RMSE, and say what they reveal about a model's mistakes;
+- explain why held-out performance is more honest than in-sample performance, and what a lower RMSE does and does not mean;
+- identify a competing explanation and say what happens to an estimate when it is accounted for;
+- audit an AI-generated claim for overconfidence and unsupported causal language;
+- write a calibrated conclusion that says what the evidence supports, what remains uncertain, and how confident you are.
+
+The specific wine context will **not** be on Test 3. The test will ask you to transfer this reasoning to a new empirical problem.
