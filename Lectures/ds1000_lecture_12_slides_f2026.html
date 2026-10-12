@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>How Do We Interpret and Evaluate Regression Evidence?</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Prof. Bisbee" />
+    <script src="ds1000_lecture_12_slides_f2026_files/header-attrs-2.31/header-attrs.js"></script>
+    <link href="ds1000_lecture_12_slides_f2026_files/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="ds1000_lecture_12_slides_f2026_files/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
+    <link href="ds1000_lecture_12_slides_f2026_files/remark-css-0.0.1/metropolis-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# How Do We Interpret and Evaluate Regression Evidence?
+]
+.subtitle[
+## DS 1000
+]
+.author[
+### Prof. Bisbee
+]
+
+---
+
+
+
+
+&lt;style&gt;
+.big { font-size: 130%; }
+.huge { font-size: 180%; }
+.small { font-size: 80%; }
+&lt;/style&gt;
+
+&lt;!--
+LEARNING OBJECTIVES
+
+LO1: Interrogate empirical claims.
+LO3: Select and justify analytical approaches.
+LO4: Conduct and evaluate data analyses.
+LO5: Critically use AI as an analytical tool.
+LO6: Communicate evidence responsibly.
+
+Lecture 12 completes Unit 3's core instructional content. It extends the
+adm_rate model built in Lecture 11 with residual diagnostics, RMSE, and
+cross-validation -- deliberately framed as "the bootstrap idea, applied to
+model evaluation" to tie the Regression sub-unit back to Uncertainty I/II.
+
+INSTRUCTOR NOTE:
+This is the last instructional lecture before the Unit 3 Assessment Day
+(Evidence Debate 3 + Unit Test 3). Per the established course pattern, it
+closes with a Daily Quiz callout and an assessment-day tease, not a
+"Homework N" slide -- the next homework (HW10) belongs to Lecture 13
+(Prediction vs. Explanation, the Unit 4 opener).
+--&gt;
+
+# How Do We Interpret and Evaluate Regression Evidence?
+
+.big[
+Last class:
+
+&gt; **How can a model summarize a relationship?**
+
+Today:
+
+&gt; **How good is that summary, and how do we know?**
+]
+
+---
+
+# Where We Are
+
+.big[
+**Question → trustworthy variables → appropriate comparison → describe the relationship → interrogate explanations → quantify uncertainty → summarize with a model → evaluate the model → communicate**
+]
+
+Today:
+
+**Evaluate the model**
+
+---
+
+# Picking Up Where We Left Off
+
+Yesterday's model:
+
+
+``` r
+model_adm &lt;- lm(md_earn_wne_p6 ~ adm_rate, data = debt)
+```
+
+.big[
+We interpreted the intercept and slope. We never asked: **is this a good model?**
+]
+
+---
+
+# Every Model Makes Mistakes
+
+.big[
+If a line fit every observation perfectly, it wouldn't be summarizing anything — it would just be tracing the data.
+]
+
+The question is not *whether* the model makes mistakes. It's **how big, and how patterned**.
+
+---
+
+# Residuals, Again
+
+For every college, the model predicts earnings. The residual is:
+
+.huge[
+`\(\text{residual} = Y - \hat{Y}\)`
+]
+
+
+``` r
+debt$pred_adm &lt;- predict(model_adm)
+debt$resid_adm &lt;- debt$md_earn_wne_p6 - debt$pred_adm
+
+summary(debt$resid_adm)
+```
+
+```
+##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
+## -19719.8  -5101.9   -901.8      0.0   3742.4  87303.0
+```
+
+---
+
+# Look at the Residuals: Univariate
+
+
+``` r
+debt %&gt;%
+  ggplot(aes(x = resid_adm)) +
+  geom_histogram(bins = 40) +
+  labs(x = "Residual (actual − predicted earnings)")
+```
+
+&lt;img src="ds1000_lecture_12_slides_f2026_files/figure-html/unnamed-chunk-4-1.png" alt="" style="display: block; margin: auto;" /&gt;
+
+.big[
+Residuals average to zero by construction. Look instead at their **shape**.
+]
+
+---
+
+# Look at the Residuals: Multivariate
+
+
+``` r
+debt %&gt;%
+  ggplot(aes(x = adm_rate, y = resid_adm)) +
+  geom_point(alpha = .4) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_smooth() +
+  labs(x = "Admission rate", y = "Residual")
+```
+
+&lt;img src="ds1000_lecture_12_slides_f2026_files/figure-html/unnamed-chunk-5-1.png" alt="" style="display: block; margin: auto;" /&gt;
+
+---
+
+# What Would We Want to See?
+
+.big[
+**Ideal:** residuals scattered evenly around zero across the whole range of `\(X\)` — a formless cloud.
+
+**Warning sign:** a visible pattern — a curve, a funnel, a cluster — meaning the model systematically over- or under-predicts in some region of `\(X\)`.
+]
+
+A pattern in the residuals means there is structure left in the data that a straight line isn't capturing.
+
+&lt;!-- LO4: Let the rendered plot drive the discussion; don't presume its exact shape here. --&gt;
+
+---
+
+# From a Picture to a Number
+
+.big[
+Residual plots are essential, but we also want a **single number** to summarize how good the model is — especially for comparing models.
+]
+
+We already have the tool: **RMSE**.
+
+---
+
+# RMSE, Again
+
+
+``` r
+rmse_in_sample &lt;- sqrt(mean(debt$resid_adm^2))
+round(rmse_in_sample, 0)
+```
+
+```
+## [1] 8956
+```
+
+.big[
+On average, this model's predictions are off by about \$8,956.
+]
+
+Is that good? Good compared to **what**?
+
+---
+
+# A Hidden Problem
+
+.big[
+We calculated RMSE using the **same data** we used to fit the model.
+]
+
+The model was built to minimize error on exactly this data. Its RMSE here is close to the *best-case* performance.
+
+.big[
+That is not the same as asking: **how well would this model do on data it hasn't seen?**
+]
+
+---
+
+# This Should Sound Familiar
+
+.big[
+We faced a version of this problem in Unit 3 already.
+]
+
+A single sample can make a comparison look more solid than it really is. **Bootstrapping** asked: *would this hold up under a different sample?*
+
+Today's version of that question: **would this model's accuracy hold up on data it wasn't fit to?**
+
+---
+
+# Train and Test
+
+.big[
+**Split the data in two:**
+
+- Fit the model on a **training** set.
+- Evaluate its RMSE on a separate **test** set the model never saw.
+]
+
+This is called **cross-validation**.
+
+---
+
+# One Split
+
+
+``` r
+set.seed(1021)
+inds &lt;- sample(1:nrow(debt), size = round(nrow(debt) / 2), replace = FALSE)
+train &lt;- debt %&gt;% slice(inds)
+test &lt;- debt %&gt;% slice(-inds)
+
+model_train &lt;- lm(md_earn_wne_p6 ~ adm_rate, data = train)
+test$pred &lt;- predict(model_train, newdata = test)
+```
+
+
+``` r
+rmse_holdout_once &lt;- sqrt(mean((test$md_earn_wne_p6 - test$pred)^2, na.rm = TRUE))
+round(rmse_holdout_once, 0)
+```
+
+```
+## [1] 10043
+```
+
+---
+
+# In-Sample vs. Held-Out RMSE
+
+.big[
+In-sample RMSE: \$8,956
+
+One held-out RMSE: \$10,043
+]
+
+A single train/test split depends on which colleges happened to land in the test set — the same fragility we saw with a single bootstrap resample.
+
+---
+
+# Repeat It, Like a Bootstrap
+
+
+``` r
+cv_adm &lt;- NULL
+for (i in 1:100) {
+  inds_i &lt;- sample(1:nrow(debt), size = round(nrow(debt) / 2), replace = FALSE)
+  train_i &lt;- debt %&gt;% slice(inds_i)
+  test_i &lt;- debt %&gt;% slice(-inds_i)
+  m_i &lt;- lm(md_earn_wne_p6 ~ adm_rate, data = train_i)
+  test_i$pred &lt;- predict(m_i, newdata = test_i)
+  cv_adm &lt;- c(cv_adm, sqrt(mean((test_i$md_earn_wne_p6 - test_i$pred)^2, na.rm = TRUE)))
+}
+```
+
+.big[
+100 different train/test splits, each producing its own held-out RMSE.
+]
+
+---
+
+# The Distribution of Held-Out RMSE
+
+
+``` r
+data.frame(rmse = cv_adm) %&gt;%
+  ggplot(aes(x = rmse)) +
+  geom_density(fill = "grey70") +
+  geom_vline(xintercept = mean(cv_adm), linetype = "dashed") +
+  labs(x = "Held-out RMSE across 100 splits")
+```
+
+&lt;img src="ds1000_lecture_12_slides_f2026_files/figure-html/unnamed-chunk-10-1.png" alt="" style="display: block; margin: auto;" /&gt;
+
+---
+
+# A More Honest Estimate
+
+.big[
+Average held-out RMSE: \$8,926
+
+In-sample RMSE: \$8,956
+]
+
+Cross-validation gives a more honest sense of how the model would perform on colleges it wasn't built from.
+
+---
+
+# Using RMSE to Compare Models
+
+Recall Lecture 11's second model, using `sat_avg` instead of `adm_rate`.
+
+.big[
+Which predictor summarizes graduate earnings more reliably?
+]
+
+Cross-validate **both** and compare their average held-out RMSE.
+
+---
+
+# Comparing Two Models
+
+
+``` r
+tibble(
+  model = c("md_earn_wne_p6 ~ adm_rate", "md_earn_wne_p6 ~ sat_avg"),
+  mean_cv_rmse = c(mean(cv_adm), mean(cv_sat))
+)
+```
+
+```
+## # A tibble: 2 × 2
+##   model                     mean_cv_rmse
+##   &lt;chr&gt;                            &lt;dbl&gt;
+## 1 md_earn_wne_p6 ~ adm_rate        8926.
+## 2 md_earn_wne_p6 ~ sat_avg         7579.
+```
+
+.big[
+The model with the **lower** average held-out RMSE makes smaller predictive mistakes on data it wasn't fit to.
+]
+
+---
+
+# What a Lower RMSE Does *Not* Mean
+
+.big[
+A lower RMSE means one model's predictions are, on average, closer to the truth.
+]
+
+It does **not** mean:
+
+- that predictor is the *causal* driver of earnings;
+- the winning model is correct, only less wrong;
+- either model would generalize to colleges very different from these.
+
+&lt;!-- LO1: Keep separating predictive performance from causal explanation. --&gt;
+
+---
+
+# Audit an AI Claim
+
+Suppose an AI assistant compares the two RMSE values and says:
+
+&gt; "This proves that admission rate is the true cause of earnings differences, since its model has lower error."
+
+.big[
+**What does a lower cross-validated RMSE actually measure?**
+
+**Does better prediction imply a causal mechanism?**
+
+**What Unit 2 habits still apply here?**
+]
+
+Predictive accuracy and causal explanation are different questions.
+
+---
+
+# A Calibrated Conclusion
+
+Instead of:
+
+&gt; "This model proves what drives earnings."
+
+Try:
+
+.big[
+&gt; **Cross-validated on 100 random splits, the admission-rate model's predictions are off by about \$8,926, on average, on colleges it wasn't fit to — a measure of predictive reliability, not proof of what causes earnings differences.**
+]
+
+---
+
+# Before You Leave
+
+When someone hands you a regression's RMSE, ask:
+
+1. Was it calculated on the same data used to fit the model?
+2. Would it hold up on data the model hasn't seen?
+3. Does the residual plot show a formless cloud, or a pattern?
+4. If comparing models, which has the lower held-out error?
+5. Does a lower error imply anything about *why* the relationship exists?
+
+---
+
+# The Rule to Remember
+
+.huge[
+**A good-looking fit on the data you trained on is the easy version of the question.**
+
+**Cross-validation asks the harder, more honest one.**
+]
+
+---
+
+# The Unit 3 Workflow, Complete
+
+.big[
+**Compare in a sample**
+
+↓
+
+**Resample to measure confidence**
+
+↓
+
+**Ask what that confidence justifies**
+
+↓
+
+**Summarize with a model**
+
+↓
+
+**Evaluate the model out of sample**
+]
+
+This is the same reasoning pattern the Evidence Debate and Unit Test will ask you to transfer.
+
+---
+
+# Daily Quiz 12
+
+.huge[
+
+Now test yourself independently.
+
+]
+
+.big[
+
+Open **Daily Quiz 12** in Brightspace.
+
+]
+
+.small[
+
+No AI or internet access during the quiz.
+
+]
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+  "ratio": "16:9",
+  "highlightStyle": "github",
+  "highlightLines": true,
+  "countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
