@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DS 1000 — Evidence Debate 3</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="assets/edb3_results.js"></script>
+<style>
+:root{--gold:#cfae70;--ink:#222;--muted:#666;--line:#ddd;--bg:#f5f5f5;--panel:#fff}
+*{box-sizing:border-box} body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}
+main{max-width:980px;margin:auto;padding:28px 18px 70px}.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:28px;margin:18px 0}
+h1{margin:0 0 5px} h2{border-bottom:3px solid var(--gold);padding-bottom:8px}.claim{font-size:1.25rem;font-weight:700;background:#f4efe5;border-left:5px solid var(--gold);padding:18px;margin:18px 0}
+textarea,input[type=text],input[type=number]{width:100%;padding:10px;border:1px solid #aaa;border-radius:6px;font:inherit} textarea{min-height:90px}
+input[type=number]{max-width:160px}
+label{display:block;font-weight:700;margin:14px 0 6px}.opt{display:block;font-weight:400;margin:4px 0}.opt input{margin-right:8px}
+.row{display:flex;gap:18px;flex-wrap:wrap}.row>*{flex:1;min-width:140px}
+button{padding:10px 16px;border:0;border-radius:6px;background:#333;color:white;font-weight:700;cursor:pointer;margin-top:12px}.hidden{display:none!important}
+.status{padding:10px 12px;border-radius:6px;background:#eee;margin:12px 0}.evidence{max-width:100%;display:block;margin:18px auto;border:1px solid #ccc;cursor:zoom-in}
+.small{font-size:.9rem;color:var(--muted)} .scale{width:100%}
+table.data{border-collapse:collapse;margin:14px 0;width:100%;max-width:560px}table.data th,table.data td{border:1px solid var(--line);padding:6px 10px;text-align:right}table.data th:first-child,table.data td:first-child{text-align:left}table.data th{background:#f4efe5}
+.fb{margin:14px 0;padding:0;list-style:none}.fb li{padding:10px 12px;border-radius:6px;margin:6px 0;font-size:.95rem}.fb .ok{background:#e8f4e8;border-left:4px solid #4a9a4a}.fb .no{background:#fbeaea;border-left:4px solid #c0392b}
+.callout{background:#f4efe5;border-radius:6px;padding:12px 14px;margin:14px 0}
+details{margin:12px 0}summary{cursor:pointer;font-weight:700}pre{background:#f0f0f0;padding:12px;border-radius:6px;overflow-x:auto;font-size:.85rem}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;z-index:9999;padding:30px}
+#modal.open{display:flex} #modal img{max-width:95vw;max-height:90vh;object-fit:contain;background:white} #modalClose{position:fixed;right:22px;top:14px;font-size:38px;color:white;cursor:pointer}
+</style>
+</head>
+<body>
+<main>
+<div class="card">
+<h1>Evidence Debate 3: Remote Work</h1>
+<p>DS 1000 — Uncertainty &amp; Inference</p>
+<div class="claim">Claim: “Working from home makes employees more productive.”</div>
+<div id="dbStatus" class="status">Connecting to response database...</div>
+<p class="small">Your responses are recorded by student code. Evidence is revealed one stage at a time. Today you act as the analyst for <b>Meridian Services</b>, a fictional firm whose records we simulated. In each stage you read bootstrap evidence, answer a few questions that we score for you, and then update your confidence. Wrong answers do not block you; the feedback is there to be read.</p>
+<p class="small"><b>Output index:</b> output per shift, scaled so the average office employee is 100. A WFH effect of +4 means 4% more output per shift. <b>Confidence</b> in a bootstrap result means the share of the 1,000 resamples in which the WFH-minus-office difference is above zero.</p>
+</div>
+
+<section id="s0" class="card">
+<h2>Stage 0 — Commit to a prediction</h2>
+<p>Before any data: you will be scored later on how well calibrated you were.</p>
+<label>Student code</label><input id="studentCode" type="text" placeholder="Enter your course student code">
+<label>How confident are you that the claim is true? <span id="c0v">50</span>/100</label>
+<input id="c0" class="scale" type="range" min="0" max="100" value="50">
+<label>Suppose a firm randomly assigned some employees to work from home. By how much (in %) do you think output per shift changed, on average? Negative numbers mean a loss.</label>
+<input id="p0" type="number" step="0.5" placeholder="e.g. 2">
+<label>Give an 80% interval: you should be 80% sure the true effect lies between these values.</label>
+<div class="row"><div><span class="small">Lower bound</span><input id="lo0" type="number" step="0.5"></div><div><span class="small">Upper bound</span><input id="hi0" type="number" step="0.5"></div></div>
+<label>What evidence would most change your confidence?</label><textarea id="r0"></textarea>
+<button onclick="saveStage(0)">Record Stage 0</button>
+</section>
+
+<section id="s1" class="card hidden">
+<h2>Stage 1 — The raw comparison</h2>
+<div class="claim">Claim: “Working from home makes employees more productive.”</div>
+<p>Meridian's records cover <span data-res="n_obs"></span> employees. Each employee chose whether to work from home (WFH) or in the office. Here is output per shift by arrangement:</p>
+<table class="data"><tr><th>Group</th><th>n</th><th>Mean output</th><th>SD</th></tr>
+<tr><td>Office</td><td data-res="obs_groups.office.n"></td><td data-res="obs_groups.office.mean"></td><td data-res="obs_groups.office.sd"></td></tr>
+<tr><td>WFH</td><td data-res="obs_groups.wfh.n"></td><td data-res="obs_groups.wfh.mean"></td><td data-res="obs_groups.wfh.sd"></td></tr></table>
+<img class="evidence" src="assets/sim1_distribution.png" alt="Boxplots of output per shift for office and WFH employees">
+<p>We then resampled the employees with replacement 1,000 times and recomputed the WFH-minus-office difference each time:</p>
+<img class="evidence" src="assets/sim1_boot_naive.png" alt="Histogram of 1,000 bootstrap differences in output between WFH and office employees, all well above zero">
+<table class="data"><tr><th>Bootstrap summary</th><th>Value</th></tr>
+<tr><td>Middle 95% of resamples</td><td>from <span data-res="naive.lo"></span> to <span data-res="naive.hi"></span></td></tr></table>
+<details><summary>Reproduce this in R (optional)</summary>
+<pre>library(tidyverse)
+d &lt;- read_csv("https://github.com/jbisbee1/DS1000_F2026/raw/main/evidence_debates/EDB_3/assets/edb3_firm_records.csv")
+set.seed(123)
+bs &lt;- NULL
+for (i in 1:1000) {
+  bs &lt;- bind_rows(bs, d %&gt;% sample_n(nrow(d), replace = TRUE) %&gt;%
+    group_by(wfh) %&gt;% summarise(m = mean(output)) %&gt;% mutate(sim = i))
+}
+bs %&gt;% pivot_wider(names_from = wfh, values_from = m, names_prefix = "wfh_") %&gt;%
+  mutate(diff = wfh_1 - wfh_0) %&gt;% summarise(confidence = mean(diff &gt; 0))</pre></details>
+
+<label>1a. What is the difference in mean output (WFH minus office), from the table?</label><input id="q1a" type="number" step="0.1">
+<label>1b. In about what percent of resamples is the WFH-minus-office difference above zero?</label><input id="q1b" type="number" step="1">
+<label>1c. What does that bootstrap confidence tell us?</label>
+<label class="opt"><input type="radio" name="q1c" value="a">WFH causes the higher output in this firm.</label>
+<label class="opt"><input type="radio" name="q1c" value="b">In this firm's data, the WFH advantage is very unlikely to be a sampling fluke.</label>
+<label class="opt"><input type="radio" name="q1c" value="c">WFH would raise output at other firms by about the same amount.</label>
+<label class="opt"><input type="radio" name="q1c" value="d">The true effect is exactly the number in the table.</label>
+<label>1d. Which kinds of employees might choose to work from home, and how could that distort this comparison?</label><textarea id="r1d"></textarea>
+<label>Updated confidence in the original claim: <span id="c1v">50</span>/100</label><input id="c1" class="scale" type="range" min="0" max="100" value="50">
+<button onclick="saveStage(1)">Record Stage 1</button>
+<ul class="fb" id="fb1"></ul>
+</section>
+
+<section id="s2" class="card hidden">
+<h2>Stage 2 — A fairer comparison</h2>
+<div class="claim">Claim: “Working from home makes employees more productive.”</div>
+<p>Meridian also has each employee's prior-year performance percentile. Sorting employees into five prior-performance groups (quintiles), here is who chose to work from home:</p>
+<img class="evidence" src="assets/sim2_selection.png" alt="Share of employees choosing WFH rises with prior-year performance quintile">
+<p>Now compare WFH and office employees <i>within</i> each quintile, average those within-quintile gaps (weighted by quintile size), and bootstrap the result:</p>
+<img class="evidence" src="assets/sim2_boot_fair.png" alt="Histogram of bootstrap within-quintile differences, centered near 4.6">
+<table class="data"><tr><th>Comparison</th><th>Estimate</th><th>Middle 95% of resamples</th><th>Confidence</th></tr>
+<tr><td>Stage 1: raw gap</td><td data-res="naive.est"></td><td><span data-res="naive.lo"></span> to <span data-res="naive.hi"></span></td><td><span data-res="naive.conf"></span>%</td></tr>
+<tr><td>Stage 2: within quintiles</td><td data-res="fair.est"></td><td><span data-res="fair.lo"></span> to <span data-res="fair.hi"></span></td><td><span data-res="fair.conf"></span>%</td></tr></table>
+
+<label>2a. What share (%) of the top prior-performance quintile (Q5) chose WFH?</label><input id="q2a" type="number" step="1">
+<label>2b. By how many index points did the estimate shrink between Stage 1 and Stage 2?</label><input id="q2b" type="number" step="0.1">
+<label>2c. Why did it shrink?</label>
+<label class="opt"><input type="radio" name="q2c" value="a">Stronger prior performers disproportionately chose WFH and also produce more regardless of where they work, so the raw gap mixed two things.</label>
+<label class="opt"><input type="radio" name="q2c" value="b">WFH has no effect on output.</label>
+<label class="opt"><input type="radio" name="q2c" value="c">The bootstrap uses too few resamples in Stage 2.</label>
+<label class="opt"><input type="radio" name="q2c" value="d">Employees misreported their output.</label>
+<label>2d. Does the within-quintile estimate show that WFH <i>causes</i> the remaining gap?</label>
+<label class="opt"><input type="radio" name="q2d" value="a">Yes. Confidence is 100%, so the effect is causal.</label>
+<label class="opt"><input type="radio" name="q2d" value="b">Yes. We compared like with like.</label>
+<label class="opt"><input type="radio" name="q2d" value="c">No. It only accounts for what we measured; unmeasured differences between those who choose WFH and those who do not (motivation, home situation) could remain.</label>
+<label class="opt"><input type="radio" name="q2d" value="d">No. Bootstrap results can never speak to causes under any design.</label>
+<label>Updated confidence in the original claim: <span id="c2v">50</span>/100</label><input id="c2" class="scale" type="range" min="0" max="100" value="50">
+<label>2e. What would a design have to do to remove the selection problem entirely?</label><textarea id="r2e"></textarea>
+<button onclick="saveStage(2)">Record Stage 2</button>
+<ul class="fb" id="fb2"></ul>
+</section>
+
+<section id="s3" class="card hidden">
+<h2>Stage 3 — Meridian runs an experiment</h2>
+<div class="claim">Claim: “Working from home makes employees more productive.”</div>
+<p>Meridian asked <span data-res="n_exp"></span> volunteers to be randomly assigned to work from home or in the office for six months. We bootstrapped the WFH-minus-office difference in output per shift:</p>
+<img class="evidence" src="assets/sim3_boot_exp.png" alt="Histogram of bootstrap differences from the randomized experiment, centered near 3.7 with a wide spread">
+<table class="data"><tr><th>Estimate</th><th>Middle 95% of resamples</th><th>Confidence</th></tr>
+<tr><td data-res="exp.est"></td><td><span data-res="exp.lo"></span> to <span data-res="exp.hi"></span></td><td><span data-res="exp.conf"></span>%</td></tr></table>
+<div class="callout" id="s0recall"></div>
+
+<label>3a. Select every value for the true average effect that is consistent with the middle 95% of resamples.</label>
+<label class="opt"><input type="checkbox" name="q3a" value="-2">−2</label>
+<label class="opt"><input type="checkbox" name="q3a" value="1">1</label>
+<label class="opt"><input type="checkbox" name="q3a" value="3">3</label>
+<label class="opt"><input type="checkbox" name="q3a" value="6">6</label>
+<label class="opt"><input type="checkbox" name="q3a" value="9">9</label>
+<label>3b. Why is this estimate more credible as evidence of a <i>cause</i> than the Stage 2 estimate?</label>
+<label class="opt"><input type="radio" name="q3b" value="a">Random assignment makes WFH and office groups comparable on measured and unmeasured traits, on average.</label>
+<label class="opt"><input type="radio" name="q3b" value="b">The experiment has a smaller sample.</label>
+<label class="opt"><input type="radio" name="q3b" value="c">The bootstrap confidence is lower, so it is more cautious.</label>
+<label class="opt"><input type="radio" name="q3b" value="d">Volunteers are more representative of all employees.</label>
+<label>3c. The bootstrap range reflects which source of uncertainty?</label>
+<label class="opt"><input type="radio" name="q3c" value="a">How much this estimate would move if we redrew the sample of volunteers. It does not tell us whether non-volunteers, or other firms, would respond similarly.</label>
+<label class="opt"><input type="radio" name="q3c" value="b">Every source of uncertainty, including whether the result generalizes.</label>
+<label class="opt"><input type="radio" name="q3c" value="c">Only measurement error in output.</label>
+<label class="opt"><input type="radio" name="q3c" value="d">Whether the estimate is causal.</label>
+<label>Updated confidence in the original claim: <span id="c3v">50</span>/100</label><input id="c3" class="scale" type="range" min="0" max="100" value="50">
+<label>3d. Compare the experimental estimate with your Stage 0 prediction. What, if anything, should you update about your beliefs?</label><textarea id="r3d"></textarea>
+<button onclick="saveStage(3)">Record Stage 3</button>
+<ul class="fb" id="fb3"></ul>
+</section>
+
+<section id="s4" class="card hidden">
+<h2>Stage 4 — What does “productive” mean?</h2>
+<div class="claim">Claim: “Working from home makes employees more productive.”</div>
+<p>In the same experiment, output per shift is the product of two things: the minutes an employee works and the output produced per minute. We bootstrapped the WFH-minus-office difference for each:</p>
+<img class="evidence" src="assets/sim4_outcomes.png" alt="Effect of WFH on minutes worked, output per minute and output per shift, with bootstrap ranges">
+<table class="data"><tr><th>Outcome</th><th>Estimate</th><th>Middle 95%</th><th>Confidence</th></tr>
+<tr><td>Minutes worked per shift</td><td data-res="minutes.est"></td><td><span data-res="minutes.lo"></span> to <span data-res="minutes.hi"></span></td><td><span data-res="minutes.conf"></span>%</td></tr>
+<tr><td>Output per minute</td><td data-res="per_minute.est"></td><td><span data-res="per_minute.lo"></span> to <span data-res="per_minute.hi"></span></td><td><span data-res="per_minute.conf"></span>%</td></tr>
+<tr><td>Output per shift</td><td data-res="exp.est"></td><td><span data-res="exp.lo"></span> to <span data-res="exp.hi"></span></td><td><span data-res="exp.conf"></span>%</td></tr></table>
+
+<label>4a. Which outcome has the lowest bootstrap confidence?</label>
+<label class="opt"><input type="radio" name="q4a" value="minutes">Minutes worked per shift</label>
+<label class="opt"><input type="radio" name="q4a" value="per_minute">Output per minute</label>
+<label class="opt"><input type="radio" name="q4a" value="output">Output per shift</label>
+<label>4b. The output-per-minute range includes zero. Which conclusion is justified?</label>
+<label class="opt"><input type="radio" name="q4b" value="a">WFH does not change how fast people work.</label>
+<label class="opt"><input type="radio" name="q4b" value="b">These data are compatible with a small gain, no change, or a small loss in output per minute; they cannot tell us which.</label>
+<label class="opt"><input type="radio" name="q4b" value="c">WFH makes people slower.</label>
+<label class="opt"><input type="radio" name="q4b" value="d">Output per minute is the only valid measure of productivity.</label>
+<label>4c. Which outcome would you use to operationalize “productive,” and would your answer differ for an employer versus an employee?</label><textarea id="r4c"></textarea>
+<label>Updated confidence in the original claim: <span id="c4v">50</span>/100</label><input id="c4" class="scale" type="range" min="0" max="100" value="50">
+<button onclick="saveStage(4)">Record Stage 4</button>
+<ul class="fb" id="fb4"></ul>
+</section>
+
+<section id="s5" class="card hidden">
+<h2>Stage 5 — Does it hold for everyone?</h2>
+<div class="claim">Claim: “Working from home makes employees more productive.”</div>
+<p>Meridian's volunteers span three job types. We bootstrapped the experimental difference separately within each job type (call center n = <span data-res="jobs_n.Call center"></span>, data entry n = <span data-res="jobs_n.Data entry"></span>, analyst n = <span data-res="jobs_n.Analyst"></span>):</p>
+<img class="evidence" src="assets/sim5_jobs.png" alt="Experimental effect by job type with bootstrap ranges; call center clearly positive, data entry and analyst ranges include zero">
+<table class="data"><tr><th>Group</th><th>Estimate</th><th>Middle 95%</th><th>Confidence</th></tr>
+<tr><td>Call center</td><td data-res="jobs.Call center.est"></td><td><span data-res="jobs.Call center.lo"></span> to <span data-res="jobs.Call center.hi"></span></td><td><span data-res="jobs.Call center.conf"></span>%</td></tr>
+<tr><td>Data entry</td><td data-res="jobs.Data entry.est"></td><td><span data-res="jobs.Data entry.lo"></span> to <span data-res="jobs.Data entry.hi"></span></td><td><span data-res="jobs.Data entry.conf"></span>%</td></tr>
+<tr><td>Analyst</td><td data-res="jobs.Analyst.est"></td><td><span data-res="jobs.Analyst.lo"></span> to <span data-res="jobs.Analyst.hi"></span></td><td><span data-res="jobs.Analyst.conf"></span>%</td></tr></table>
+
+<label>5a. Select every job type whose middle-95% range includes zero.</label>
+<label class="opt"><input type="checkbox" name="q5a" value="Call center">Call center</label>
+<label class="opt"><input type="checkbox" name="q5a" value="Data entry">Data entry</label>
+<label class="opt"><input type="checkbox" name="q5a" value="Analyst">Analyst</label>
+<label>5b. The pooled result had confidence above 95%. What might the pooled number hide?</label>
+<label class="opt"><input type="radio" name="q5b" value="a">Nothing. A confident pooled result applies to every job type.</label>
+<label class="opt"><input type="radio" name="q5b" value="b">The pooled result may be driven mostly by one group, with the others showing little or no clear effect. Pooled confidence cannot distinguish a uniform effect from a concentrated one.</label>
+<label class="opt"><input type="radio" name="q5b" value="c">That the bootstrap was run incorrectly.</label>
+<label class="opt"><input type="radio" name="q5b" value="d">That the experiment was not randomized.</label>
+<label>5c. “Data entry has a range including zero, so WFH has no effect on data-entry workers.” Is that justified?</label>
+<label class="opt"><input type="radio" name="q5c" value="a">Yes. A range containing zero means zero effect.</label>
+<label class="opt"><input type="radio" name="q5c" value="b">No. With only 75 workers the range is wide; it is compatible with zero, a modest loss, and a modest gain. Absence of detected evidence is not evidence of absence.</label>
+<label class="opt"><input type="radio" name="q5c" value="c">Yes, because the point estimate is positive.</label>
+<label class="opt"><input type="radio" name="q5c" value="d">No, because bootstrapping cannot be run within subgroups.</label>
+
+<p>For comparison, here are four <i>real</i> studies of working from home, which differ in workers, treatments and designs:</p>
+<img class="evidence" src="assets/evidence_E_comparison.png" alt="Comparison of four real studies of working from home by workers, treatment, design and result">
+<p class="small">Sources: Bloom et al., Quarterly Journal of Economics (2015); Bloom, Han &amp; Liang, Nature (2024); Atkin, Schoar &amp; Shinde, NBER WP 31515 (2023, working paper); Gibbs, Mengel &amp; Siemroth, Journal of Political Economy Microeconomics (2023).</p>
+<label>5d. How does Meridian's job-type pattern relate to the variation across these real studies? What does this imply about generalizing beyond any one firm?</label><textarea id="r5d"></textarea>
+<label>Confidence that remote/hybrid work has a positive effect on measured productivity: <span id="c5v">50</span>/100</label><input id="c5" class="scale" type="range" min="0" max="100" value="50">
+<label>Confidence that remote/hybrid work benefits employers overall: <span id="b5v">50</span>/100</label><input id="b5" class="scale" type="range" min="0" max="100" value="50">
+<button onclick="saveStage(5)">Record Stage 5</button>
+<ul class="fb" id="fb5"></ul>
+</section>
+
+<section id="s6" class="card hidden">
+<h2>Stage 6 — Put an AI analyst to work</h2>
+<div class="claim">Claim: “Working from home makes employees more productive.”</div>
+<p>You have now read the results of several analyses. In this stage you ask for them yourself. Meridian's analyst is an AI assistant with the two datasets loaded: the firm records from Stages 1–2 and the experiment from Stages 3–5. <b>Open the analyst and work through the tasks below in order, using your own words.</b> The analyst runs what you ask for, shows its code, and keeps its answers short.</p>
+<p><a id="gptLink" href="#" target="_blank" rel="noopener"><b>Open the Meridian Analyst</b></a> <span class="small" id="gptNote"></span></p>
+<details><summary>Can't open the analyst? Use any AI tool with data analysis</summary>
+<p>Download <a href="assets/edb3_firm_records.csv">edb3_firm_records.csv</a>, <a href="assets/edb3_experiment.csv">edb3_experiment.csv</a> and <a href="ai_analyst/data_dictionary.md">data_dictionary.md</a>, upload all three to ChatGPT, Claude or similar, and tell it to act as the data analyst for a firm. Ask for the same tasks.</p></details>
+<ol>
+<li><b>Task 1.</b> Ask the analyst whether working from home makes employees more productive in the firm records. Note what it does and what it says.</li>
+<li><b>Task 2.</b> Decide whether its first answer addresses the selection problem from Stage 2. If not, tell it, in your own words, how to fix it, and have it bootstrap the fairer comparison.</li>
+<li><b>Task 3.</b> Using the experiment file, get the WFH-minus-office difference in output per shift with a bootstrap. Then get it for each job type.</li>
+</ol>
+<p class="small">The analyst will do what you ask. Your job is to ask the right questions and check what comes back.</p>
+
+<label>6a. In Task 1, what was the analyst's WFH-minus-office difference in output? (Number)</label><input id="q6a" type="number" step="0.1">
+<label>6b. Did the analyst's first answer to Task 1 mention or address the selection problem?</label>
+<label class="opt"><input type="radio" name="q6b" value="yes">Yes, on its own</label>
+<label class="opt"><input type="radio" name="q6b" value="no">No, I had to raise it</label>
+<label>6c. In Task 3, what was the analyst's overall WFH-minus-office difference in output in the experiment? (Number)</label><input id="q6c" type="number" step="0.1">
+<label>6d. Paste the exact prompt you used to get the fairer comparison in Task 2.</label><textarea id="r6d"></textarea>
+<label>6e. Name one thing the analyst reported (a number, a method choice, or an interpretation) that you checked or would want to check before relying on it. How did you check it?</label><textarea id="r6e"></textarea>
+<label>6f. Optional: paste a share link to your conversation, if your AI tool offers one.</label><input id="r6f" type="text">
+<label>Updated confidence in the original claim: <span id="c6v">50</span>/100</label><input id="c6" class="scale" type="range" min="0" max="100" value="50">
+<button onclick="saveStage(6)">Record Stage 6</button>
+<ul class="fb" id="fb6"></ul>
+</section>
+
+<section id="s7" class="card hidden">
+<h2>Stage 7 — Team argument</h2>
+<div class="claim">Claim: “Working from home makes employees more productive.”</div>
+<p id="side"></p>
+<p class="small">Cite a stage and a number in each answer.</p>
+<label>Your team's strongest evidence</label><textarea id="r7a"></textarea>
+<label>The strongest evidence against your assigned position</label><textarea id="r7b"></textarea>
+<label>Your response to that challenge</label><textarea id="r7c"></textarea>
+<button onclick="saveStage(7)">Record team argument</button>
+</section>
+
+<section id="s8" class="card hidden">
+<h2>Stage 8 — Individual adjudication</h2>
+<div class="claim">Claim: “Working from home makes employees more productive.”</div>
+<p>Advocacy is over. Give your own judgment.</p>
+<label>Final confidence that remote/hybrid work increases measured productivity: <span id="c8v">50</span>/100</label><input id="c8" class="scale" type="range" min="0" max="100" value="50">
+<label>Final confidence that remote/hybrid work benefits employers overall: <span id="b8v">50</span>/100</label><input id="b8" class="scale" type="range" min="0" max="100" value="50">
+<label>Your final estimate of the true average effect of WFH on output per shift at Meridian (index points), with an 80% interval:</label>
+<div class="row"><div><span class="small">Best estimate</span><input id="p8" type="number" step="0.5"></div><div><span class="small">Lower bound</span><input id="lo8" type="number" step="0.5"></div><div><span class="small">Upper bound</span><input id="hi8" type="number" step="0.5"></div></div>
+<label>What is the strongest evidence supporting a productivity benefit?</label><textarea id="r8a"></textarea>
+<label>What is the strongest reason for caution?</label><textarea id="r8b"></textarea>
+<label>In 2–3 sentences, state the conclusion the full body of evidence warrants.</label><textarea id="r8c"></textarea>
+<button onclick="saveStage(8)">Submit final adjudication</button>
+<div id="calib" class="callout hidden"></div>
+</section>
+</main>
+
+<div id="modal"><span id="modalClose">&times;</span><img id="modalImg" alt=""></div>
+
+<script>
+const SUPABASE_URL = "https://syjgkatbxjiyjiosacdr.supabase.co";
+const SUPABASE_KEY = "sb_publishable_dpOWSyvPGnRtpef9UYMvgg_I2x-hSnG";
+const EXPERIMENT_ID = "evidence-debate-3-remote-work";
+const STAGE_KEY = "ds1000_evidence_debate3_remote_stage";
+const S0_KEY = "ds1000_evidence_debate3_stage0";
+const GPT_URL = "https://chatgpt.com/g/g-6acd8f9da85c81919ffa158acd65f7ff-meridian-analyst-ds-1000";   // paste the shared Meridian Analyst link here (see ai_analyst/gpt_instructions.md)
+const LAST = 8;
+let db = null;
+
+// ---- scored items -------------------------------------------------------
+const pick=(o,p)=>p.split(".").reduce((a,k)=>a==null?a:a[k],o);
+const inRange=(r,v)=>v>=r.lo&&v<=r.hi;
+const Q={
+1:[
+ {id:"q1a",t:"num",ans:()=>RES.obs_groups.wfh.mean-RES.obs_groups.office.mean,tol:.5,ex:()=>`The difference is ${(RES.obs_groups.wfh.mean-RES.obs_groups.office.mean).toFixed(1)} (${RES.obs_groups.wfh.mean} − ${RES.obs_groups.office.mean}).`},
+ {id:"q1b",t:"num",ans:()=>RES.naive.conf,tol:3,ex:()=>`About ${RES.naive.conf}% of resamples. Every resample shows WFH employees ahead.`},
+ {id:"q1c",t:"mc",ans:"b",ex:()=>"Bootstrap confidence speaks to sampling variability in this dataset (Question A). It is silent on cause, and on other firms (Question B). Employees chose their arrangement, so the gap may reflect who chose it."}
+],
+2:[
+ {id:"q2a",t:"num",ans:()=>RES.share_q[4],tol:3,ex:()=>`${RES.share_q[4]}%, versus ${RES.share_q[0]}% in the lowest quintile. Selection into WFH is strongly related to prior performance.`},
+ {id:"q2b",t:"num",ans:()=>RES.naive.est-RES.fair.est,tol:.5,ex:()=>`${RES.naive.est} − ${RES.fair.est} = ${(RES.naive.est-RES.fair.est).toFixed(1)} points. More than half of the raw gap came from who chose WFH.`},
+ {id:"q2c",t:"mc",ans:"a",ex:()=>"Prior performance predicts both who chooses WFH and how much they produce, so it is a confounder. Comparing within quintiles holds it roughly constant."},
+ {id:"q2d",t:"mc",ans:"c",ex:()=>"Comparing within groups only handles the confounders we measured. Confidence is still 100% for the gap, but that is a statement about sampling, not about cause."}
+],
+3:[
+ {id:"q3a",t:"multi",ans:()=>[-2,1,3,6,9].filter(v=>inRange(RES.exp,v)).map(String),ex:()=>`The middle 95% runs from ${RES.exp.lo} to ${RES.exp.hi}. Anything in that interval is consistent with these data; the range is wide, from barely above zero to a large gain.`},
+ {id:"q3b",t:"mc",ans:"a",ex:()=>"Random assignment balances both measured and unmeasured traits on average, so the remaining gap is not driven by who chose WFH."},
+ {id:"q3c",t:"mc",ans:"a",ex:()=>"The bootstrap mimics redrawing this sample. Volunteers may differ from other employees, and Meridian from other firms; the range cannot reflect that."}
+],
+4:[
+ {id:"q4a",t:"mc",ans:"per_minute",ex:()=>`Output per minute has a confidence of ${RES.per_minute.conf}%, against ${RES.minutes.conf}% for minutes worked.`},
+ {id:"q4b",t:"mc",ans:"b",ex:()=>`The range runs from ${RES.per_minute.lo} to ${RES.per_minute.hi}. A range that includes zero fails to rule out zero; it does not establish zero. The output gain comes mainly from more minutes worked.`}
+],
+6:[
+ {id:"q6a",t:"num",ans:()=>RES.naive.est,tol:.6,ex:()=>`The raw gap is ${RES.naive.est}. If the analyst reported something different, check which comparison it ran and ask it to show its code.`},
+ {id:"q6b",t:"mc",ans:"no",ex:()=>"The analyst answers what it is asked. A raw WFH-minus-office difference does not address selection into WFH; raising that, as in Stage 2, is the manager's job."},
+ {id:"q6c",t:"num",ans:()=>RES.exp.est,tol:.4,ex:()=>`The experimental difference is ${RES.exp.est}, with a middle 95% from ${RES.exp.lo} to ${RES.exp.hi}. Compare it with your Task 1 answer.`}
+],
+5:[
+ {id:"q5a",t:"multi",ans:()=>["Call center","Data entry","Analyst"].filter(j=>inRange(RES.jobs[j],0)),ex:()=>"Data entry and analyst ranges include zero. Only the call-center range is clearly positive."},
+ {id:"q5b",t:"mc",ans:"b",ex:()=>"As with pooling seasons in Lecture 10, a high pooled confidence can come from one subgroup carrying the average."},
+ {id:"q5c",t:"mc",ans:"b",ex:()=>`Data entry's range runs from ${RES.jobs["Data entry"].lo} to ${RES.jobs["Data entry"].hi}. With n = ${RES.jobs_n["Data entry"]} we cannot distinguish a modest loss from a modest gain.`}
+]};
+
+function grade(stage){
+  const items=Q[stage]||[],correct={},answers={},html=[];
+  for(const it of items){
+    let ok=false,val;
+    if(it.t==="num"){const raw=document.getElementById(it.id).value;val=raw===""?null:+raw;ok=val!==null&&Math.abs(val-it.ans())<=it.tol}
+    else if(it.t==="mc"){const r=document.querySelector(`input[name=${it.id}]:checked`);val=r?r.value:null;ok=val===it.ans}
+    else{val=[...document.querySelectorAll(`input[name=${it.id}]:checked`)].map(c=>c.value);const a=it.ans();ok=val.length===a.length&&a.every(x=>val.includes(x))}
+    answers[it.id]=val;correct[it.id]=ok;
+    html.push(`<li class="${ok?"ok":"no"}"><b>${ok?"✓":"✗"} ${it.id.slice(1).toUpperCase()}.</b> ${it.ex()}</li>`);
+  }
+  return {answers,correct,html:html.join("")};
+}
+
+// ---- db and navigation --------------------------------------------------
+function initDB(){
+  const el=document.getElementById("dbStatus");
+  if(!window.supabase || !window.supabase.createClient){el.textContent="Supabase library did not load. (CLIENT_NOT_READY)";return;}
+  try{db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);el.textContent="Connected to response database."}
+  catch(e){el.textContent="Database initialization error: "+e.message}
+}
+function code(){return document.getElementById("studentCode").value.trim()}
+function showThrough(n){for(let i=1;i<=LAST;i++)document.getElementById("s"+i).classList.toggle("hidden",i>n)}
+function restore(){const n=Number(localStorage.getItem(STAGE_KEY)||0);showThrough(n);const saved=localStorage.getItem("ds1000_course_student_code");if(saved)document.getElementById("studentCode").value=saved;if(n>=7)document.getElementById("side").textContent="Assigned position: "+assignedSide();recall()}
+function val(id){const e=document.getElementById(id);return e?e.value:null}
+function num(id){const v=val(id);return v===""||v===null?null:+v}
+function recall(){
+  try{const s=JSON.parse(localStorage.getItem(S0_KEY)||"null");
+  if(s)document.getElementById("s0recall").innerHTML=`<b>Your Stage 0 prediction:</b> ${s.pred} (80% interval ${s.lo} to ${s.hi}).`;}catch(e){}
+}
+async function saveStage(stage){
+  if(!code()){alert("Enter your student code first.");return}
+  if(!db){alert("Supabase client is not available. (CLIENT_NOT_READY)");return}
+  let payload={},fb="";
+  if(stage===0){
+    const p=num("p0"),lo=num("lo0"),hi=num("hi0");
+    if(p===null||lo===null||hi===null||lo>p||p>hi){alert("Enter a prediction and an interval with lower ≤ prediction ≤ upper.");return}
+    payload={confidence:+val("c0"),prediction:p,lo:lo,hi:hi,wanted_evidence:val("r0")};
+    try{localStorage.setItem(S0_KEY,JSON.stringify({pred:p,lo:lo,hi:hi}))}catch(e){}
+  }
+  if(stage>=1&&stage<=6){const g=grade(stage);fb=g.html;payload={answers:g.answers,correct:g.correct,score:Object.values(g.correct).filter(Boolean).length,items:Object.keys(g.correct).length};}
+  if(stage===1)Object.assign(payload,{confidence:+val("c1"),selection_reasoning:val("r1d")});
+  if(stage===2)Object.assign(payload,{confidence:+val("c2"),design_fix:val("r2e")});
+  if(stage===3)Object.assign(payload,{confidence:+val("c3"),update_reasoning:val("r3d")});
+  if(stage===4)Object.assign(payload,{confidence:+val("c4"),productivity_measure:val("r4c")});
+  if(stage===5)Object.assign(payload,{productivity_confidence:+val("c5"),employer_benefit_confidence:+val("b5"),external_validity:val("r5d")});
+  if(stage===6)Object.assign(payload,{confidence:+val("c6"),fair_prompt:val("r6d"),check_reasoning:val("r6e"),share_link:val("r6f")});
+  if(stage===7)payload={side:assignedSide(),strongest:val("r7a"),counterevidence:val("r7b"),response:val("r7c")};
+  if(stage===8){
+    const p=num("p8"),lo=num("lo8"),hi=num("hi8");
+    if(p===null||lo===null||hi===null||lo>p||p>hi){alert("Enter a final estimate and an interval with lower ≤ estimate ≤ upper.");return}
+    let s0=null;try{s0=JSON.parse(localStorage.getItem(S0_KEY)||"null")}catch(e){}
+    const cov0=s0?(s0.lo<=RES.true_ate&&RES.true_ate<=s0.hi):null, cov7=lo<=RES.true_ate&&RES.true_ate<=hi;
+    payload={productivity_confidence:+val("c8"),employer_benefit_confidence:+val("b8"),final_estimate:p,final_lo:lo,final_hi:hi,covers_truth_stage0:cov0,covers_truth_stage7:cov7,support:val("r8a"),caution:val("r8b"),conclusion:val("r8c")};
+    var calib=`<b>Calibration reveal.</b> In the simulation, the true average effect of WFH on output per shift at Meridian was <b>${RES.true_ate}</b> index points.<ul>`
+      +(s0?`<li>Stage 0: your interval (${s0.lo} to ${s0.hi}) ${cov0?"<b>covered</b>":"<b>missed</b>"} the truth; width ${(s0.hi-s0.lo).toFixed(1)}.</li>`:"")
+      +`<li>Stage 7: your interval (${lo} to ${hi}) ${cov7?"<b>covered</b>":"<b>missed</b>"} the truth; width ${(hi-lo).toFixed(1)}.</li>`
+      +`<li>The experiment's middle 95% was ${RES.exp.lo} to ${RES.exp.hi}; the raw Stage 1 gap (${RES.naive.est}) overstated the truth by about ${(RES.naive.est-RES.true_ate).toFixed(1)} points.</li></ul>`
+      +`<p class="small">An 80% interval should cover the truth about 80% of the time and be as narrow as the evidence allows. One miss is not an indictment; consistently missing, or covering only by being very wide, is. The truth here is a feature of the simulation; in real firms we never get to see it.</p>`;
+  }
+  const {error}=await db.from("debate_responses").upsert({debate_id:EXPERIMENT_ID,student_code:code(),stage:String(stage),confidence:payload.confidence ?? payload.productivity_confidence ?? null,response_json:payload},{onConflict:'debate_id,student_code,stage'});
+  if(error){alert(`${error.message} (${error.code||"DB_ERROR"})`);return}
+  localStorage.setItem("ds1000_course_student_code",code());
+  if(fb){const el=document.getElementById("fb"+stage);if(el)el.innerHTML=fb}
+  if(stage===8){const c=document.getElementById("calib");c.innerHTML=calib;c.classList.remove("hidden")}
+  const next=Math.min(stage+1,LAST);const prev=Number(localStorage.getItem(STAGE_KEY)||0);
+  localStorage.setItem(STAGE_KEY,String(Math.max(prev,next)));showThrough(Math.max(prev,next));
+  if(stage===3)recall();
+  if(stage===6)document.getElementById("side").textContent="Assigned position: "+assignedSide();
+}
+function assignedSide(){let s=0;for(const ch of code())s+=ch.charCodeAt(0);return s%2===0?"AFFIRMATIVE — The evidence supports a productivity benefit.":"SKEPTIC — The evidence does not justify the broad productivity claim."}
+
+// ---- fill numbers from RES, wire UI ------------------------------------
+document.querySelectorAll("[data-res]").forEach(e=>{const v=pick(RES,e.dataset.res);e.textContent=v==null?"?":v});
+["c0","c1","c2","c3","c4","c5","b5","c6","c8","b8"].forEach(id=>{const e=document.getElementById(id);const o=document.getElementById(id+"v");if(e&&o)e.addEventListener("input",()=>o.textContent=e.value)});
+document.querySelectorAll(".evidence").forEach(img=>img.addEventListener("click",()=>{document.getElementById("modalImg").src=img.src;document.getElementById("modalImg").alt=img.alt;document.getElementById("modal").classList.add("open")}));
+document.getElementById("modal").addEventListener("click",e=>{if(e.target.id==="modal"||e.target.id==="modalClose")document.getElementById("modal").classList.remove("open")});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")document.getElementById("modal").classList.remove("open")});
+(function(){const a=document.getElementById("gptLink"),n=document.getElementById("gptNote");
+  if(GPT_URL){a.href=GPT_URL}else{a.removeAttribute("href");n.textContent="(link not yet set; use the fallback below)"}})();
+initDB();restore();
+</script>
+</body>
+</html>

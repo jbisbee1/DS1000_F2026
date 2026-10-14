@@ -137,8 +137,12 @@ tmpRes <- test %>%
 cvRes <- cvRes %>% bind_rows(tmpRes)
 }
 
+
+
 cvRes %>%
   ggplot(aes(x = rmse)) + 
-  geom_histogram()
+  geom_histogram() + 
+  geom_vline(xintercept = mean(cvRes$rmse),
+             linetype = 'dashed')
 ```
 

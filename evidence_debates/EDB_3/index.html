@@ -1,0 +1,503 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DS 1000 — Evidence Debate 3</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="assets/edb3_results.js"></script>
+<script src="assets/edb3_data.js"></script>
+<style>
+:root{--gold:#cfae70;--ink:#1d1c1d;--muted:#616061;--line:#e0dede;--side:#1f2a44;--sidetx:#cfd6e6;--bg:#fff}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:var(--bg);display:flex;line-height:1.45}
+#side{width:270px;background:var(--side);color:var(--sidetx);padding:16px 14px;flex-shrink:0;overflow-y:auto}
+#side h3{margin:0 0 2px;color:#fff;font-size:1.05rem}
+#side .ws{font-size:.8rem;opacity:.8;margin-bottom:16px}
+#side .lbl{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;opacity:.7;margin:16px 0 6px}
+#side .ch{padding:3px 8px;border-radius:5px;font-size:.92rem}
+#side .ch.on{background:#cfae70;color:#1d1c1d;font-weight:700}
+#side .role{font-size:.8rem;margin:7px 0;line-height:1.35}#side .role b{color:#fff}
+#notes{width:100%;min-height:110px;background:#2b3858;color:#fff;border:0;border-radius:6px;padding:8px;font:inherit;font-size:.8rem}
+#clock{font-variant-numeric:tabular-nums;font-size:1.3rem;color:#fff;margin-top:4px}
+#dbStatus{font-size:.75rem;opacity:.75;margin-top:18px}
+#chan{flex:1;display:flex;flex-direction:column;min-width:0;height:100vh}
+#head{padding:12px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+#head b{font-size:1.1rem}#head span{font-size:.85rem;color:var(--muted)}
+#feed{flex:1;overflow-y:auto;padding:14px 20px 8px}
+.msg{display:flex;gap:10px;margin:14px 0;animation:in .25s ease-out}
+@keyframes in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.av{width:38px;height:38px;border-radius:7px;color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.8rem}
+.body{min-width:0;flex:1}
+.who{font-weight:700;font-size:.95rem}.who .meta{font-weight:400;color:var(--muted);font-size:.78rem;margin-left:6px}
+.who .tag{background:#e8e8e8;color:#444;font-size:.65rem;padding:1px 5px;border-radius:3px;margin-left:5px;font-weight:700}
+.txt{font-size:.97rem}.txt p{margin:4px 0}.txt ul,.txt ol{margin:6px 0;padding-left:22px}
+.txt q{quotes:none;font-style:normal;background:#f4efe5;padding:1px 4px;border-radius:3px}
+.att{max-width:100%;border:1px solid var(--line);border-radius:8px;margin-top:8px;cursor:zoom-in;display:block}
+.quote{border-left:4px solid var(--gold);padding:4px 10px;margin:6px 0;color:#333;background:#faf6ee}
+.typing{color:var(--muted);font-size:.85rem;margin:8px 0 8px 48px;font-style:italic}
+.pill{display:inline-block;background:#f4efe5;border:1px solid var(--gold);border-radius:12px;padding:1px 9px;font-size:.82rem;margin:2px 4px 2px 0}
+.dist{display:flex;align-items:flex-end;gap:6px;height:130px;margin:10px 0 4px;max-width:480px}
+.dist .col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%}
+.dist .bar{width:100%;background:#9aa7c4;border-radius:3px 3px 0 0}.dist .col.mk .bar{background:var(--gold)}
+.dist .n{font-size:.7rem;color:var(--muted)}.dist .mkl{font-size:.66rem;font-weight:700;color:#8a6a1f;min-height:14px;text-align:center}
+.axis{display:flex;gap:6px;max-width:480px}.axis span{flex:1;text-align:center;font-size:.68rem;color:var(--muted)}
+.cap{font-size:.75rem;color:var(--muted);margin-top:4px}
+#composer{border-top:1px solid var(--line);padding:12px 20px 16px;background:#fafafa;max-height:48vh;overflow-y:auto}
+#composer.hidden{display:none}
+#composer h4{margin:0 0 6px;font-size:.9rem}
+#composer label{display:block;font-weight:700;font-size:.88rem;margin:10px 0 4px}
+#composer .opt{font-weight:400;margin:3px 0;display:block}#composer .opt input{margin-right:7px}
+#composer input[type=text],#composer input[type=number],#composer textarea{width:100%;padding:8px;border:1px solid #aaa;border-radius:6px;font:inherit}
+#composer input[type=number]{max-width:130px}#composer textarea{min-height:70px}
+#composer .row{display:flex;gap:14px;flex-wrap:wrap}#composer .row>div{flex:1;min-width:110px}
+#composer .hint{font-size:.8rem;color:var(--muted);font-weight:400}
+#composer .scale{width:100%}
+#err{color:#b3261e;font-size:.85rem;margin-top:8px;min-height:1em}
+button{padding:9px 18px;border:0;border-radius:6px;background:#2a7a4b;color:#fff;font-weight:700;cursor:pointer;margin-top:10px}
+button:disabled{background:#999;cursor:default}
+a{color:#1264a3}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;z-index:9999;padding:30px}
+#modal.open{display:flex}#modal img{max-width:95vw;max-height:90vh;object-fit:contain;background:#fff}#modalClose{position:fixed;right:22px;top:14px;font-size:38px;color:#fff;cursor:pointer}
+#rpanel{width:410px;flex-shrink:0;border-left:1px solid var(--line);background:#f7f7f8;display:none;flex-direction:column;height:100vh}
+#rpanel.open{display:flex}
+#rpanel .rh{padding:10px 12px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#rpanel .rh b{font-size:1rem}
+#rstatus{font-size:.75rem;padding:2px 8px;border-radius:10px;background:#e8e8e8;color:#444}
+#rstatus.ok{background:#dff0e3;color:#1c5a30}#rstatus.load{background:#fff3d6;color:#7a5a00}#rstatus.bad{background:#fbeaea;color:#8a1c14}
+#rpanel .rhelp{font-size:.78rem;color:var(--muted);padding:6px 12px 0}
+#rcode{margin:8px 12px 0;height:190px;width:calc(100% - 24px);font-family:Consolas,Menlo,monospace;font-size:.8rem;line-height:1.35;padding:8px;border:1px solid #aaa;border-radius:6px;resize:vertical;background:#fff}
+#rpanel .rbar{display:flex;gap:6px;padding:6px 12px;flex-wrap:wrap}
+#rpanel .rbar button{margin:0;padding:6px 12px;font-size:.8rem}
+#rpanel .rbar button.sec{background:#6b7280}
+#rout{flex:1;margin:0 12px 12px;padding:8px;background:#fff;border:1px solid var(--line);border-radius:6px;font-family:Consolas,Menlo,monospace;font-size:.76rem;line-height:1.35;white-space:pre-wrap;overflow:auto;min-height:80px}
+#rtoggle{margin:0;padding:4px 10px;font-size:.78rem;background:#6b7280}
+@media(max-width:1100px){#rpanel{position:fixed;right:0;top:0;bottom:0;width:min(94vw,440px);z-index:50;box-shadow:-4px 0 14px rgba(0,0,0,.25);display:none}#rpanel.open{display:flex}}
+@media(max-width:760px){#side{display:none}#feed{padding:10px 12px}#composer{padding:10px 12px 14px}}
+</style>
+</head>
+<body>
+<aside id="side">
+  <h3>Meridian Services</h3><div class="ws">DS 1000 simulation</div>
+  <div class="lbl">Channels</div>
+  <div class="ch"># general</div><div class="ch on"># wfh-decision</div><div class="ch"># finance</div>
+  <div class="lbl">Board call in</div><div id="clock">35:00</div>
+  <div class="lbl">Checker and Scribe, this step</div>
+  <div id="roles"></div>
+  <div class="lbl">Scribe's notes</div>
+  <textarea id="notes" placeholder="Running notes: numbers, decisions, caveats. They become your memo."></textarea>
+  <div id="dbStatus">Connecting to response database...</div>
+</aside>
+<section id="chan">
+  <div id="head"><div><b># wfh-decision</b> <span>Should Meridian make remote work permanent?</span></div><span><span id="whoTeam"></span> <button id="rtoggle" type="button">R console (optional)</button></span></div>
+  <div id="feed"></div>
+  <div id="composer" class="hidden"></div>
+</section>
+<aside id="rpanel">
+  <div class="rh"><b>R</b> <span id="rstatus">Not started</span></div>
+  <div class="rhelp">Two data frames are loaded: <b>firm</b> (firm records) and <b>experiment</b>. Paste R code from the analyst, or write your own, and press Run (Ctrl+Enter). Base R is ready; for dplyr, load it first.</div>
+  <textarea id="rcode" spellcheck="false"></textarea>
+  <div class="rbar"><button id="rrun" type="button" disabled>Run</button><button id="rdplyr" type="button" class="sec" disabled>Load dplyr</button><button id="rclear" type="button" class="sec">Clear output</button><button id="rrestart" type="button" class="sec">Restart R</button></div>
+  <pre id="rout"></pre>
+</aside>
+<div id="modal"><span id="modalClose">&times;</span><img id="modalImg" alt=""></div>
+
+<script>
+const SUPABASE_URL = "https://syjgkatbxjiyjiosacdr.supabase.co";
+const SUPABASE_KEY = "sb_publishable_dpOWSyvPGnRtpef9UYMvgg_I2x-hSnG";
+const EXPERIMENT_ID = "evidence-debate-3-remote-work";
+const STATE_KEY = "ds1000_edb3_chat_v2";
+const GPT_URL = "https://chatgpt.com/g/g-6acd8f9da85c81919ffa158acd65f7ff-meridian-analyst-ds-1000";
+const DEADLINE_MIN = 35;
+let db = null;
+
+// ---------------------------------------------------------------- people
+const P = {
+  dana:{name:"Dana Whitfield",role:"CEO",color:"#6b4f9e",init:"DW"},
+  marcus:{name:"Marcus Reed",role:"CFO",color:"#2f7d6d",init:"MR"},
+  priya:{name:"Priya Nair",role:"Head of HR",color:"#c0562b",init:"PN"},
+  analyst:{name:"analyst",bot:true,color:"#333",init:"AI"},
+  team:{name:"",color:"#cfae70",init:"YOU",dark:true}
+};
+
+// ---------------------------------------------------------------- state
+let S = {step:0, team:"", startedAt:null, answers:{}, tries:{}};
+function load(){try{const s=JSON.parse(localStorage.getItem(STATE_KEY)||"null");if(s)S=s}catch(e){}S.tries=S.tries||{}}
+function persist(){try{localStorage.setItem(STATE_KEY,JSON.stringify(S))}catch(e){}}
+if(location.search.includes("reset=1")){try{localStorage.removeItem(STATE_KEY)}catch(e){}}
+load();
+
+// ---------------------------------------------------------------- helpers
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const sgn=v=>(v>0?"+":"")+v;
+const inRange=(r,v)=>v>=r.lo&&v<=r.hi;
+const near=(v,t,tol)=>v!==null&&Math.abs(v-t)<=tol;
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+let clockMin=9*60+2;
+function stamp(){const t=clockMin;clockMin+=1+Math.floor(Math.random()*2);const h=Math.floor(t/60),m=t%60;return `${h}:${String(m).padStart(2,"0")} AM`}
+const same=(a,b)=>JSON.stringify([...a].sort())===JSON.stringify([...b].sort());
+
+// ---------------------------------------------------------------- rendering
+function addMsg(who,html,opts={}){
+  const p=who==="team"?{...P.team,name:S.team?("Team "+S.team):"Your team"}:P[who];
+  const el=document.createElement("div");el.className="msg";
+  el.innerHTML=`<div class="av" style="background:${p.color};${p.dark?"color:#1d1c1d;":""}">${p.init}</div><div class="body"><div class="who">${esc(p.name)}${p.role?`<span class="meta">${p.role}</span>`:""}${p.bot?`<span class="tag">APP</span>`:""}<span class="meta">${stamp()}</span></div><div class="txt">${html}</div></div>`;
+  $("feed").appendChild(el);
+  if(opts.img){const im=document.createElement("img");im.className="att";im.src=opts.img;im.alt=opts.alt||"";im.addEventListener("click",()=>openModal(im));el.querySelector(".txt").appendChild(im)}
+  if(opts.node)el.querySelector(".txt").appendChild(opts.node);
+  scroll();return el;
+}
+function scroll(){const f=$("feed");f.scrollTop=f.scrollHeight}
+function openModal(img){$("modalImg").src=img.src;$("modalImg").alt=img.alt;$("modal").classList.add("open")}
+async function play(list,instant){
+  for(const m of list){
+    if(!instant){const t=document.createElement("div");t.className="typing";t.textContent=P[m.who].name+" is typing…";$("feed").appendChild(t);scroll();await wait(650+Math.min(900,(m.text||"").length*4));t.remove()}
+    addMsg(m.who,m.text,{img:m.img,alt:m.alt,node:m.node&&m.node()});
+  }
+}
+
+// fixed managers' distribution (simulated), shown with markers
+const BINS=["under −5","−5 to 0","0 to 5","5 to 10","10 to 15","15 to 20","20+"], COUNTS=[6,10,19,23,24,12,6];
+function binOf(v){return v<-5?0:v<0?1:v<5?2:v<10?3:v<15?4:v<20?5:6}
+function distNode(marks){
+  const w=document.createElement("div"),mx=Math.max(...COUNTS),mk={};
+  marks.forEach(m=>{const b=binOf(m.v);mk[b]=(mk[b]?mk[b]+" / ":"")+m.label});
+  w.innerHTML=`<div class="dist">${COUNTS.map((c,i)=>`<div class="col ${mk[i]?"mk":""}"><div class="mkl">${mk[i]||""}</div><div class="n">${c}</div><div class="bar" style="height:${c/mx*80}%"></div></div>`).join("")}</div><div class="axis">${BINS.map(b=>`<span>${b}</span>`).join("")}</div><div class="cap">Meridian managers' guesses for the effect of WFH on output per shift (%), n = ${COUNTS.reduce((a,b)=>a+b)} (simulated)</div>`;
+  return w;
+}
+function inventoryNode(){
+  const w=document.createElement("div");
+  w.innerHTML=`<table style="border-collapse:collapse;font-size:.85rem;margin:8px 0;max-width:560px"><tr style="background:#f4efe5"><th style="border:1px solid #e0dede;padding:5px 8px;text-align:left">File</th><th style="border:1px solid #e0dede;padding:5px 8px;text-align:left">What it is</th><th style="border:1px solid #e0dede;padding:5px 8px;text-align:left">Variables</th></tr>
+  <tr><td style="border:1px solid #e0dede;padding:5px 8px"><b>Firm records</b></td><td style="border:1px solid #e0dede;padding:5px 8px">${RES.n_obs.toLocaleString()} employees; each chose WFH or office</td><td style="border:1px solid #e0dede;padding:5px 8px">output per shift, WFH (yes/no), job type, prior-year performance percentile</td></tr>
+  <tr><td style="border:1px solid #e0dede;padding:5px 8px"><b>Experiment</b></td><td style="border:1px solid #e0dede;padding:5px 8px">${RES.n_exp} volunteers; WFH or office assigned at random</td><td style="border:1px solid #e0dede;padding:5px 8px">output per shift, minutes worked per shift, output per minute, WFH (assigned), job type</td></tr></table>`;
+  return w;
+}
+function A(i){return S.answers[i]||{}}
+
+// ---------------------------------------------------------------- composer widgets
+const num=(id,ph="")=>`<input id="${id}" type="number" step="0.1" placeholder="${ph}">`;
+const radio=(name,opts)=>opts.map(([v,t])=>`<label class="opt"><input type="radio" name="${name}" value="${v}">${t}</label>`).join("");
+const checks=(name,opts)=>opts.map(([v,t])=>`<label class="opt"><input type="checkbox" name="${name}" value="${v}">${t}</label>`).join("");
+const slider=(id,label)=>`<label>${label} <span id="${id}v">50</span>/100</label><input id="${id}" class="scale" type="range" min="0" max="100" value="50" oninput="document.getElementById('${id}v').textContent=this.value">`;
+const gn=id=>{const v=$(id).value;return v===""?null:+v};
+const gr=name=>{const r=document.querySelector(`input[name=${name}]:checked`);return r?r.value:null};
+const gc=name=>[...document.querySelectorAll(`input[name=${name}]:checked`)].map(c=>c.value);
+const CONS=[-2,1,3,6,9], JOBS=["Call center","Data entry","Analyst"];
+// what each role does at each beat: [Driver, Prompter, Skeptic, Checker, Scribe]
+const ROLES=[
+ ["Type the team's answers into the reply box","Lead the discussion: ask each person for one meaning of 'productive'","Ask: what could 'productive' mean that data might miss?","Note which requested items turn up on Marcus's list","Write the team's definitions in the notes"],
+ ["Post the team's choice","Read the four options aloud and ask for a vote","Ask: would a worker call this measure productivity?","Confirm your measure exists in the file you expect to use","Note the measure and why"],
+ ["Post the number and range","Make the team commit before anyone looks anything up","Ask: is the range too narrow? What would surprise us?","Compare the team's range with the managers' chart","Note the gut call"],
+ ["Post the analyst's number","Write the request to the analyst in your own words","Ask: who chose WFH, and could they differ from everyone else?","Find the check card; read off the file, the outcome and n per group","Note the raw gap and the group sizes"],
+ ["Post the fair number and the prompt","Tell the analyst how to compare like with like","Ask: what differs between people that we did not measure?","Check the card: what did the comparison hold fixed?","Note the new gap and what changed"],
+ ["Post the estimate and range","Ask the analyst for the experiment, with a bootstrap","Ask: these are volunteers; would everyone respond alike?","Check the card: experiment file, 300 employees, random assignment","Note the estimate, the range and your gut call"],
+ ["Post the team's reading","Read each range off the chart aloud","Ask: is 'no evidence of an effect' the same as 'no effect'?","Confirm for each job type whether zero is inside the range","Note which groups drive the result"],
+ ["Post the memo","Read the memo aloud before sending","Ask: what would make us wrong?","Check the final range against every earlier estimate","Turn the notes into the memo (it is pre-filled below)"]
+];
+const ROLE_NAMES=["Checker","Scribe"], ROLE_IDX=[3,4];
+function renderRoles(i){
+  const r=ROLES[Math.min(i,ROLES.length-1)];
+  $("roles").innerHTML=ROLE_NAMES.map((n,k)=>`<div class="role"><b>${n}</b>: ${r[ROLE_IDX[k]]}</div>`).join("");
+}
+
+// ---------------------------------------------------------------- the script
+const BEATS=[
+// 0 — Dana: unpack the claim
+{pre:()=>[
+  {who:"dana",text:`<p>Morning, team. I have to tell the board by the end of this call whether Meridian makes remote work <b>permanent</b>. The claim on the table:</p><div class="quote">Working from home makes employees more productive.</div>`},
+  {who:"dana",text:`<p>A claim like that is easy to say and hard to check, because the words do not tell us what to measure. Before any analysis, <b>talk as a team</b>: what does "productive" actually mean here, and what counts as "working from home"?</p><p>Then tell Marcus what data you would ask for. He controls what we can pull. Enter your team code too.</p>`}],
+ form:()=>`<h4>Reply to Dana</h4>
+  <label>Team code</label><input id="f_team" type="text" placeholder="Your team's course code" value="${esc(S.team)}">
+  <label>"Productive": list at least two different ways we could measure it</label><textarea id="f_prod"></textarea>
+  <label>"Working from home": who counts, and who should we compare them with?</label><textarea id="f_wfh"></textarea>
+  <label>What data would you ask Marcus for? <span class="hint">(list everything you would want)</span></label><textarea id="f_req"></textarea>`,
+ read(){const t=$("f_team").value.trim(),a=$("f_prod").value.trim(),b=$("f_wfh").value.trim(),c=$("f_req").value.trim();
+  if(!t)return{err:"Enter your team code."};if(!a||!b||!c)return{err:"Answer all three prompts."};return{team:t,prod:a,wfh:b,req:c}},
+ post:v=>`<p><b>"Productive" could mean:</b></p><div class="quote">${esc(v.prod)}</div><p><b>"Working from home" means / comparison group:</b></p><div class="quote">${esc(v.wfh)}</div><p><b>Data we would like:</b></p><div class="quote">${esc(v.req)}</div>`,
+ replies:v=>[
+  {who:"marcus",text:`<p>Okay, I read your list. Here is what we have in the system:</p>`,node:()=>inventoryNode()},
+  {who:"marcus",text:`<p>And what we <b>do not</b> track: work quality or error rates, employee satisfaction or burnout, why someone chose to work from home, hours worked outside the shift, and customer outcomes. If it is not on the list above, we cannot get it today.</p>`}],
+ payload:v=>({productive_measures:v.prod,wfh_definition:v.wfh,data_requests:v.req})},
+
+// 1 — Marcus: commit to a measure
+{pre:()=>[
+  {who:"marcus",text:`<p>I cannot give you everything, so you need to commit. Pick the <b>one outcome</b> you will treat as "productive," and tell me which file you think will give the cleaner answer.</p>`}],
+ form:()=>`<h4>Reply to Marcus</h4>
+  <label>Which measure will your team use for "productive"?</label>
+  ${radio("f_out",[["shift","Output per shift"],["minutes","Minutes worked per shift (experiment only)"],["permin","Output per minute (experiment only)"],["prior","Prior-year performance percentile (firm records only)"]])}
+  <label>Why? <span class="hint">(one or two sentences)</span></label><textarea id="f_why"></textarea>
+  <label>Which file do you expect to give the cleaner answer to "does working from home <i>cause</i> higher output"?</label>
+  ${radio("f_exp",[["records","Firm records: more employees, everyone included"],["experiment","Experiment: employees were randomly assigned"],["unsure","Not sure yet"]])}`,
+ read(){const o=gr("f_out"),w=$("f_why").value.trim(),e=gr("f_exp");if(!o||!w||!e)return{err:"Answer all three."};return{out:o,why:w,exp:e}},
+ post:v=>`We will use <b>${{shift:"output per shift",minutes:"minutes worked per shift",permin:"output per minute",prior:"prior-year performance"}[v.out]}</b> as our measure of "productive": <q>${esc(v.why)}</q> We expect the <b>${{records:"firm records",experiment:"experiment",unsure:"(not sure yet)"}[v.exp]}</b> to be cleaner.`,
+ replies:v=>[
+  {who:"marcus",text:{shift:`<p>Output per shift is the cleanest summary of what an employee produces, and it is the one the analyst reports by default.</p>`,minutes:`<p>Minutes worked tells us about effort, not about what comes out of it. Keep that in mind: it only exists in the experiment.</p>`,permin:`<p>Output per minute is speed, not total output. It only exists in the experiment, so keep that in mind.</p>`,prior:`<p>Prior-year performance describes who the employees already were, not what working from home did to them. I would be careful using it as the outcome.</p>`}[v.out]},
+  {who:"marcus",text:v.exp==="experiment"?`<p>Fair. We will get to the experiment, but the firm records cover everyone, so let's start there and see what they say.</p>`:`<p>We will start with the firm records, since they cover everyone, and check your expectation as we go.</p>`}],
+ payload:v=>({outcome_choice:v.out,outcome_reason:v.why,expected_cleaner_file:v.exp})},
+
+// 2 — Dana: gut call
+{pre:()=>[
+  {who:"dana",text:`<p>Good. Now, before you touch any data, I want your <b>gut call</b>. Output is measured on an index where the average office employee scores 100, so a result of +4 means 4% more output per shift.</p><p>By how much do you think output per shift changes when employees work from home? Give me a best guess and a range you are 80% sure about.</p>`}],
+ form:()=>`<h4>Reply to Dana</h4>
+  <label>Best guess: effect of WFH on output per shift (%, negative = loss)</label>${num("f_pred","e.g. 4")}
+  <label>80% range <span class="hint">(you are 80% sure the true effect is between these)</span></label>
+  <div class="row"><div>${num("f_lo","lower")}</div><div>${num("f_hi","upper")}</div></div>
+  ${slider("f_c","How confident is your team that the claim is true?")}`,
+ read(){const p=gn("f_pred"),lo=gn("f_lo"),hi=gn("f_hi");
+  if(p===null||lo===null||hi===null||lo>p||p>hi)return{err:"Enter a guess and a range with lower ≤ guess ≤ upper."};
+  return{pred:p,lo,hi,conf:+$("f_c").value}},
+ post:v=>`Our gut call: <b>${sgn(v.pred)}%</b> (80% range ${v.lo} to ${v.hi}). We are ${v.conf}/100 confident the claim is true.`,
+ replies:v=>[
+  {who:"dana",text:`<p>Noted. For reference, here is how Meridian's managers guessed when I asked them last month:</p>`,node:()=>distNode([{v:v.pred,label:"you"}])},
+  {who:"dana",text:`Hold on to your number. We will see how it holds up.`}],
+ payload:v=>({confidence:v.conf,prediction:v.pred,lo:v.lo,hi:v.hi})},
+
+// 1 — Marcus: raw number
+{pre:()=>[
+  {who:"marcus",text:`<p>Let's not overthink this. Pull the number from our employee records and tell me what it says. Use the analyst.</p>`},
+  {who:"analyst",text:`<p>Hi, I'm the Meridian analyst. I have two datasets loaded: <b>firm records</b> (1,200 employees who chose their own arrangement) and an <b>experiment</b> (300 volunteers). Tell me what to run, in your own words, and I will show you my code and results.</p><p><a href="${GPT_URL}" target="_blank" rel="noopener"><b>Open the analyst in a new tab</b></a></p><p>I end every answer with a <b>check card</b>, so your Checker can verify what I did. Here is what one looks like (an example for a different question):</p><pre style="background:#f0f0f0;border-radius:6px;padding:8px 10px;font-size:.78rem;line-height:1.35;white-space:pre-wrap;margin:6px 0">CHECK CARD
+- File: edb3_firm_records.csv
+- Outcome: output (output per shift, index)
+- Groups compared: Call center (n = 600) vs Analyst (n = 300)
+- Held fixed / compared within: nothing
+- Method: difference in means
+- Rows dropped: none</pre><p>You can also ask me for <b>R code</b> and run it yourself in the optional R console (button at the top right).</p><p style="font-size:.8rem;color:#616061"><b>Checker</b>, find the check card after each answer and keep it on screen; your job is in the sidebar. No access? Download <a href="assets/edb3_firm_records.csv">firm records</a>, <a href="assets/edb3_experiment.csv">experiment</a> and the <a href="ai_analyst/data_dictionary.md">data dictionary</a> and upload them to any AI tool with data analysis.</p>`}],
+ form:()=>`<h4>Reply to Marcus</h4>
+  <label>What WFH-minus-office difference in output did the analyst report?</label>${num("f_gap","number")}
+  <label>Did the analyst's first answer bring up, on its own, how employees came to work from home?</label>${radio("f_sel",[["yes","Yes, it raised that on its own"],["no","No, it just gave the number"]])}
+  <label>Checker: the group sizes on the analyst's check card <span class="hint">(WFH / office)</span></label><div class="row"><div>${num("f_nw","WFH n")}</div><div>${num("f_no","office n")}</div></div>
+  <label>Your call for now</label>${radio("f_dec",[["approve","Approve remote work"],["hold","Hold off"]])}`,
+ read(){const g=gn("f_gap"),s=gr("f_sel"),d=gr("f_dec"),nw=gn("f_nw"),no=gn("f_no");if(g===null||!s||!d||nw===null||no===null)return{err:"Answer everything, including the Checker's group sizes."};return{gap:g,sel:s,dec:d,nw,no}},
+ post:v=>`The analyst says WFH employees average <b>${sgn(v.gap)}</b> points higher on output. It ${v.sel==="no"?"just gave us the number":"raised how people chose WFH"}. Checker confirms the card shows <b>${v.nw}</b> WFH and <b>${v.no}</b> office. Our call for now: <b>${v.dec==="approve"?"approve":"hold off"}</b>.`,
+ replies:v=>[
+  {who:"marcus",text:near(v.gap,RES.naive.est,.6)?`<p>${RES.naive.est} points. That is a big win. If nobody objects, I say we approve it.</p>`:`<p>Hm, finance gets about ${RES.naive.est} from the same records. Ask it to show its code and check which comparison it ran. Either way, the headline looks big.</p>`},
+  {who:"marcus",text:near(v.nw,RES.obs_groups.wfh.n,5)&&near(v.no,RES.obs_groups.office.n,5)?`<p>Group sizes match my records (${RES.obs_groups.wfh.n} WFH, ${RES.obs_groups.office.n} office). Good, Checker.</p>`:`<p>Checker, I have ${RES.obs_groups.wfh.n} WFH and ${RES.obs_groups.office.n} office. If your card shows something else, ask the analyst what it filtered or which file it used.</p>`},
+  {who:"marcus",text:v.dec==="approve"?`Good, we agree.`:`Hold off? Fine, but I will want a reason.`}],
+ payload:v=>({answers:{gap:v.gap,raised_selection:v.sel,decision:v.dec,n_wfh:v.nw,n_office:v.no},correct:{gap:near(v.gap,RES.naive.est,.6),analyst_literal:v.sel==="no",group_sizes:near(v.nw,RES.obs_groups.wfh.n,5)&&near(v.no,RES.obs_groups.office.n,5)}}),
+ challenge:v=>near(v.gap,RES.naive.est,.6)?null:[{who:"marcus",text:`<p>That is not what I see. Before we go any further: which file did the analyst use, which column is the outcome, and which two groups did it compare?${v.nw+v.no!==RES.n_obs?` The records cover ${RES.n_obs.toLocaleString()} employees, and your group sizes do not add up to that.`:""}</p><p><b>Checker</b>, what does the check card say? Fix whatever is off, then revise your reply and send it again.</p>`}]},
+
+// 2 — Priya: selection
+{pre:()=>[
+  {who:"priya",text:`<p>Before anyone approves anything, look at <b>who</b> actually chose to work from home.</p>`,img:"assets/sim2_selection.png",alt:"Share choosing WFH rises with prior-year performance quintile"},
+  {who:"priya",text:`<p>Our strongest performers opted in at much higher rates. So is that ${RES.naive.est} about working from home, or about who chose it?</p><p>Tell the analyst how to compare like with like, then post the new number <i>and the exact prompt you used</i>.</p>`}],
+ form:()=>`<h4>Reply to Priya</h4>
+  <label>What does the fairer comparison give? <span class="hint">(WFH minus office, same format as before)</span></label>${num("f_fair","number")}
+  <label>The exact prompt you gave the analyst</label><textarea id="f_prompt"></textarea>
+  <label>Checker: according to the check card, what was the comparison made within?</label>${radio("f_hold",[["prior","Groups of employees with similar prior-year performance"],["job","Job type"],["none","Nothing: it was the same raw comparison"],["other","Something else, or the card does not say"]])}
+  <label>Does this fairer comparison show that WFH <i>causes</i> the remaining gap?</label>${radio("f_caus",[["a","Yes, we compared like with like, so it is causal"],["b","No, it only accounts for what we measured; things we did not measure could still differ between those who chose WFH and those who did not"],["c","Yes, because the confidence is 100%"]])}`,
+ read(){const f=gn("f_fair"),p=$("f_prompt").value.trim(),c=gr("f_caus"),k=gr("f_hold");if(f===null||!p||!c||!k)return{err:"Answer all four."};return{fair:f,prompt:p,caus:c,hold:k}},
+ post:v=>`Fair comparison: <b>${sgn(v.fair)}</b>. Prompt we used: <q>${esc(v.prompt)}</q> Checker: the card says it compared within <b>${{prior:"groups of similar prior-year performance",job:"job type",none:"nothing (the raw comparison)",other:"something else / not stated"}[v.hold]}</b>.`,
+ replies:v=>{const ok=near(v.fair,RES.fair.est,1.0),d=(RES.naive.est-RES.fair.est).toFixed(1);return[
+  {who:"priya",text:ok?`<p>About ${RES.fair.est}, which is ${d} points less than the raw gap. More than half of the ${RES.naive.est} was who chose WFH.</p>`:`<p>I get about ${RES.fair.est} when I compare employees within the same prior-performance group, roughly ${d} below the raw gap. Check your comparison against that.</p>`},
+  {who:"priya",text:v.caus==="b"?`<p>And I am still not sure it is causal. Motivation, home life, a quiet room: we measured none of that.</p>`:`<p>Careful. We only held constant what we measured. Whatever else makes people choose WFH is still in that number.</p>`},
+  {who:"priya",text:{prior:`<p>Checker, that is the right thing to hold fixed: it is the pattern in the chart.</p>`,job:`<p>Checker, job type is worth holding fixed, but the pattern I showed you was prior performance. Ask the analyst to compare within prior-performance groups.</p>`,none:`<p>Checker, if the card says it was the raw comparison, then it is not a fair comparison. Ask the analyst to compare within groups of similar prior-year performance.</p>`,other:`<p>Checker, if the card does not say what was held fixed, ask the analyst to say so before we trust the number.</p>`}[v.hold]},
+  {who:"marcus",text:`Okay, so it is closer to ${RES.fair.est} than to ${RES.naive.est}. But is it real?`}]},
+ payload:v=>({answers:{fair:v.fair,fair_prompt:v.prompt,causal:v.caus,held_fixed:v.hold},correct:{fair:near(v.fair,RES.fair.est,1.0),causal:v.caus==="b",held_prior:v.hold==="prior"}}),
+ challenge:v=>near(v.fair,RES.fair.est,1.0)?null:[{who:"priya",text:`<p>That does not look right to me. What exactly was the comparison made within? We want to compare employees with <b>similar prior-year performance</b>, so the card should say it held that fixed.</p><p><b>Checker</b>, what does the card say? Ask the analyst to redo it if needed, then revise your reply and send it again.</p>`}]},
+
+// 3 — Dana: experiment
+{pre:()=>[
+  {who:"dana",text:`<p>Good catch, Priya. Ops ran a <b>randomized experiment</b> last year: ${RES.n_exp} volunteers, assigned by coin flip to WFH or the office.</p><p>Ask the analyst for the WFH-minus-office difference in output per shift, with a bootstrap, and post the estimate and the middle 95% range.</p>`}],
+ form:()=>`<h4>Reply to Dana</h4>
+  <label>Estimated difference in output per shift (WFH minus office)</label>${num("f_est","number")}
+  <label>Middle 95% of the bootstrap resamples</label><div class="row"><div>${num("f_elo","lower")}</div><div>${num("f_ehi","upper")}</div></div>
+  <label>Checker: which file did the card say was used, and how many employees?</label>
+  <div class="row"><div>${radio("f_file",[["experiment","Experiment"],["records","Firm records"]])}</div><div>${num("f_ntot","total n")}</div></div>
+  <label>Which true average effects are consistent with that range? <span class="hint">(select all)</span></label>
+  ${checks("f_cons",CONS.map(x=>[String(x),String(x).replace("-","−")]))}
+  <label>Why is this evidence of a cause more credible than the fairer comparison?</label>
+  ${radio("f_rand",[["a","Random assignment makes the groups comparable on measured and unmeasured traits, on average"],["b","The sample is smaller"],["c","Volunteers are more typical of all employees"]])}`,
+ read(){const e=gn("f_est"),l=gn("f_elo"),h=gn("f_ehi"),r=gr("f_rand"),f=gr("f_file"),n=gn("f_ntot");if(e===null||l===null||h===null||!r||!f||n===null)return{err:"Fill in the estimate, the range, the Checker's file and n, and the last question."};return{est:e,lo:l,hi:h,cons:gc("f_cons"),rand:r,file:f,ntot:n}},
+ post:v=>`Experiment: <b>${sgn(v.est)}</b> (middle 95% ${v.lo} to ${v.hi}). Checker: the card shows the <b>${v.file==="experiment"?"experiment":"firm records"}</b> file, n = <b>${v.ntot}</b>. Consistent effects: ${v.cons.length?v.cons.map(x=>`<span class="pill">${x.replace("-","−")}</span>`).join(""):"none selected"}.`,
+ replies:v=>{const ok=CONS.filter(x=>inRange(RES.exp,x)).map(String),good=same(v.cons,ok);return[
+  {who:"dana",text:v.file==="experiment"&&near(v.ntot,RES.n_exp,5)?`<p>Checker confirms the experiment file and ${RES.n_exp} employees assigned at random. Good.</p>`:`<p>Checker, the experiment has ${RES.n_exp} employees assigned at random. If your card shows a different file or a different n, the analyst used the wrong data. Ask it to rerun on the experiment.</p>`},
+  {who:"dana",text:near(v.est,RES.exp.est,.4)?`<p>I get ${RES.exp.est} too, with a range from ${RES.exp.lo} to ${RES.exp.hi}.</p>`:`<p>Ops reports ${RES.exp.est}, with a 95% range from ${RES.exp.lo} to ${RES.exp.hi}. Compare that with yours.</p>`},
+  {who:"dana",text:good?`<p>Right: anything between ${RES.exp.lo} and ${RES.exp.hi} fits these data, from barely above zero to a large gain.</p>`:`<p>Anything between ${RES.exp.lo} and ${RES.exp.hi} fits these data, which is wide: from barely above zero to a large gain.</p>`},
+  {who:"dana",text:`<p>For the record, your gut call was <b>${sgn(A(2).pred)}</b> and the experiment says <b>${sgn(RES.exp.est)}</b>. The raw number we started with was ${RES.naive.est}.</p>`,node:()=>distNode([{v:A(2).pred,label:"gut"},{v:RES.exp.est,label:"exp."}])},
+  {who:"marcus",text:`So it is about ${RES.exp.est}, not ${RES.naive.est}. Still positive, though.`}]},
+ payload:v=>({answers:{est:v.est,lo:v.lo,hi:v.hi,consistent:v.cons,why_credible:v.rand,file:v.file,n:v.ntot},correct:{file_and_n:v.file==="experiment"&&near(v.ntot,RES.n_exp,5),est:near(v.est,RES.exp.est,.4),consistent:same(v.cons,CONS.filter(x=>inRange(RES.exp,x)).map(String)),why_credible:v.rand==="a"}}),
+ challenge:v=>near(v.est,RES.exp.est,.4)?null:[{who:"dana",text:`<p>That is not what Ops has. <b>Checker</b>, which file is on the card, and how many employees? The experiment has ${RES.n_exp}, assigned at random. Ask the analyst to confirm it used the experiment file and a bootstrap, then revise your reply and send it again.</p>`}]},
+
+// 4 — Priya: job types
+{pre:()=>[
+  {who:"priya",text:`<p>One more thing before we decide. Does this hold for everyone? Here is the experiment split by job type (call center n = ${RES.jobs_n["Call center"]}, data entry n = ${RES.jobs_n["Data entry"]}, analyst n = ${RES.jobs_n["Analyst"]}).</p>`,img:"assets/sim5_jobs.png",alt:"Experimental effect by job type with bootstrap ranges"}],
+ form:()=>`<h4>Reply to Priya</h4>
+  <label>Which job types have a middle-95% range that includes zero? <span class="hint">(select all)</span></label>
+  ${checks("f_jobs",JOBS.map(j=>[j,j]))}
+  <label>"Data entry's range includes zero, so WFH does nothing for data-entry workers." Is that justified?</label>
+  ${radio("f_de",[["a","Yes, a range that includes zero means no effect"],["b","No: with only "+RES.jobs_n["Data entry"]+" workers the range is wide and fits a modest loss, no change or a modest gain"],["c","Yes, because the estimate is positive"]])}`,
+ read(){const d=gr("f_de");if(!d)return{err:"Answer the second question."};return{jobs:gc("f_jobs"),de:d}},
+ post:v=>`Ranges that include zero: ${v.jobs.length?v.jobs.map(x=>`<span class="pill">${x}</span>`).join(""):"none"}. ${v.de==="b"?"That does not mean no effect for data entry: the range is too wide to say.":"We read that as no effect for data entry."}`,
+ replies:v=>{const ok=JOBS.filter(j=>inRange(RES.jobs[j],0)),good=same(v.jobs,ok);return[
+  {who:"priya",text:`<p>${good?"Yes: ":""}data entry and analyst both include zero. Only call center is clearly positive (${RES.jobs["Call center"].est}), and it is half the sample, so it carries the average.</p>`},
+  {who:"priya",text:v.de==="b"?`<p>Exactly. A range that includes zero fails to rule zero out. It does not show zero. We just cannot tell.</p>`:`<p>I would not say that. The range for data entry runs from ${RES.jobs["Data entry"].lo} to ${RES.jobs["Data entry"].hi}. That fits a loss, nothing, or a gain.</p>`}]},
+ payload:v=>({answers:{ranges_with_zero:v.jobs,data_entry_claim:v.de},correct:{ranges_with_zero:same(v.jobs,JOBS.filter(j=>inRange(RES.jobs[j],0))),data_entry_claim:v.de==="b"}})},
+
+// 5 — Dana: recommendation
+{pre:()=>[
+  {who:"dana",text:`<p>I am walking into the board call. I need your recommendation: <b>your best estimate, your range, and what I should tell them</b>. About three sentences. <b>Scribe</b>, this one is yours.</p>`}],
+ form:()=>`<h4>Reply to Dana</h4>
+  <label>Your team's best estimate of the true average effect of WFH on output per shift at Meridian, with an 80% range</label>
+  <div class="row"><div><span class="hint">best estimate</span>${num("f_p","number")}</div><div><span class="hint">lower</span>${num("f_l","number")}</div><div><span class="hint">upper</span>${num("f_h","number")}</div></div>
+  ${slider("f_c1","Confidence that remote work raises measured productivity:")}
+  ${slider("f_c2","Confidence that remote work benefits Meridian overall:")}
+  <label>Your recommendation to the board <span class="hint">(pre-filled from the Scribe's notes; edit freely)</span></label><textarea id="f_memo" style="min-height:120px">${esc(S.notes||"")}</textarea>`,
+ read(){const p=gn("f_p"),l=gn("f_l"),h=gn("f_h"),m=$("f_memo").value.trim();if(p===null||l===null||h===null||l>p||p>h)return{err:"Enter an estimate and a range with lower ≤ estimate ≤ upper."};if(!m)return{err:"Write the recommendation."};return{p,l,h,c1:+$("f_c1").value,c2:+$("f_c2").value,memo:m}},
+ post:v=>`<b>Recommendation.</b> Best estimate: ${sgn(v.p)} (80% range ${v.l} to ${v.h}). Confidence it raises measured productivity: ${v.c1}/100; that it benefits Meridian: ${v.c2}/100.<div class="quote">${esc(v.memo)}</div>`,
+ replies:v=>{const g=A(2),t=RES.true_ate,c0=g.lo<=t&&t<=g.hi,c5=v.l<=t&&t<=v.h;return[
+  {who:"dana",text:`<p>Thank you. This is what I will take to the board.</p>`},
+  {who:"dana",text:`<p>One thing I should tell you: Meridian is a simulation, so we <i>can</i> check. The true average effect of WFH on output per shift here was <b>${sgn(t)}</b>.</p><ul><li>Your gut call (${g.lo} to ${g.hi}) <b>${c0?"covered":"missed"}</b> it.</li><li>Your final range (${v.l} to ${v.h}) <b>${c5?"covered":"missed"}</b> it.</li><li>The raw number we started with (${RES.naive.est}) overshot by ${(RES.naive.est-t).toFixed(1)} points.</li></ul>`,node:()=>distNode([{v:g.pred,label:"gut"},{v:t,label:"truth"},{v:v.p,label:"final"}])},
+  {who:"dana",text:`<p>Take two minutes as a team before we wrap:</p><ol><li>Which message changed your team's mind the most, and why?</li><li>If Priya had not spoken up, what would we have told the board?</li><li>What would you want to know before applying this to a different company?</li></ol>`}]},
+ payload:v=>{const t=RES.true_ate,g=A(2);return{productivity_confidence:v.c1,employer_benefit_confidence:v.c2,final_estimate:v.p,final_lo:v.l,final_hi:v.h,covers_truth_stage0:g.lo<=t&&t<=g.hi,covers_truth_final:v.l<=t&&t<=v.h,conclusion:v.memo}}}
+];
+
+// ---------------------------------------------------------------- engine
+function showComposer(i){
+  const c=$("composer"),b=BEATS[i];
+  c.innerHTML=b.form()+`<div id="err"></div><button id="send">Send</button>`;
+  c.classList.remove("hidden");$("send").onclick=()=>submit(i);
+  c.scrollTop=0;scroll();renderRoles(i);
+}
+async function playAttempt(i,instant){
+  const t=S.tries[i];if(!t)return;
+  addMsg("team",BEATS[i].post(t));
+  await play(BEATS[i].challenge(t)||[],instant);
+}
+async function begin(i,instant){
+  if(i>=BEATS.length){$("composer").classList.add("hidden");$("roles").innerHTML=`<div class="role">All done. Use the debrief questions in the channel.</div>`;return}
+  await play(BEATS[i].pre(),instant);
+  await playAttempt(i,instant);
+  showComposer(i);
+}
+async function submit(i){
+  const b=BEATS[i],v=b.read();
+  if(v.err){$("err").textContent=v.err;return}
+  $("err").textContent="";
+  const team=i===0?v.team:S.team;
+  if(!team){$("err").textContent="Missing team code.";return}
+  const btn=$("send");btn.disabled=true;btn.textContent="Sending…";
+  const fail=m=>{$("err").textContent=m;btn.disabled=false;btn.textContent="Send"};
+  if(!db){fail("Database not connected. Check the connection and try again. (CLIENT_NOT_READY)");return}
+  const payload=b.payload(v);
+  const retry=!!S.tries[i];
+  const ch=(b.challenge&&!retry)?b.challenge(v):null;
+  payload.attempts=retry?2:1;
+  const conf=payload.confidence ?? payload.productivity_confidence ?? null;
+  const stageKey=ch?i+"a1":String(i);
+  const {error}=await db.from("debate_responses").upsert({debate_id:EXPERIMENT_ID,student_code:team,stage:stageKey,confidence:conf,response_json:{...payload,raw:v}},{onConflict:'debate_id,student_code,stage'});
+  if(error){fail(`${error.message} (${error.code||"DB_ERROR"})`);return}
+  if(ch){
+    S.tries[i]=v;S.team=team;if(!S.startedAt)S.startedAt=Date.now();persist();
+    $("whoTeam").textContent="Team "+S.team;
+    addMsg("team",b.post(v));
+    await play(ch,false);
+    btn.disabled=false;btn.textContent="Send revised reply";
+    return;
+  }
+  S.team=team;if(!S.startedAt)S.startedAt=Date.now();
+  S.answers[i]=v;S.step=i+1;persist();
+  $("composer").classList.add("hidden");
+  $("whoTeam").textContent="Team "+S.team;
+  addMsg("team",b.post(v));
+  await play(b.replies(v),false);
+  await begin(S.step,false);
+}
+async function replayAll(){
+  $("feed").innerHTML="";clockMin=9*60+2;
+  for(let i=0;i<S.step;i++){
+    const b=BEATS[i],v=S.answers[i];
+    await play(b.pre(),true);
+    if(S.tries[i]){addMsg("team",b.post(S.tries[i]));await play(b.challenge(S.tries[i])||[],true)}
+    addMsg("team",b.post(v));await play(b.replies(v),true);
+  }
+  await begin(S.step,true);
+}
+
+// ---------------------------------------------------------------- clock and db
+function tick(){
+  if(!S.startedAt){$("clock").textContent=DEADLINE_MIN+":00";return}
+  const left=Math.max(0,DEADLINE_MIN*60-Math.floor((Date.now()-S.startedAt)/1000));
+  $("clock").textContent=Math.floor(left/60)+":"+String(left%60).padStart(2,"0");
+}
+setInterval(tick,1000);tick();
+function initDB(){
+  const el=$("dbStatus");
+  if(!window.supabase||!window.supabase.createClient){el.textContent="Supabase library did not load. (CLIENT_NOT_READY)";return}
+  try{db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);el.textContent="Connected."}catch(e){el.textContent="Database error: "+e.message}
+}
+$("modal").addEventListener("click",e=>{if(e.target.id==="modal"||e.target.id==="modalClose")$("modal").classList.remove("open")});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")$("modal").classList.remove("open")});
+$("notes").value=S.notes||"";
+$("notes").addEventListener("input",()=>{S.notes=$("notes").value;persist()});
+initDB();
+if(S.team)$("whoTeam").textContent="Team "+S.team;
+replayAll();
+</script>
+<script type="module">
+import {WebR} from "https://webr.r-wasm.org/v0.4.2/webr.mjs";
+const BASE="https://webr.r-wasm.org/v0.4.2/", CODE_KEY="ds1000_edb3_rcode";
+const $=id=>document.getElementById(id);
+const st=$("rstatus"),out=$("rout"),code=$("rcode"),runB=$("rrun"),dpB=$("rdplyr");
+const STARTER="# firm and experiment are already loaded\nstr(firm)\nstr(experiment)\n";
+try{code.value=localStorage.getItem(CODE_KEY)||STARTER}catch(e){code.value=STARTER}
+code.addEventListener("input",()=>{try{localStorage.setItem(CODE_KEY,code.value)}catch(e){}});
+let webR=null,busy=false,gen=0;
+function status(t,c){st.textContent=t;st.className=c||""}
+function append(t){out.textContent+=(out.textContent?"\n":"")+t;out.scrollTop=out.scrollHeight}
+async function boot(){
+  const my=++gen;runB.disabled=true;dpB.disabled=true;
+  status("Loading R (first load can take 30 to 60 seconds)…","load");
+  const fail=(msg)=>{status("R failed to load","bad");append(msg+"\nPress Restart R to try again. Your team can still use the analyst without this panel.")};
+  try{webR=new WebR({baseUrl:BASE});await webR.init()}
+  catch(e){
+    fail("Could not start R from webr.r-wasm.org ("+(e.message||e)+").\n"+(location.protocol==="file:"?"This page was opened as a file. Open it from its web address (GitHub Pages) or run a local server instead of double-clicking it.":"Your network may be blocking webr.r-wasm.org, or the browser is out of date. Try another network or a current Chrome, Edge or Firefox."));
+    return}
+  try{
+    const enc=new TextEncoder();
+    const files={"edb3_firm_records.csv":"firm","edb3_experiment.csv":"experiment"};
+    for(const f of Object.keys(files)){
+      let bytes=null;
+      if(typeof EDB3_CSV!=="undefined")bytes=enc.encode(EDB3_CSV[files[f]]);
+      else{const r=await fetch("assets/"+f);if(!r.ok)throw new Error("could not fetch "+f);bytes=new Uint8Array(await r.arrayBuffer())}
+      await webR.FS.writeFile("/home/web_user/"+f,bytes);
+    }
+    await webR.evalRVoid('firm <- read.csv("edb3_firm_records.csv"); experiment <- read.csv("edb3_experiment.csv")');
+  }catch(e){fail("R started, but the data could not be loaded ("+(e.message||e)+").");return}
+  if(my!==gen)return;
+  status("R ready","ok");runB.disabled=false;dpB.disabled=false;
+}
+async function run(){
+  if(!webR||busy||runB.disabled)return;
+  busy=true;runB.disabled=true;status("Running…","load");
+  const t0=performance.now();let shelter=null;
+  append("> "+code.value.trim().split("\n").slice(-1)[0].slice(0,80)+(code.value.trim().split("\n").length>1?"  (…)":""));
+  try{
+    shelter=await new webR.Shelter();
+    const res=await shelter.captureR(code.value,{withAutoprint:true,captureStreams:true,captureConditions:false,captureGraphics:false});
+    const text=res.output.map(o=>o.data).join("\n");
+    append(text||"(no output)");
+    status("R ready ("+((performance.now()-t0)/1000).toFixed(1)+" s)","ok");
+  }catch(e){append("Error: "+(e.message||e));status("R ready","ok")}
+  finally{try{if(shelter)await shelter.purge()}catch(e){}busy=false;runB.disabled=false}
+}
+runB.addEventListener("click",run);
+code.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key==="Enter"){e.preventDefault();run()}});
+$("rclear").addEventListener("click",()=>{out.textContent=""});
+dpB.addEventListener("click",async()=>{
+  if(!webR||busy)return;busy=true;runB.disabled=true;dpB.disabled=true;status("Loading dplyr…","load");
+  try{await webR.installPackages(["dplyr"],{quiet:true});append("dplyr installed. Use library(dplyr).");status("R ready, dplyr loaded","ok")}
+  catch(e){append("Could not load dplyr: "+(e.message||e));status("R ready","ok");dpB.disabled=false}
+  finally{busy=false;runB.disabled=false}
+});
+$("rrestart").addEventListener("click",async()=>{try{if(webR)await webR.close()}catch(e){}busy=false;out.textContent="";boot()});
+let booted=false;
+$("rtoggle").addEventListener("click",()=>{
+  const pn=$("rpanel");pn.classList.toggle("open");
+  if(pn.classList.contains("open")&&!booted){booted=true;boot()}
+});
+window.__rpanel={run,boot};
+</script>
+</body>
+</html>
