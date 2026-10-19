@@ -22,7 +22,7 @@ library(tidyverse)
 gms <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/main/data/game_summary.Rds")
 
 # Linear probability model: predicting a binary outcome with lm().
-model_lpm <- lm(isWin ~ tov, data = gms)
+model_lpm <- lm(isWin ~ pts, data = gms)
 gms$pred_lpm <- predict(model_lpm)
 
 n_below0 <- sum(gms$pred_lpm < 0, na.rm = TRUE)
@@ -180,7 +180,7 @@ What happens if we just plug it into `lm()` like we always have?
 # Trying the Familiar Tool
 
 ```{r}
-model_lpm <- lm(isWin ~ tov, data = gms)
+model_lpm <- lm(isWin ~ pts, data = gms)
 summary(model_lpm)$coefficients
 ```
 
@@ -194,7 +194,7 @@ R doesn't stop us. It fits a line through 0s and 1s.
 
 ```{r}
 gms %>%
-  ggplot(aes(x = tov, y = isWin)) +
+  ggplot(aes(x = pts, y = as.numeric(isWin))) +
   geom_jitter(height = .05, alpha = .2) +
   geom_smooth(method = "lm", se = FALSE)
 ```

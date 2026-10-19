@@ -18,11 +18,11 @@ gms <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/main/data/game_sum
 
 In Lecture 13, you saw that `lm()` can technically run on a binary outcome, but the predictions it produces don't behave like probabilities — and that "how good is this model" depends on whether your goal is explanation or prediction.
 
-Now you will run that same demonstration yourself, on a new pair of predictors:
+Now you will run that same demonstration yourself with a different predictor (points scored), and then evaluate a new prediction question using two things that are known *before* a game starts:
 
-> **Rest and location. Can they help us guess who wins, even without explaining why?**
+> **Rest and location. Can they help us guess who wins?**
 
-You may use AI, your notes, classmates, and the internet. AI can help you write the code. Your job is to decide what kind of question you're answering, and whether your evaluation actually fits it.
+You may use AI, your notes, classmates, and the internet. AI can help you write the code. Your job is to decide what kind of question you're answering, whether your evaluation actually fits it, and what your results do and do not show.
 
 # The Claim
 
@@ -33,16 +33,27 @@ The relevant variables:
 | Variable | Meaning |
 |---|---|
 | `isWin` | Whether the team won the game (`TRUE`/`FALSE`) |
+| `pts` | Points the team scored in the game |
 | `teamrest` | Days since the team's last game |
 | `locationGame` | `H` (home) or `A` (away) |
 
 # Part I: Name the Question
 
-## 1. Explanation or Prediction?
+## 1. Two Versions of the Same Claim
 
-Is the claim above, as written, more naturally an explanation question or a prediction question? Explain your reasoning in one or two sentences.
+The claim above could be turned into two very different questions:
 
-**Your answer:**
+> **Version A:** "Does getting extra rest cause teams to play better?"
+
+> **Version B:** "Can a sportsbook use rest and home/away status to set its odds before a game?"
+
+For each version, say whether it is an explanation question or a prediction question. Then say what you would need to check to judge whether an answer to that version is any good. (Think about what each version would be evaluated on: ruling out other explanations, or guessing right on new games?)
+
+**Version A:**
+
+
+
+**Version B:**
 
 
 
@@ -50,7 +61,7 @@ Is the claim above, as written, more naturally an explanation question or a pred
 
 ## 2. Fit a Linear Model on a Binary Outcome
 
-Fit `isWin ~ teamrest`, using `lm()`, the same way you would for a continuous outcome.
+Fit `isWin ~ pts`, using `lm()`, the same way you would for a continuous outcome.
 
 ```{r fit-lpm}
 # Fit the model here.
@@ -71,6 +82,8 @@ Generate predicted values from your model and check their range.
 
 
 # Part III: Evaluate It As a Prediction Problem
+
+From here on, you are answering **Version B**.
 
 ## 4. Split the Data
 
@@ -105,25 +118,68 @@ What fraction of the test set's outcomes did your classified predictions get rig
 
 
 
-# Part IV: What Kind of Claim Does This Support?
+## 7. Is That Good? Compare to Simple Guesses
 
-## 7. Explanation vs. Prediction, Revisited
+An accuracy number means little on its own. Calculate the accuracy on the test set of two "dumb" guessing rules that use no model at all:
 
-Does your accuracy number tell you *why* rest and location matter for winning? What would you need in order to make that kind of claim?
+- **Rule 1:** always guess that the team wins.
+- **Rule 2:** guess that the team wins if it is playing at home, and loses if it is away.
 
-**Your answer:**
+```{r baselines}
+# Calculate the test-set accuracy of Rule 1 and Rule 2.
+
+```
+
+**Rule 1 accuracy:**
+
+**Rule 2 accuracy:**
+
+**How does your model from Question 5 compare to these two rules? What do you notice?**
+
+
+
+## 8. Does Rest Add Anything?
+
+Fit `isWin ~ locationGame` on the training set (no `teamrest`), classify the test set using a 0.5 cutoff, and calculate its accuracy.
+
+```{r location-only}
+# Fit the location-only model on train, predict and classify on test, and calculate accuracy.
+
+```
+
+**Location-only accuracy:**
+
+**Did adding `teamrest` improve the model's predictions?**
+
+
+
+# Part IV: Does Rest Matter?
+
+## 9. Look at Rest Directly
+
+Now look at the data itself instead of the model. Calculate the win rate for each number of days of rest, using the full `gms` data.
+
+A few teams have very long rests (for example, before their first game of the season), so group the rest values into `0`, `1`, `2`, and `3+` days before summarizing.
+
+```{r rest-win-rates}
+# Group teamrest into 0, 1, 2, and 3+ days, then calculate the win rate
+# (and number of games) for each group.
+
+```
+
+**What pattern do you see? Which group stands out?**
 
 
 
 # Part V: Audit an AI Explanation
 
-Suppose an AI assistant sees your accuracy number and says:
+Suppose an AI assistant sees your result from Question 8 and says:
 
-> **"This proves that extra rest causes teams to play better."**
+> **"Adding rest didn't improve the model's accuracy, so this shows that rest has no effect on whether teams win."**
 
-## 8. Audit the Claim
+## 10. Audit the Claim
 
-Identify two problems with this statement.
+Identify two problems with this statement. Use what you found in Question 9, and think about the difference between a prediction question and an explanation question.
 
 **Problem 1:**
 
@@ -135,13 +191,13 @@ Identify two problems with this statement.
 
 # Part VI: Calibrated Communication
 
-## 9. Write the Conclusion
+## 11. Write the Conclusion
 
-Write two or three sentences for a non-statistical audience. Your conclusion should:
+Write two or three sentences for a sportsbook manager who has no statistics background. Your conclusion should:
 
-- report your held-out accuracy and what it measures;
-- avoid claiming that rest or location *causes* winning;
-- be clear about whether this was an explanation exercise or a prediction exercise.
+- report your model's held-out accuracy and compare it to a simple guessing rule;
+- say whether knowing a team's rest improved the predictions;
+- avoid claiming that rest or location *causes* winning, or that rest *doesn't* matter.
 
 **Your answer:**
 
@@ -163,5 +219,10 @@ Complete these statements:
 
 
 
-> **High predictive accuracy, by itself, does not establish ________________________________.**
+> **An accuracy number only means something when compared to ________________________________.**
+
+
+
+> **A variable that doesn't improve predictive accuracy might still ________________________________.**
+
 
