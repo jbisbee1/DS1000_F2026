@@ -1,0 +1,26 @@
+.Rproj.user
+.Rhistory
+.Rdata
+.httr-oauth
+.DS_Store
+Lectures/*/Scaffolding/
+Lectures/*/*slides_files*
+Lectures/*/*slides.Rmd
+Lectures/*/*.Rhistory
+Lectures/*/VideoDecodeStats
+Quizzes
+Tests
+NFGH
+evidence_debates/*
+!evidence_debates/EDB_1
+!evidence_debates/EDB_1/**
+!evidence_debates/EDB_2
+!evidence_debates/EDB_2/**
+!evidence_debates/EDB_3
+!evidence_debates/EDB_3/**
+
+# Answer keys (keep private)
+*answer_key*
+
+# Student rosters / check-ins (names)
+evidence_debates/**/*checkin*.html

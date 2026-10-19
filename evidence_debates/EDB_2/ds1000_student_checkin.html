@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DS 1000 Check-In</title>
+<style>
+  :root{--bg:#f6f7f9;--card:#fff;--ink:#1f2937;--muted:#6b7280;--accent:#2563eb;--accent2:#dbeafe;--border:#e5e7eb;--ok:#166534;--okbg:#dcfce7}
+  *{box-sizing:border-box} body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--ink)}
+  header{background:#111827;color:#fff;padding:18px 24px;position:sticky;top:0;z-index:5}
+  header h1{margin:0 0 5px;font-size:22px} header p{margin:0;color:#d1d5db;font-size:13px}
+  .wrap{max-width:1100px;margin:0 auto;padding:20px}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
+  input[type=search]{flex:1;min-width:230px;padding:11px 13px;border:1px solid #d1d5db;border-radius:9px;font-size:15px}
+  button{border:1px solid #d1d5db;background:#fff;color:var(--ink);padding:10px 13px;border-radius:9px;cursor:pointer;font-size:14px}
+  button:hover{background:#f3f4f6} button.primary{background:var(--accent);border-color:var(--accent);color:#fff} button.danger{color:#991b1b}
+  .stats{display:flex;gap:12px;flex-wrap:wrap;margin:8px 0 18px}.stat{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 15px;min-width:130px}.stat b{display:block;font-size:20px}.stat span{font-size:12px;color:var(--muted)}
+  .team-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+  .team{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+  .team h2{font-size:16px;margin:0;padding:13px 15px;background:#f9fafb;border-bottom:1px solid var(--border);display:flex;justify-content:space-between}
+  .team h2 span{font-size:12px;color:var(--muted);font-weight:normal}
+  .roster{padding:6px 10px 10px}
+  label.person{display:flex;align-items:center;gap:10px;padding:9px 6px;border-bottom:1px solid #f0f1f3;cursor:pointer}
+  label.person:last-child{border-bottom:0}.person input{width:18px;height:18px;accent-color:var(--accent)}
+  .person .name{flex:1}.person small{color:var(--muted);font-size:12px}.person.checked .name{text-decoration:line-through;color:var(--muted)}
+  .hidden{display:none!important}.empty{padding:30px;text-align:center;color:var(--muted)}
+  .footer{margin-top:18px;color:var(--muted);font-size:12px}
+  @media(max-width:600px){.wrap{padding:12px}.team-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header><h1>DS 1000 Student Check-In</h1><p>Randomized teams · check-in is saved in this browser</p></header>
+<div class="wrap">
+  <div class="toolbar">
+    <input id="search" type="search" placeholder="Search students by name…">
+    <button id="checkAll" class="primary">Check in all visible</button>
+    <button id="clearAll">Clear check-ins</button>
+    <button id="export">Export attendance CSV</button>
+  </div>
+  <div class="stats">
+    <div class="stat"><b id="present">0</b><span>Present</span></div>
+    <div class="stat"><b id="total">57</b><span>Total students</span></div>
+    <div class="stat"><b id="remaining">57</b><span>Not checked in</span></div>
+  </div>
+  <div id="teams" class="team-grid"></div>
+  <div id="empty" class="empty hidden">No students match the search.</div>
+  <div class="footer">Attendance is stored locally in your browser. Export a CSV before switching devices or clearing browser data.</div>
+</div>
+<script>
+const teams = [{"team": 1, "members": [{"last": "Fang", "first": "Tim"}, {"last": "Mahesh", "first": "Tejas"}, {"last": "Malhotra", "first": "Ruhaan"}, {"last": "Weissman", "first": "Leah"}, {"last": "Belisle", "first": "Layla"}, {"last": "Kassim", "first": "Alima"}]}, {"team": 2, "members": [{"last": "Chavez", "first": "Suri"}, {"last": "Geist", "first": "Lucie"}, {"last": "Lee", "first": "Grace"}, {"last": "O'Connor-Yeung", "first": "Matthew"}, {"last": "Olivera", "first": "Eddie"}, {"last": "Healy", "first": "Sofia"}]}, {"team": 3, "members": [{"last": "Fleiss", "first": "Teddy"}, {"last": "Li Kircher", "first": "Kaia"}, {"last": "Weng", "first": "Elena"}, {"last": "Chang", "first": "Yurim"}, {"last": "McCarley", "first": "Susan"}, {"last": "Chandra", "first": "Shiv"}]}, {"team": 4, "members": [{"last": "Worth", "first": "Jeremy"}, {"last": "Ferrer", "first": "Luisiana"}, {"last": "Lin", "first": "Justin"}, {"last": "Liu", "first": "Zihui"}, {"last": "Leonardi Goncalves", "first": "Helena"}, {"last": "Zhang", "first": "Anthony"}]}, {"team": 5, "members": [{"last": "Sugar", "first": "Will"}, {"last": "DeFabrizio", "first": "Luca"}, {"last": "Jie", "first": "Qing"}, {"last": "Ingelmo", "first": "Elaina"}, {"last": "Horn", "first": "Callie"}, {"last": "Crary", "first": "Charlie"}]}, {"team": 6, "members": [{"last": "Sharipova", "first": "Ameli"}, {"last": "Buchert", "first": "Karsten"}, {"last": "Zhang", "first": "Mars"}, {"last": "Angus", "first": "Seren"}, {"last": "Kimball", "first": "Annie"}, {"last": "Hunt", "first": "Molly"}]}, {"team": 7, "members": [{"last": "Nuckles", "first": "Camryn"}, {"last": "Be", "first": "James"}, {"last": "Nguyen", "first": "Thai"}, {"last": "Petkash", "first": "Joe"}, {"last": "Hess", "first": "Adrienne"}, {"last": "Chen", "first": "Alex"}]}, {"team": 8, "members": [{"last": "Gulko", "first": "Maddie"}, {"last": "Jiang", "first": "Chen"}, {"last": "Cartwright", "first": "Drake"}, {"last": "Thomas", "first": "Langston"}, {"last": "Choi", "first": "Ian"}]}, {"team": 9, "members": [{"last": "Acar", "first": "Mert"}, {"last": "Fowler", "first": "Ava"}, {"last": "Maddox", "first": "Lavin"}, {"last": "Carazas", "first": "Maria"}, {"last": "Baglieri", "first": "Cameron"}]}, {"team": 10, "members": [{"last": "Tang", "first": "Emerald"}, {"last": "Nguyen", "first": "Lam"}, {"last": "Kim", "first": "Yena"}, {"last": "Appelbaum", "first": "Tess"}, {"last": "Liu", "first": "Anzi"}]}];
+const key = 'ds1000-attendance-v1';
+let attendance = JSON.parse(localStorage.getItem(key) || '{}');
+
+function idFor(last, first){ return `${last}|${first}`; }
+function save(){ localStorage.setItem(key, JSON.stringify(attendance)); }
+function render(){
+  const q = document.getElementById('search').value.trim().toLowerCase();
+  const root = document.getElementById('teams'); root.innerHTML='';
+  let visible = 0;
+  teams.forEach(t=>{
+    const members = t.members.filter(p => `${p.first} ${p.last}`.toLowerCase().includes(q) || `${p.last}, ${p.first}`.toLowerCase().includes(q));
+    if(!members.length) return;
+    visible += members.length;
+    const card=document.createElement('section'); card.className='team';
+    const count=t.members.filter(p=>attendance[idFor(p.last,p.first)]).length;
+    card.innerHTML=`<h2>Team ${t.team}<span>${count}/${t.members.length} checked in</span></h2>`;
+    const roster=document.createElement('div'); roster.className='roster';
+    members.forEach(p=>{
+      const id=idFor(p.last,p.first), checked=!!attendance[id];
+      const label=document.createElement('label'); label.className='person'+(checked?' checked':'');
+      label.innerHTML=`<input type="checkbox" ${checked?'checked':''}><span class="name">${p.first} ${p.last}</span>`;
+      label.querySelector('input').addEventListener('change',e=>{attendance[id]=e.target.checked; if(!e.target.checked) delete attendance[id]; save(); render();});
+      roster.appendChild(label);
+    });
+    card.appendChild(roster); root.appendChild(card);
+  });
+  document.getElementById('empty').classList.toggle('hidden', visible>0);
+  const present=Object.keys(attendance).length;
+  document.getElementById('present').textContent=present;
+  document.getElementById('remaining').textContent=57-present;
+}
+
+document.getElementById('search').addEventListener('input', render);
+document.getElementById('checkAll').addEventListener('click',()=>{
+  const q=document.getElementById('search').value.trim().toLowerCase();
+  teams.forEach(t=>t.members.forEach(p=>{
+    if(!q || `${p.first} ${p.last}`.toLowerCase().includes(q) || `${p.last}, ${p.first}`.toLowerCase().includes(q)) attendance[idFor(p.last,p.first)]=true;
+  })); save(); render();
+});
+document.getElementById('clearAll').addEventListener('click',()=>{attendance={};save();render();});
+document.getElementById('export').addEventListener('click',()=>{
+  const rows=[['Team','Last Name','First Name','Checked In']];
+  teams.forEach(t=>t.members.forEach(p=>rows.push([t.team,p.last,p.first,attendance[idFor(p.last,p.first)]?'Yes':'No'])));
+  const csv=rows.map(r=>r.map(v=>`"${String(v).replaceAll('"','""')}"`).join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}); const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download='ds1000_attendance.csv'; a.click(); URL.revokeObjectURL(a.href);
+});
+render();
+</script>
+</body></html>

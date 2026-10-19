@@ -21,6 +21,3 @@ evidence_debates/*
 
 # Answer keys (keep private)
 *answer_key*
-
-# Student rosters / check-ins (names)
-evidence_debates/**/*checkin*.html

@@ -385,8 +385,8 @@ async function submit(i){
   const ch=(b.challenge&&!retry)?b.challenge(v):null;
   payload.attempts=retry?2:1;
   const conf=payload.confidence ?? payload.productivity_confidence ?? null;
-  const stageKey=ch?i+"a1":String(i);
-  const {error}=await db.from("debate_responses").upsert({debate_id:EXPERIMENT_ID,student_code:team,stage:stageKey,confidence:conf,response_json:{...payload,raw:v}},{onConflict:'debate_id,student_code,stage'});
+  if(retry)payload.first_attempt=S.tries[i];
+  const {error}=await db.from("debate_responses").upsert({debate_id:EXPERIMENT_ID,student_code:team,stage:i,confidence:conf,response_json:{...payload,raw:v}},{onConflict:'debate_id,student_code,stage'});
   if(error){fail(`${error.message} (${error.code||"DB_ERROR"})`);return}
   if(ch){
     S.tries[i]=v;S.team=team;if(!S.startedAt)S.startedAt=Date.now();persist();
