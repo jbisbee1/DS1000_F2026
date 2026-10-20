@@ -1,0 +1,78 @@
+---
+title: "Classification Part 1"
+output: html_document
+date: "2026-10-19"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+require(tidyverse)
+
+gms <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/game_summary.Rds")
+```
+
+# Easy recipe
+
+```{r}
+m_simple <- lm(isWin ~ pts,data = gms)
+
+preds <- predict(m_simple)
+
+gms <- gms %>%
+  mutate(predicted_win_prob = preds) %>%
+  mutate(predict_win = ifelse(predicted_win_prob > .5,TRUE,FALSE)) %>%
+  mutate(predict_win = predicted_win_prob > .5)
+
+gms %>%
+  select(isWin,predict_win,predicted_win_prob) %>%
+  summarise(accuracy = mean(predict_win == isWin))
+```
+
+# Cross validate this instead
+
+```{r}
+inds <- sample(1:nrow(gms),
+               size = round(.5*nrow(gms)),
+               replace = F)
+
+train <- gms %>% slice(inds)
+test <- gms %>% slice(-inds)
+
+colnames(gms)
+m_simple <- lm(isWin ~ locationGame + teamrest + second_game,train)
+
+test %>%
+  mutate(pred_prob = predict(m_simple,newdata = test)) %>%
+  mutate(pred_win = pred_prob > .5) %>%
+  summarise(accuracy = mean(pred_win == isWin))
+```
+
+```{r}
+require(ranger)
+
+inds <- sample(1:nrow(gms),
+               size = round(.8*nrow(gms)),
+               replace = F)
+
+train <- gms %>% slice(inds)
+test <- gms %>% slice(-inds)
+
+
+m_RF <- ranger(isWin ~ locationGame + teamrest + second_game,
+               data = train,
+               probability = T)
+
+preds <- predict(m_RF,data = test)
+
+# hist(preds$predictions)
+
+test %>%
+  mutate(pred_prob = preds$predictions) %>%
+  mutate(pred_win = pred_prob > .5) %>%
+  select(pred_prob,pred_win,isWin)
+  summarise(accuracy = mean(pred_win == isWin))
+
+```
