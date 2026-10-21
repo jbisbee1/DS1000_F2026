@@ -1,0 +1,384 @@
+---
+title: "Classification Part 2: Confusion Matrices"
+output: html_document
+date: "2026-10-21"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+# How to use these notes
+
+This file has the full code for today's live coding, posted before class.
+
+The code is split into sections. Each section starts with a **CHECKPOINT** chunk. A checkpoint chunk rebuilds everything the section needs from scratch: it loads the packages, loads the data, and redoes the earlier steps. If you hit an error or fall behind, run the most recent checkpoint chunk and you are caught up. You do not need to fix the earlier error first.
+
+Today's question: **using a player's in-game stats, can we predict whether a Fortnite game ended in a top-10 finish? And how do we know if our predictions are any good?**
+
+# Section 1: Load and look at the data
+
+```{r}
+# CHECKPOINT 1 ------------------------------------------------------------
+require(tidyverse)
+
+fn <- read_csv("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/Fortnite%20Statistics.csv")
+```
+
+The column names have spaces and capital letters (e.g., `Damage to Players`), which means typing backticks every time. We convert them to lower case with underscores.
+
+```{r}
+fn <- fn %>%
+  rename_with(~ str_to_lower(str_replace_all(.x, " ", "_")))
+
+colnames(fn)
+```
+
+Each row is one game played by one player. `placed` is where they finished: 1 is a win, and higher numbers are worse.
+
+```{r}
+nrow(fn)
+
+fn %>%
+  ggplot(aes(x = placed)) +
+  geom_histogram(binwidth = 2) +
+  labs(x = "Finishing place (1 = win)",
+       y = "Number of games",
+       title = "Where did this player finish?")
+```
+
+# Section 2: Why we won't predict outright wins
+
+The obvious outcome is "did the player win?", which means `placed == 1`.
+
+```{r}
+fn <- fn %>%
+  mutate(win = placed == 1)
+
+fn %>%
+  count(win)
+```
+
+There are only 3 wins in 87 games. Consider the laziest possible classifier, which predicts "loss" for every game:
+
+```{r}
+fn %>%
+  mutate(pred_win = FALSE) %>%
+  summarise(accuracy = mean(pred_win == win))
+```
+
+It is about 97% accurate, and it never correctly predicts a single win. This is the trap from the slides: **accuracy can hide unevenness.** When one outcome is rare, always guessing the common one looks great.
+
+Three wins is also too few to split into training and test sets. Instead we use a more common outcome: **finishing in the top 10.**
+
+```{r}
+fn <- fn %>%
+  mutate(top10 = placed <= 10)
+
+fn %>%
+  count(top10) %>%
+  mutate(share = n / sum(n))
+```
+
+About 18% of games were top-10 finishes. That 18% matters later: a model that always says "not top 10" will be about 82% accurate.
+
+**PAUSE: everyone should be here. If not, run the next checkpoint.**
+
+# Section 3: Split into training and test sets
+
+```{r}
+# CHECKPOINT 3 ------------------------------------------------------------
+require(tidyverse)
+fn <- read_csv("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/Fortnite%20Statistics.csv") %>%
+  rename_with(~ str_to_lower(str_replace_all(.x, " ", "_"))) %>%
+  mutate(top10 = placed <= 10)
+```
+
+As in Lectures 12 and 13, we fit the model on one half of the games and evaluate it on the other half. `set.seed()` makes the random split the same for everyone, so your numbers will match mine.
+
+```{r}
+set.seed(123)
+inds <- sample(1:nrow(fn),
+               size = round(nrow(fn) / 2),
+               replace = FALSE)
+
+train <- fn %>% slice(inds)
+test <- fn %>% slice(-inds)
+
+nrow(train)
+nrow(test)
+
+test %>%
+  count(top10)
+```
+
+The test set has 43 games and only 8 top-10 finishes. Keep that small number in mind: in this test set, one game moves accuracy by about 2.3 percentage points.
+
+# Section 4: Fit a model and predict on the test set
+
+```{r}
+# CHECKPOINT 4 ------------------------------------------------------------
+require(tidyverse)
+fn <- read_csv("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/Fortnite%20Statistics.csv") %>%
+  rename_with(~ str_to_lower(str_replace_all(.x, " ", "_"))) %>%
+  mutate(top10 = placed <= 10)
+set.seed(123)
+inds <- sample(1:nrow(fn), size = round(nrow(fn) / 2), replace = FALSE)
+train <- fn %>% slice(inds)
+test <- fn %>% slice(-inds)
+```
+
+We use the same tool as Lecture 13: a linear regression with a TRUE/FALSE outcome. The predictors are eliminations and damage dealt to other players.
+
+```{r}
+m_fight <- lm(top10 ~ eliminations + damage_to_players, data = train)
+
+summary(m_fight)
+```
+
+Now predict for the **test** games, which the model never saw:
+
+```{r}
+test <- test %>%
+  mutate(pred_prob = predict(m_fight, newdata = test))
+
+test %>%
+  select(placed, top10, eliminations, damage_to_players, pred_prob) %>%
+  arrange(desc(pred_prob)) %>%
+  head(10)
+```
+
+`pred_prob` is a score. Higher means the model thinks a top-10 finish is more likely. As in Lecture 13, these are not true probabilities (some can be below 0), but we can still use them to make a decision.
+
+```{r}
+test %>%
+  ggplot(aes(x = pred_prob, fill = top10)) +
+  geom_histogram(binwidth = 0.05, position = "identity", alpha = 0.6) +
+  geom_vline(xintercept = 0.5, linetype = "dashed") +
+  labs(x = "Predicted score", y = "Number of test games",
+       fill = "Actually top 10?",
+       title = "Predicted scores for the test games",
+       subtitle = "Dashed line = threshold of 0.5")
+```
+
+**PAUSE: everyone should be here. If not, run the next checkpoint.**
+
+# Section 5: From a score to a decision
+
+```{r}
+# CHECKPOINT 5 ------------------------------------------------------------
+require(tidyverse)
+fn <- read_csv("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/Fortnite%20Statistics.csv") %>%
+  rename_with(~ str_to_lower(str_replace_all(.x, " ", "_"))) %>%
+  mutate(top10 = placed <= 10)
+set.seed(123)
+inds <- sample(1:nrow(fn), size = round(nrow(fn) / 2), replace = FALSE)
+train <- fn %>% slice(inds)
+test <- fn %>% slice(-inds)
+m_fight <- lm(top10 ~ eliminations + damage_to_players, data = train)
+test <- test %>% mutate(pred_prob = predict(m_fight, newdata = test))
+```
+
+**Classification** means turning the score into a category. We pick a threshold. At or above it we predict "top 10", and below it we predict "not top 10".
+
+```{r}
+test <- test %>%
+  mutate(pred_class = pred_prob >= 0.5)
+
+test %>%
+  select(top10, pred_prob, pred_class) %>%
+  head(10)
+```
+
+# Section 6: The confusion matrix
+
+Each prediction falls into one of four cells:
+
+| | Predicted top 10 | Predicted not top 10 |
+|---|---|---|
+| **Actually top 10** | True positive | False negative |
+| **Actually not top 10** | False positive | True negative |
+
+The quick version uses `count()` on the truth and the prediction:
+
+```{r}
+test %>%
+  count(top10, pred_class)
+```
+
+Only three rows came back. **`count()` drops any combination that never happens.** Here there were no false positives, so that row is missing entirely. Converting both columns to factors and using `.drop = FALSE` keeps all four cells, including zeros:
+
+```{r}
+conf_mat <- test %>%
+  mutate(top10 = factor(top10, levels = c(TRUE, FALSE)),
+         pred_class = factor(pred_class, levels = c(TRUE, FALSE))) %>%
+  count(top10, pred_class, .drop = FALSE)
+
+conf_mat
+```
+
+The same counts as a 2x2 table, which is how confusion matrices are usually shown:
+
+```{r}
+conf_mat %>%
+  pivot_wider(names_from = pred_class,
+              values_from = n,
+              names_prefix = "predicted_")
+```
+
+Read it row by row:
+
+- Of the **8** games that were actually top 10, we predicted 3 correctly (true positives) and missed 5 (false negatives).
+- Of the **35** games that were not top 10, we predicted all 35 correctly (true negatives). There were no false positives.
+
+**PAUSE: everyone should be here. If not, run the next checkpoint.**
+
+# Section 7: Accuracy, compared to a baseline
+
+```{r}
+# CHECKPOINT 7 ------------------------------------------------------------
+require(tidyverse)
+fn <- read_csv("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/Fortnite%20Statistics.csv") %>%
+  rename_with(~ str_to_lower(str_replace_all(.x, " ", "_"))) %>%
+  mutate(top10 = placed <= 10)
+set.seed(123)
+inds <- sample(1:nrow(fn), size = round(nrow(fn) / 2), replace = FALSE)
+train <- fn %>% slice(inds)
+test <- fn %>% slice(-inds)
+m_fight <- lm(top10 ~ eliminations + damage_to_players, data = train)
+test <- test %>%
+  mutate(pred_prob = predict(m_fight, newdata = test),
+         pred_class = pred_prob >= 0.5)
+```
+
+Accuracy is the share of all predictions that were correct:
+
+```{r}
+test %>%
+  summarise(accuracy = mean(pred_class == top10))
+```
+
+On its own, 88% means nothing. The comparison is the **baseline**: always guess the more common outcome.
+
+```{r}
+test %>%
+  summarise(share_top10 = mean(top10),
+            baseline_accuracy = max(mean(top10), 1 - mean(top10)))
+```
+
+Always guessing "not top 10" gets 81%. Our model gets 88%, which is about 3 more correct games out of 43.
+
+Now look inside the matrix. What share did we get right **within each actual outcome**?
+
+```{r}
+test %>%
+  group_by(top10) %>%
+  summarise(n_games = n(),
+            n_correct = sum(pred_class == top10),
+            share_correct = mean(pred_class == top10))
+```
+
+- **Sensitivity** (of the actual top-10 games, the share we caught): 3 / 8 = 38%.
+- **Specificity** (of the actual non-top-10 games, the share we correctly ruled out): 35 / 35 = 100%.
+
+The 88% overall accuracy hides a lopsided model. It is excellent at saying "no" and misses most of the top-10 games. We cover the tradeoff between these two numbers next class.
+
+# Section 8: The threshold was a choice
+
+```{r}
+# CHECKPOINT 8 ------------------------------------------------------------
+require(tidyverse)
+fn <- read_csv("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/Fortnite%20Statistics.csv") %>%
+  rename_with(~ str_to_lower(str_replace_all(.x, " ", "_"))) %>%
+  mutate(top10 = placed <= 10)
+set.seed(123)
+inds <- sample(1:nrow(fn), size = round(nrow(fn) / 2), replace = FALSE)
+train <- fn %>% slice(inds)
+test <- fn %>% slice(-inds)
+m_fight <- lm(top10 ~ eliminations + damage_to_players, data = train)
+test <- test %>%
+  mutate(pred_prob = predict(m_fight, newdata = test),
+         pred_class = pred_prob >= 0.5)
+```
+
+There was nothing special about 0.5. Top-10 finishes are only 18% of games, so a lower threshold is reasonable. Try 0.3:
+
+```{r}
+test <- test %>%
+  mutate(pred_class_30 = pred_prob >= 0.3)
+
+test %>%
+  count(top10, pred_class_30)
+
+test %>%
+  summarise(accuracy_50 = mean(pred_class == top10),
+            accuracy_30 = mean(pred_class_30 == top10))
+```
+
+At 0.3 we catch 5 of the 8 top-10 games instead of 3, at the cost of 1 false positive. Accuracy goes from 88% to 91%. Changing the threshold changes the confusion matrix, and with it every number we calculate from it.
+
+# Section 9: Your turn
+
+```{r}
+# CHECKPOINT 9 ------------------------------------------------------------
+require(tidyverse)
+fn <- read_csv("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/Fortnite%20Statistics.csv") %>%
+  rename_with(~ str_to_lower(str_replace_all(.x, " ", "_"))) %>%
+  mutate(top10 = placed <= 10)
+set.seed(123)
+inds <- sample(1:nrow(fn), size = round(nrow(fn) / 2), replace = FALSE)
+train <- fn %>% slice(inds)
+test <- fn %>% slice(-inds)
+```
+
+The data include the player's `mental_state` for each game: `"sober"` or `"high"`.
+
+**Claim:** "A model using only mental state predicts top-10 finishes with 81% accuracy."
+
+1. Fit `top10 ~ mental_state` on `train`.
+2. Predict on `test` and use a threshold of 0.5.
+3. Build the confusion matrix.
+4. Compare the accuracy to the baseline. Is the claim true? Is it impressive?
+
+```{r}
+m_state <- lm(top10 ~ mental_state, data = train)
+
+test <- test %>%
+  mutate(pred_prob_state = predict(m_state, newdata = test),
+         pred_class_state = pred_prob_state >= 0.5)
+
+test %>%
+  count(top10, pred_class_state)
+
+test %>%
+  summarise(accuracy = mean(pred_class_state == top10),
+            baseline = max(mean(top10), 1 - mean(top10)))
+```
+
+The claim is technically true, and the model is no better than guessing "not top 10" every time. It never predicts a top-10 finish, because the highest score it gives any game is below 0.5:
+
+```{r}
+range(test$pred_prob_state)
+```
+
+# Aside: a predictor that is too good
+
+Try adding `distance_traveled`:
+
+```{r}
+m_dist <- lm(top10 ~ eliminations + damage_to_players + distance_traveled, data = train)
+
+test %>%
+  mutate(pred_class_dist = predict(m_dist, newdata = test) >= 0.5) %>%
+  summarise(accuracy = mean(pred_class_dist == top10))
+```
+
+Accuracy jumps to about 95%. But players who survive longer travel farther, so distance traveled is largely a **result** of placing well, not something you could know before the game ends. A model built on it looks great and is not useful for prediction. Before trusting a high accuracy, ask whether each predictor would be available at the moment you need to make the prediction.
+
+# Summary
+
+1. Pick a threshold to turn a predicted score into a predicted category.
+2. Build the confusion matrix. Use factors and `.drop = FALSE` so zero cells are not dropped.
+3. Compare accuracy to the baseline of always guessing the more common outcome.
+4. Look inside the matrix. Overall accuracy can hide a model that misses most of the rare outcome.
+5. Evaluate on the test set, never on the data used to fit the model.
