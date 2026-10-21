@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>How Do We Predict Categories?</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Prof. Bisbee" />
+    <script src="ds1000_lecture_14_slides_f2026_files/header-attrs-2.31/header-attrs.js"></script>
+    <link href="ds1000_lecture_14_slides_f2026_files/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="ds1000_lecture_14_slides_f2026_files/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
+    <link href="ds1000_lecture_14_slides_f2026_files/remark-css-0.0.1/metropolis-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# How Do We Predict Categories?
+]
+.subtitle[
+## DS 1000
+]
+.author[
+### Prof. Bisbee
+]
+
+---
+
+
+
+
+&lt;style&gt;
+.big { font-size: 130%; }
+.huge { font-size: 180%; }
+.small { font-size: 80%; }
+&lt;/style&gt;
+
+&lt;!--
+LEARNING OBJECTIVES
+
+LO1: Interrogate empirical claims.
+LO3: Select and justify analytical approaches.
+LO4: Conduct and evaluate data analyses.
+LO5: Critically use AI as an analytical tool.
+LO6: Communicate evidence responsibly.
+
+Lecture 14 turns Lecture 13's "broken" linear probability model into a real
+classification workflow: threshold the predicted values, build a confusion
+matrix, calculate accuracy, and compare against a baseline. Sensitivity /
+specificity are introduced only by name, as a teaser -- full treatment of
+evaluation tradeoffs (thresholds, ROC/AUC) is reserved for Classification II.
+
+INSTRUCTOR NOTE:
+Continues the game_summary.Rds / isWin thread from Lecture 13 rather than
+introducing a new dataset, to keep the unit's cognitive load manageable.
+--&gt;
+
+# How Do We Predict Categories?
+
+.big[
+Last class:
+
+&gt; **What happens when I use a continuous-outcome tool on a categorical outcome?**
+
+Today:
+
+&gt; **How do I turn that into an actual classifier, and know if it's any good?**
+]
+
+---
+
+# Where We Are
+
+.big[
+**Question → trustworthy variables → appropriate comparison → describe the relationship → interrogate explanations → quantify uncertainty → summarize with a model → evaluate the model → choose the right goal → build a classifier**
+]
+
+Today:
+
+**Build a classifier**
+
+---
+
+# Picking Up Where We Left Off
+
+Lecture 13 fit this on the training half of the data:
+
+
+``` r
+model_class &lt;- lm(isWin ~ tov + pts + treb + pctFG, data = train)
+test$pred_prob &lt;- predict(model_class, newdata = test)
+```
+
+.big[
+The predictions weren't real probabilities — but we can still use them to make a **decision**.
+]
+
+---
+
+# From a Number to a Decision
+
+.big[
+**Classification:** turning a predicted score into a predicted category.
+]
+
+
+``` r
+test$pred_class &lt;- ifelse(test$pred_prob &gt;= 0.5, TRUE, FALSE)
+
+test %&gt;%
+  select(idGame, isWin, pred_prob, pred_class) %&gt;%
+  head(5)
+```
+
+```
+## # A tibble: 5 × 4
+##     idGame isWin pred_prob pred_class
+##      &lt;dbl&gt; &lt;lgl&gt;     &lt;dbl&gt; &lt;lgl&gt;     
+## 1 21600002 TRUE      0.351 FALSE     
+## 2 21600002 FALSE     0.309 FALSE     
+## 3 21600003 TRUE      1.10  TRUE      
+## 4 21600004 TRUE      0.780 TRUE      
+## 5 21600004 FALSE     0.342 FALSE
+```
+
+---
+
+# Every Prediction Is One of Four Things
+
+For a binary outcome, compare the prediction to the truth:
+
+.big[
+- Predicted **win**, actually won → correct
+- Predicted **loss**, actually lost → correct
+- Predicted **win**, actually lost → wrong
+- Predicted **loss**, actually won → wrong
+]
+
+---
+
+# The Confusion Matrix
+
+
+``` r
+test %&gt;%
+  count(isWin, pred_class)
+```
+
+```
+## # A tibble: 4 × 3
+##   isWin pred_class     n
+##   &lt;lgl&gt; &lt;lgl&gt;      &lt;int&gt;
+## 1 FALSE FALSE       1389
+## 2 FALSE TRUE         452
+## 3 TRUE  FALSE        454
+## 4 TRUE  TRUE        1395
+```
+
+.big[
+A **confusion matrix**: every combination of truth and prediction, counted.
+]
+
+---
+
+# Naming the Four Cells
+
+.big[
+**True positive:** predicted win, actually a win.
+
+**True negative:** predicted loss, actually a loss.
+
+**False positive:** predicted win, actually a loss.
+
+**False negative:** predicted loss, actually a win.
+]
+
+"Positive" here just means the class we're tracking — a win.
+
+---
+
+# From Counts to Accuracy
+
+.huge[
+`$$\text{Accuracy} = \frac{\text{correct predictions}}{\text{all predictions}}$$`
+]
+
+
+``` r
+accuracy &lt;- (tp + tn) / (tp + tn + fp + fn_)
+round(accuracy * 100, 1)
+```
+
+```
+## [1] 75.4
+```
+
+---
+
+# Is That Good?
+
+.big[
+Accuracy alone means nothing without a **baseline** to compare it to.
+]
+
+The simplest possible classifier: always guess the more common outcome.
+
+
+``` r
+round(baseline_acc * 100, 1)
+```
+
+```
+## [1] 50.1
+```
+
+.big[
+Our model should beat this "dumbest guess" baseline — if it doesn't, it isn't adding anything.
+]
+
+---
+
+# A Trap: Accuracy Can Hide Unevenness
+
+.big[
+A model can post a great overall accuracy while doing **very differently** on the two classes.
+]
+
+Imagine a classifier that is excellent at predicting losses but bad at predicting wins. Overall accuracy could still look fine, because losses may be more common.
+
+---
+
+# Looking Inside the Matrix
+
+
+``` r
+conf_mat %&gt;%
+  group_by(isWin) %&gt;%
+  mutate(total = sum(n), pct = percent(n / total))
+```
+
+```
+## # A tibble: 4 × 5
+## # Groups:   isWin [2]
+##   isWin pred_class     n total pct  
+##   &lt;lgl&gt; &lt;lgl&gt;      &lt;int&gt; &lt;int&gt; &lt;chr&gt;
+## 1 FALSE FALSE       1389  1841 75%  
+## 2 FALSE TRUE         452  1841 25%  
+## 3 TRUE  FALSE        454  1849 25%  
+## 4 TRUE  TRUE        1395  1849 75%
+```
+
+.big[
+Same accuracy number can come from very different confusion matrices. Always look inside it.
+]
+
+---
+
+# Two Names Worth Knowing
+
+.big[
+**Sensitivity:** of the games actually won, what share did we correctly predict as wins?
+
+**Specificity:** of the games actually lost, what share did we correctly predict as losses?
+]
+
+We will unpack these — and the tradeoff between them — in the next class.
+
+---
+
+# The Threshold Was a Choice
+
+.big[
+We predicted "win" whenever `pred_prob &gt;= 0.5`. That cutoff was arbitrary.
+]
+
+
+``` r
+test$pred_class_40 &lt;- ifelse(test$pred_prob &gt;= 0.4, TRUE, FALSE)
+
+mean(test$pred_class_40 == test$isWin)
+```
+
+```
+## [1] 0.7355014
+```
+
+Changing the threshold changes the confusion matrix — and the accuracy.
+
+---
+
+# Same Held-Out Discipline
+
+.big[
+Notice: everything today still respected the train/test split from Lecture 12.
+]
+
+We never evaluated the classifier on the same games used to fit it. That habit doesn't change just because the outcome is now categorical.
+
+---
+
+# Do It Together
+
+.blue[Claim]: **A simpler model — using only turnovers — classifies about as well as the full model.**
+
+1. Fit `isWin ~ tov` on `train`.
+2. Predict on `test`, threshold at 0.5.
+3. Build the confusion matrix.
+4. Compare its accuracy to the full model's.
+
+---
+
+# Audit an AI Claim
+
+Suppose an AI assistant is shown only the specificity of a classifier (95%) and says:
+
+&gt; "This model is excellent — it correctly predicts the outcome 95% of the time."
+
+.big[
+**What does specificity alone measure?**
+
+**What is missing from this claim?**
+
+**What could make this misleading even if it's technically true?**
+]
+
+Quoting one favorable number from a confusion matrix is not the same as reporting overall performance.
+
+---
+
+# A Calibrated Conclusion
+
+Instead of:
+
+&gt; "The model predicts game outcomes."
+
+Try:
+
+.big[
+&gt; **On held-out games, the classifier correctly predicted the outcome 75.4% of the time, compared to 50.1% for always guessing the more common outcome — but its performance was not identical across wins and losses, which the next class will examine more closely.**
+]
+
+---
+
+# Before You Leave
+
+When you see a classification result, ask:
+
+1. What threshold turned predicted scores into predicted categories?
+2. What does the confusion matrix look like, not just the accuracy number?
+3. How does accuracy compare to the simplest possible baseline?
+4. Is performance even across both classes, or lopsided?
+5. Was this evaluated on data the model wasn't fit to?
+
+---
+
+# The Rule to Remember
+
+.huge[
+**A single accuracy number can hide a lot.**
+
+**Always look inside the confusion matrix.**
+]
+
+---
+
+# Homework 11
+
+You will practice:
+
+- turning predicted scores into classified predictions using a threshold;
+- building and reading a confusion matrix;
+- comparing a model's accuracy to a baseline guess;
+- recognizing when overall accuracy hides uneven performance;
+- auditing an AI claim that cites one favorable number in isolation.
+
+Next:
+
+.big[
+**Classification II**
+]
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+  "ratio": "16:9",
+  "highlightStyle": "github",
+  "highlightLines": true,
+  "countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
