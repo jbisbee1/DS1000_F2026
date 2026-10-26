@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>How Should Classification Performance Be Evaluated?</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Prof. Bisbee" />
+    <script src="ds1000_lecture_15_slides_f2026_files/header-attrs-2.30/header-attrs.js"></script>
+    <link href="ds1000_lecture_15_slides_f2026_files/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="ds1000_lecture_15_slides_f2026_files/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
+    <link href="ds1000_lecture_15_slides_f2026_files/remark-css-0.0.1/metropolis-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# How Should Classification Performance Be Evaluated?
+]
+.subtitle[
+## DS 1000
+]
+.author[
+### Prof. Bisbee
+]
+
+---
+
+
+
+
+&lt;style&gt;
+.big { font-size: 130%; }
+.huge { font-size: 180%; }
+.small { font-size: 80%; }
+&lt;/style&gt;
+
+&lt;!--
+LEARNING OBJECTIVES
+
+LO1: Interrogate empirical claims.
+LO3: Select and justify analytical approaches.
+LO4: Conduct and evaluate data analyses.
+LO5: Critically use AI as an analytical tool.
+LO6: Communicate evidence responsibly.
+
+Lecture 15 completes Unit 4's Classification material. It develops the
+sensitivity/specificity vocabulary Lecture 14 only named, builds an ROC
+curve and AUC by hand (a manual threshold sweep + trapezoidal integration,
+deliberately avoiding a tidymodels/yardstick dependency the course hasn't
+introduced), and closes by cross-validating AUC to compare two model
+specifications -- mirroring Lecture 12's cross-validated RMSE comparison,
+now applied to a classification metric.
+
+INSTRUCTOR NOTE:
+Logistic regression / GLMs are intentionally NOT introduced here. The course
+stays with the linear-probability-model classifier from Lecture 14; the
+point of this lecture is evaluation, not a new model class.
+--&gt;
+
+# How Should Classification Performance Be Evaluated?
+
+.big[
+Last class:
+
+&gt; **How do I build a classifier and check its overall accuracy?**
+
+Today:
+
+&gt; **What is my classifier good and bad at, specifically — and how do I compare classifiers fairly?**
+]
+
+---
+
+# Where We Are
+
+.big[
+**Question → ... → summarize with a model → evaluate the model → choose the right goal → build a classifier → evaluate the tradeoffs**
+]
+
+Today:
+
+**Evaluate the tradeoffs**
+
+---
+
+# Picking Up the Confusion Matrix
+
+Same classifier as last class, same 0.5 threshold:
+
+
+``` r
+test %&gt;% count(isWin, pred_class)
+```
+
+```
+## # A tibble: 4 × 3
+##   isWin pred_class     n
+##   &lt;lgl&gt; &lt;lgl&gt;      &lt;int&gt;
+## 1 FALSE FALSE       1389
+## 2 FALSE TRUE         452
+## 3 TRUE  FALSE        454
+## 4 TRUE  TRUE        1395
+```
+
+Last time we asked: what's the overall accuracy? Today: what's happening **inside** each row?
+
+---
+
+# Two Questions, Not One
+
+.big[
+**Sensitivity:** of the games actually **won**, what share did the model correctly flag as wins?
+
+**Specificity:** of the games actually **lost**, what share did the model correctly flag as losses?
+]
+
+---
+
+# Calculating Both
+
+
+``` r
+sensitivity_50 &lt;- tp / (tp + fn_)
+specificity_50 &lt;- tn / (tn + fp)
+
+round(c(sensitivity = sensitivity_50, specificity = specificity_50), 3)
+```
+
+```
+## sensitivity specificity 
+##       0.754       0.754
+```
+
+.big[
+Are these close to each other, or far apart?
+]
+
+---
+
+# Why Both Matter
+
+.big[
+A model that predicts "loss" for almost everything can have very high specificity and terrible sensitivity — and still post a respectable overall accuracy, if losses are common.
+]
+
+Sensitivity and specificity separate "good at catching wins" from "good at catching losses."
+
+---
+
+# The Threshold Controls Both
+
+.big[
+Lecture 14 showed: change the 0.5 cutoff, and the confusion matrix changes.
+]
+
+Raising the threshold makes the model more cautious about predicting "win" — which shifts sensitivity and specificity in **opposite directions**.
+
+---
+
+# Sweeping the Threshold
+
+
+``` r
+sweep_thresholds &lt;- function(probs, truth, thresholds = seq(0, 1, by = 0.02)) {
+  out &lt;- NULL
+  for (t in thresholds) {
+    pred_t &lt;- ifelse(probs &gt;= t, TRUE, FALSE)
+    tp_t &lt;- sum(pred_t == TRUE &amp; truth == TRUE)
+    fn_t &lt;- sum(pred_t == FALSE &amp; truth == TRUE)
+    tn_t &lt;- sum(pred_t == FALSE &amp; truth == FALSE)
+    fp_t &lt;- sum(pred_t == TRUE &amp; truth == FALSE)
+    out &lt;- bind_rows(out, tibble(threshold = t,
+                                  sensitivity = tp_t / (tp_t + fn_t),
+                                  specificity = tn_t / (tn_t + fp_t)))
+  }
+  out
+}
+```
+
+---
+
+# Sensitivity and Specificity vs. Threshold
+
+
+``` r
+roc_full %&gt;%
+  pivot_longer(c(sensitivity, specificity), names_to = "metric", values_to = "value") %&gt;%
+  ggplot(aes(x = threshold, y = value, color = metric)) +
+  geom_line()
+```
+
+&lt;img src="ds1000_lecture_15_slides_f2026_files/figure-html/unnamed-chunk-5-1.png" style="display: block; margin: auto;" /&gt;
+
+---
+
+# The Tradeoff, Visualized
+
+.big[
+As the threshold rises: specificity tends to rise, sensitivity tends to fall.
+
+There is no threshold that maximizes both at once.
+]
+
+Which one matters more depends on the **cost of being wrong** in each direction — a judgment call, not a statistical one.
+
+---
+
+# From a Tradeoff to a Curve
+
+.big[
+Instead of picking one threshold, plot the whole tradeoff:
+]
+
+**x-axis:** 1 − specificity (how often we wrongly call a loss a win)
+
+**y-axis:** sensitivity (how often we correctly catch a win)
+
+This is the **ROC curve** (Receiver Operating Characteristic).
+
+---
+
+# Plotting the ROC Curve
+
+
+``` r
+roc_full %&gt;%
+  mutate(fpr = 1 - specificity) %&gt;%
+  ggplot(aes(x = fpr, y = sensitivity)) +
+  geom_line() +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed") +
+  labs(x = "1 − specificity", y = "sensitivity")
+```
+
+&lt;img src="ds1000_lecture_15_slides_f2026_files/figure-html/unnamed-chunk-6-1.png" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Reading the ROC Curve
+
+.big[
+The dashed diagonal line is what a **coin flip** would produce — no ability to distinguish wins from losses at any threshold.
+
+A curve that bows **up and to the left**, away from the diagonal, means the classifier separates the two classes well across thresholds.
+]
+
+---
+
+# One Number for the Whole Curve
+
+.big[
+**AUC (Area Under the Curve):** the entire ROC curve's performance, summarized as one number.
+]
+
+- AUC of 0.5 → no better than guessing.
+- AUC of 1.0 → perfect separation at every threshold.
+- Between 0.5 and 1.0 → some real ability to distinguish the classes, evaluated across **every** threshold at once.
+
+---
+
+# Calculating AUC
+
+
+``` r
+compute_auc &lt;- function(roc_dat) {
+  roc_sorted &lt;- roc_dat %&gt;%
+    mutate(fpr = 1 - specificity) %&gt;%
+    arrange(fpr)
+  sum(diff(roc_sorted$fpr) * (head(roc_sorted$sensitivity, -1) +
+                                 tail(roc_sorted$sensitivity, -1)) / 2)
+}
+```
+
+
+``` r
+round(auc_full, 3)
+```
+
+```
+## [1] 0.786
+```
+
+---
+
+# Why AUC Is Useful for Comparison
+
+.big[
+Accuracy depends on a threshold you have to pick.
+
+AUC does not — it summarizes performance **across every possible threshold**, which makes it a fairer way to compare two different classifiers.
+]
+
+---
+
+# Comparing Models, the Lecture 12 Way
+
+Recall: to compare regression models, we cross-validated RMSE across 100 train/test splits.
+
+.big[
+Same idea, new metric: cross-validate **AUC** to compare two classifiers.
+]
+
+- Full model: `isWin ~ tov + pts + treb + pctFG`
+- Simple model: `isWin ~ tov`
+
+---
+
+# Repeated Cross-Validated AUC
+
+
+``` r
+for (i in 1:100) {
+  inds_i &lt;- sample(1:nrow(gms), size = round(nrow(gms) / 2), replace = FALSE)
+  train_i &lt;- gms %&gt;% slice(inds_i)
+  test_i &lt;- gms %&gt;% slice(-inds_i)
+
+  m_full_i &lt;- lm(isWin ~ tov + pts + treb + pctFG, data = train_i)
+  m_simple_i &lt;- lm(isWin ~ tov, data = train_i)
+  # ...compute AUC for each on test_i, store results...
+}
+```
+
+---
+
+# The Results
+
+
+``` r
+cv_auc_summary
+```
+
+```
+## # A tibble: 2 × 2
+##   model                           mean_auc
+##   &lt;chr&gt;                              &lt;dbl&gt;
+## 1 Full (tov + pts + treb + pctFG)    0.760
+## 2 Simple (tov only)                  0.563
+```
+
+
+``` r
+cv_auc %&gt;%
+  ggplot(aes(x = auc, fill = model)) +
+  geom_density(alpha = .4)
+```
+
+&lt;img src="ds1000_lecture_15_slides_f2026_files/figure-html/unnamed-chunk-11-1.png" style="display: block; margin: auto;" /&gt;
+
+---
+
+# What This Comparison Tells Us
+
+.big[
+The model with the higher average cross-validated AUC separates wins from losses more reliably, across thresholds, on data it wasn't fit to.
+]
+
+It does **not** tell us which predictor *causes* winning — same caution as every model comparison this semester.
+
+---
+
+# Audit an AI Claim
+
+Suppose an AI assistant is shown only the model's accuracy at the default 0.5 threshold and says:
+
+&gt; "This model performs at 74% and that fully describes how good it is."
+
+.big[
+**What does a single-threshold accuracy number leave out?**
+
+**Why might AUC give a more complete picture?**
+
+**What judgment call does picking a threshold still require, even with a good AUC?**
+]
+
+---
+
+# A Calibrated Conclusion
+
+Instead of:
+
+&gt; "The model is 74% accurate."
+
+Try:
+
+.big[
+&gt; **Across repeated train/test splits, the full model's average AUC was 0.76, compared to 0.563 for the turnovers-only model — a more complete comparison than a single accuracy number, though neither establishes what causes winning, and any real use would still require choosing a threshold based on the cost of each kind of mistake.**
+]
+
+---
+
+# Before You Leave
+
+When you see a classifier's performance reported, ask:
+
+1. Was accuracy reported at one threshold, or across the tradeoff?
+2. What are sensitivity and specificity, separately?
+3. Does the ROC curve bow away from the diagonal?
+4. Was AUC calculated with held-out data, ideally cross-validated?
+5. What threshold would actually get used, and what does that choice cost in each direction?
+
+---
+
+# The Rule to Remember
+
+.huge[
+**One accuracy number is a snapshot.**
+
+**A full evaluation looks across every threshold.**
+]
+
+---
+
+# Homework 12
+
+You will practice:
+
+- calculating sensitivity and specificity from a confusion matrix;
+- sweeping a threshold to see the tradeoff between them;
+- building and reading an ROC curve;
+- comparing two classifiers using cross-validated AUC;
+- auditing an AI claim that treats one threshold's accuracy as the full picture.
+
+Next:
+
+.big[
+**Clustering / Unsupervised Learning**
+]
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+  "ratio": "16:9",
+  "highlightStyle": "github",
+  "highlightLines": true,
+  "countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

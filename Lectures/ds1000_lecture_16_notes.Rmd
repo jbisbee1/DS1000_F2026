@@ -1,0 +1,433 @@
+---
+title: "Clustering: Finding Groups of Pokémon"
+output: html_document
+date: "2026-10-28"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+# How to use these notes
+
+This file has the full code for today's live coding, posted before class.
+
+The code is split into sections. Each section starts with a **CHECKPOINT** chunk. A checkpoint chunk rebuilds everything the section needs from scratch: it loads the packages, loads the data, and redoes the earlier steps. If you hit an error or fall behind, run the most recent checkpoint chunk and you are caught up. You do not need to fix the earlier error first.
+
+The plots are interactive (`plotly`). Hover over a point to see which Pokémon it is, and double-click a legend entry to isolate one group. If you have not installed the package yet, run this once in the console:
+
+```{r, eval=FALSE}
+install.packages("plotly")
+```
+
+Today's question: **if nobody tells us the groups, does a collection of 802 Pokémon have natural groups in it? And how much should we trust the groups an algorithm hands us?**
+
+# Section 1: Load and look at the data
+
+```{r}
+# CHECKPOINT 1 ------------------------------------------------------------
+require(tidyverse)
+require(plotly)
+
+pk <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/pokemon_stats.rds")
+```
+
+Each row is one Pokémon species from the first seven generations of games. We have its type, its size, and six **base stats** that determine how it fights: `hp` (health), `attack`, `defense`, `special_attack`, `special_defense`, and `speed`.
+
+```{r}
+glimpse(pk)
+```
+
+There is no outcome variable here. Nobody labeled any Pokémon as a "tank" or a "sweeper." The question is whether the stats themselves contain groups.
+
+```{r}
+pk %>%
+  arrange(desc(attack)) %>%
+  select(pokemon, type_1, hp, attack, defense, speed) %>%
+  head(8)
+```
+
+Now look at two of the stats at once. Hover to identify the outliers.
+
+```{r}
+p_look <- pk %>%
+  ggplot(aes(x = attack, y = defense, text = pokemon)) +
+  geom_point(alpha = 0.5) +
+  labs(x = "Attack", y = "Defense",
+       title = "802 Pokémon on two base stats")
+
+ggplotly(p_look, tooltip = "text")
+```
+
+Do you see groups? How many? Remember that you are looking at only two of the six stats.
+
+**PAUSE: everyone should be here. If not, run the next checkpoint.**
+
+# Section 2: What does "close" mean?
+
+```{r}
+# CHECKPOINT 2 ------------------------------------------------------------
+require(tidyverse)
+require(plotly)
+pk <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/pokemon_stats.rds")
+```
+
+$k$-means puts observations in the same group when they are **close**, meaning a small Euclidean (straight-line) distance on the variables we give it. We can calculate the distance between two Pokémon by hand:
+
+```{r}
+stat_cols <- c("hp", "attack", "defense", "special_attack", "special_defense", "speed")
+
+pk %>%
+  filter(pokemon %in% c("Pikachu", "Raichu", "Snorlax")) %>%
+  select(pokemon, all_of(stat_cols))
+```
+
+```{r}
+pikachu <- pk %>% filter(pokemon == "Pikachu") %>% select(all_of(stat_cols))
+raichu <- pk %>% filter(pokemon == "Raichu") %>% select(all_of(stat_cols))
+snorlax <- pk %>% filter(pokemon == "Snorlax") %>% select(all_of(stat_cols))
+
+sqrt(sum((pikachu - raichu)^2))
+sqrt(sum((pikachu - snorlax)^2))
+```
+
+Pikachu is much closer to its own evolution than to Snorlax. The same calculation works on every Pokémon at once. Here are the 8 Pokémon whose stats are closest to Pikachu's. Change `"Pikachu"` to any name you like.
+
+```{r}
+target <- "Pikachu"
+
+target_stats <- pk %>% filter(pokemon == target) %>% select(all_of(stat_cols))
+
+pk %>%
+  mutate(distance = sqrt((hp - target_stats$hp)^2 +
+                           (attack - target_stats$attack)^2 +
+                           (defense - target_stats$defense)^2 +
+                           (special_attack - target_stats$special_attack)^2 +
+                           (special_defense - target_stats$special_defense)^2 +
+                           (speed - target_stats$speed)^2)) %>%
+  arrange(distance) %>%
+  select(pokemon, type_1, distance) %>%
+  head(9)
+```
+
+The first row is the Pokémon itself, at distance 0. Notice that "closest in stats" does not mean "same type."
+
+# Section 3: Running k-means
+
+```{r}
+# CHECKPOINT 3 ------------------------------------------------------------
+require(tidyverse)
+require(plotly)
+pk <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/pokemon_stats.rds")
+stat_cols <- c("hp", "attack", "defense", "special_attack", "special_defense", "speed")
+```
+
+Start simply, with two stats and three groups. `centers = 3` asks for three clusters. `nstart = 25` tries 25 random starting positions and keeps the best, because one random start can get unlucky. `set.seed()` makes everyone's random starts the same.
+
+```{r}
+set.seed(123)
+km3 <- kmeans(pk %>% select(attack, defense), centers = 3, nstart = 25)
+
+km3$centers
+```
+
+`km3$centers` is the average attack and defense in each cluster. `km3$cluster` gives every Pokémon's cluster number.
+
+```{r}
+pk <- pk %>%
+  mutate(cluster = factor(km3$cluster))
+
+pk %>%
+  count(cluster)
+```
+
+```{r}
+p_km3 <- pk %>%
+  ggplot(aes(x = attack, y = defense, color = cluster, text = pokemon)) +
+  geom_point(alpha = 0.6) +
+  labs(x = "Attack", y = "Defense", color = "Cluster",
+       title = "k-means with k = 3 on attack and defense")
+
+ggplotly(p_km3, tooltip = "text")
+```
+
+Hover over the points near the boundary between two clusters. Pokémon that are almost identical can land in different clusters, because the algorithm has to draw a line somewhere.
+
+**The cluster numbers are arbitrary labels.** Rerun the code with `set.seed(1)` instead of 123 and you may find that "cluster 1" is now what used to be "cluster 3." What matters is which Pokémon are grouped together, not the number.
+
+```{r}
+set.seed(1)
+km3_other <- kmeans(pk %>% select(attack, defense), centers = 3, nstart = 25)
+
+table(first_run = km3$cluster, second_run = km3_other$cluster)
+```
+
+Each row should have one large number: the same groups, with different labels.
+
+**PAUSE: everyone should be here. If not, run the next checkpoint.**
+
+# Section 4: Do the clusters mean anything?
+
+```{r}
+# CHECKPOINT 4 ------------------------------------------------------------
+require(tidyverse)
+require(plotly)
+pk <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/pokemon_stats.rds")
+stat_cols <- c("hp", "attack", "defense", "special_attack", "special_defense", "speed")
+set.seed(123)
+km3 <- kmeans(pk %>% select(attack, defense), centers = 3, nstart = 25)
+pk <- pk %>% mutate(cluster = factor(km3$cluster))
+```
+
+The algorithm only saw attack and defense. To decide what the clusters represent, we look at who is in them.
+
+```{r}
+pk %>%
+  group_by(cluster) %>%
+  summarise(n_pokemon = n(),
+            mean_attack = mean(attack),
+            mean_defense = mean(defense),
+            examples = paste(head(pokemon, 5), collapse = ", "))
+```
+
+One cluster has low attack and low defense (a weak group), one has high attack, and one has the highest defense. We can check what these groups look like on something the algorithm never saw: the other four stats.
+
+```{r}
+pk %>%
+  group_by(cluster) %>%
+  summarise(across(c(hp, special_attack, special_defense, speed), mean))
+```
+
+The weak group is also the lowest on HP, special attack, and special defense, and ties for the lowest on speed, so it really is a "weak across the board" group. The high-defense group also has the highest special defense, but it is as slow as the weak group. In this sense the clusters we built from two stats are partly strength tiers and partly a style (a slow, bulky group). That is a sanity check, and it is a finding.
+
+# Section 5: How many clusters?
+
+```{r}
+# CHECKPOINT 5 ------------------------------------------------------------
+require(tidyverse)
+require(plotly)
+pk <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/pokemon_stats.rds")
+stat_cols <- c("hp", "attack", "defense", "special_attack", "special_defense", "speed")
+```
+
+Nothing stops us from asking for 2 clusters or 20. As in the slides, we measure the error, the **within-cluster sum of squares (WSS)**: the total squared distance from each point to its own cluster's center. We try $k$ from 1 to 10 and look for an elbow.
+
+```{r}
+set.seed(123)
+wss <- map_dfr(1:10, function(k) {
+  m <- kmeans(pk %>% select(attack, defense), centers = k, nstart = 25)
+  tibble(k = k, tot_wss = m$tot.withinss)
+})
+
+p_elbow <- wss %>%
+  ggplot(aes(x = k, y = tot_wss)) +
+  geom_line() +
+  geom_point() +
+  scale_x_continuous(breaks = 1:10) +
+  labs(x = "Number of clusters (k)", y = "Total within-cluster sum of squares",
+       title = "Elbow plot for attack and defense")
+
+ggplotly(p_elbow)
+```
+
+WSS always falls as $k$ grows, and here it falls smoothly. There is no sharp elbow. Two reasonable people could pick 3, 4, or 5. This is what the slides mean by "a judgment call, not a formula," and it is a clue that the Pokémon do not form cleanly separated groups on these two stats.
+
+# Section 6: Clustering on all six stats
+
+```{r}
+# CHECKPOINT 6 ------------------------------------------------------------
+require(tidyverse)
+require(plotly)
+pk <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/pokemon_stats.rds")
+stat_cols <- c("hp", "attack", "defense", "special_attack", "special_defense", "speed")
+```
+
+Now give the algorithm all six stats and ask for four groups.
+
+```{r}
+set.seed(123)
+km4 <- kmeans(pk %>% select(all_of(stat_cols)), centers = 4, nstart = 25)
+
+pk <- pk %>%
+  mutate(cluster = factor(km4$cluster))
+
+pk %>%
+  count(cluster)
+```
+
+With six variables we cannot draw one scatterplot. Instead we plot each cluster's **profile**: its average on every stat. Hover over a line to read the values.
+
+```{r}
+profile <- as_tibble(km4$centers) %>%
+  mutate(cluster = factor(row_number())) %>%
+  pivot_longer(-cluster, names_to = "stat", values_to = "average") %>%
+  mutate(stat = factor(stat, levels = stat_cols))
+
+p_profile <- profile %>%
+  ggplot(aes(x = stat, y = average, color = cluster, group = cluster)) +
+  geom_line() +
+  geom_point() +
+  labs(x = "", y = "Cluster average", color = "Cluster",
+       title = "Average stats in each of the 4 clusters")
+
+ggplotly(p_profile)
+```
+
+```{r}
+pk %>%
+  group_by(cluster) %>%
+  summarise(n_pokemon = n(),
+            examples = paste(head(pokemon[order(-(hp + attack + defense + special_attack +
+                                                      special_defense + speed))], 6),
+                             collapse = ", "))
+```
+
+Look at the lines in the profile plot, and at each cluster's average total stats. Two clusters are **tiers**: a weak one (average total of about 300) and an elite one (about 555). The other two clusters are about equally strong (a total of about 465) but have different shapes: one is fast, and the other is slow but has very high defense. The clusters therefore mix two ideas, **how strong** a Pokémon is and **what kind of fighter** it is.
+
+**PAUSE: everyone should be here. If not, run the next checkpoint.**
+
+# Section 7: What we measure decides what we find
+
+```{r}
+# CHECKPOINT 7 ------------------------------------------------------------
+require(tidyverse)
+require(plotly)
+pk <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/pokemon_stats.rds")
+stat_cols <- c("hp", "attack", "defense", "special_attack", "special_defense", "speed")
+```
+
+The raw stats are dominated by overall strength. To ask a different question, "what **shape** is this Pokémon's stat line?", we convert each stat to a **share of that Pokémon's total**.
+
+```{r}
+pk <- pk %>%
+  mutate(total = hp + attack + defense + special_attack + special_defense + speed,
+         across(all_of(stat_cols), ~ .x / total, .names = "share_{.col}"))
+
+share_cols <- paste0("share_", stat_cols)
+
+pk %>%
+  select(pokemon, total, all_of(share_cols)) %>%
+  head(5)
+```
+
+Each row of shares adds up to 1. Now cluster on the shares:
+
+```{r}
+set.seed(123)
+km_shape <- kmeans(pk %>% select(all_of(share_cols)), centers = 4, nstart = 25)
+
+pk <- pk %>%
+  mutate(shape_cluster = factor(km_shape$cluster))
+
+pk %>%
+  group_by(shape_cluster) %>%
+  summarise(n_pokemon = n(),
+            mean_total = mean(total),
+            across(all_of(share_cols), mean))
+```
+
+```{r}
+profile_shape <- as_tibble(km_shape$centers) %>%
+  mutate(shape_cluster = factor(row_number())) %>%
+  pivot_longer(-shape_cluster, names_to = "stat", values_to = "share") %>%
+  mutate(stat = factor(str_remove(stat, "share_"), levels = stat_cols))
+
+p_shape <- profile_shape %>%
+  ggplot(aes(x = stat, y = share, color = shape_cluster, group = shape_cluster)) +
+  geom_line() +
+  geom_point() +
+  labs(x = "", y = "Share of the Pokémon's total stats", color = "Cluster",
+       title = "Stat profiles when we ignore overall strength")
+
+ggplotly(p_shape)
+```
+
+The four clusters now have similar average totals (roughly 400 to 440), so strength has been taken out of the picture. What separates the clusters is shape: one is fast, one leans on attack and HP, one has an unusually high share in defense and is the slowest, and one leans on the special stats and HP. The data did not change. We changed what "close" means.
+
+```{r}
+pk %>%
+  group_by(shape_cluster) %>%
+  summarise(examples = paste(head(pokemon, 8), collapse = ", "))
+```
+
+The last step is a plot. Total strength and speed share put Pokémon on a map, colored by the shape cluster:
+
+```{r}
+p_map <- pk %>%
+  ggplot(aes(x = total, y = share_speed, color = shape_cluster, text = pokemon)) +
+  geom_point(alpha = 0.6) +
+  labs(x = "Total base stats (overall strength)",
+       y = "Speed as a share of total",
+       color = "Shape cluster",
+       title = "Strength and shape are different dimensions")
+
+ggplotly(p_map, tooltip = "text")
+```
+
+# Section 8: Your turn
+
+```{r}
+# CHECKPOINT 8 ------------------------------------------------------------
+require(tidyverse)
+require(plotly)
+pk <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/pokemon_stats.rds")
+stat_cols <- c("hp", "attack", "defense", "special_attack", "special_defense", "speed")
+```
+
+**Claim:** "A $k$-means clustering found 4 groups in the Pokémon, so there are exactly 4 kinds of Pokémon."
+
+1. Run $k$-means on all six stats with $k = 3$, $k = 4$, and $k = 5$ (use `set.seed(123)` and `nstart = 25` each time).
+2. Compare the groupings. Does a cluster from $k = 3$ stay together at $k = 5$, or does it get split up? (`table()` or `count()` on two cluster columns will show you.)
+3. Is the claim supported? What did the algorithm test, and what did we assume?
+
+```{r}
+set.seed(123)
+km_a <- kmeans(pk %>% select(all_of(stat_cols)), centers = 3, nstart = 25)
+set.seed(123)
+km_b <- kmeans(pk %>% select(all_of(stat_cols)), centers = 4, nstart = 25)
+set.seed(123)
+km_c <- kmeans(pk %>% select(all_of(stat_cols)), centers = 5, nstart = 25)
+
+pk <- pk %>%
+  mutate(k3 = factor(km_a$cluster),
+         k4 = factor(km_b$cluster),
+         k5 = factor(km_c$cluster))
+
+table(k3 = pk$k3, k5 = pk$k5)
+```
+
+```{r}
+c(k3 = km_a$tot.withinss, k4 = km_b$tot.withinss, k5 = km_c$tot.withinss)
+```
+
+The claim is not supported. We chose $k = 4$ ourselves, so the algorithm never tested whether there are 4 groups. The table shows that one group is stable: almost all of the weak Pokémon from $k = 3$ stay together at $k = 5$. The other two groups are re-cut into several pieces. The WSS also keeps falling smoothly without a sharp elbow. The clusters are one reasonable way to summarize the data, not evidence that Pokémon fall into exactly 4 kinds.
+
+Finally, an interactive look at the strongest cluster at $k = 4$. Which Pokémon does the algorithm treat as a different tier?
+
+```{r}
+top_cluster <- pk %>%
+  mutate(total = hp + attack + defense + special_attack + special_defense + speed) %>%
+  group_by(k4) %>%
+  summarise(mean_total = mean(total)) %>%
+  slice_max(mean_total, n = 1) %>%
+  pull(k4)
+
+p_top <- pk %>%
+  mutate(total = hp + attack + defense + special_attack + special_defense + speed,
+         in_top_cluster = k4 == top_cluster) %>%
+  ggplot(aes(x = attack, y = speed, color = in_top_cluster, text = pokemon)) +
+  geom_point(alpha = 0.6) +
+  labs(x = "Attack", y = "Speed", color = "In the strongest cluster?",
+       title = "Where does the strongest cluster sit?")
+
+ggplotly(p_top, tooltip = "text")
+```
+
+# Summary
+
+1. $k$-means has no outcome variable. It groups observations that are close on the variables we give it.
+2. Cluster numbers are arbitrary labels, and the random start matters. Use `set.seed()` and `nstart`.
+3. The elbow plot guides the choice of $k$. When there is no sharp elbow, the choice is a judgment call.
+4. Check what the clusters mean by looking at who is in them and at variables the algorithm did not use.
+5. What we feed the algorithm decides what it finds: raw stats mixed strength tiers with styles, and stat shares isolated the fighting styles.
+6. Clustering describes structure. It does not explain it, predict anything, or prove that exactly $k$ groups exist.

@@ -1,0 +1,373 @@
+---
+title: "Auditing an AI Report: Who Reaches the Summit?"
+output: html_document
+date: "2026-11-16"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+# How to use these notes
+
+This file has the full code for today's live coding, posted before class.
+
+The code is split into sections. Each section starts with a **CHECKPOINT** chunk. A checkpoint chunk rebuilds everything the section needs from scratch: it loads the packages, loads the data, and redoes the earlier steps. If you hit an error or fall behind, run the most recent checkpoint chunk and you are caught up. You do not need to fix the earlier error first.
+
+The plots are interactive (`plotly`): hover to read the details. If you have not installed the package, run this once in the console:
+
+```{r, eval=FALSE}
+install.packages("plotly")
+```
+
+Today's question: **AI can write the analysis. What is left for a human to do?** We answer it by auditing a short AI-style report, sentence by sentence, using real data. The report below was written for this exercise in the style of an AI-generated summary. It is not output from a real model, but it is written the way such summaries often are.
+
+> "Using the Himalayan Database, we find that climbers who use supplemental oxygen are far more likely to reach the summit. A regression model finds this relationship is highly confident, and the model predicts summit success accurately. This confirms that oxygen is the key driver of summit success."
+
+Each sentence makes a different kind of claim. For each one we ask: what can the computer do, and what must a person decide?
+
+# Section 1: Load and look at the data
+
+```{r}
+# CHECKPOINT 1 ------------------------------------------------------------
+require(tidyverse)
+require(plotly)
+
+hm <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/himalaya_members.rds")
+```
+
+The data come from the Himalayan Database, a record of expeditions to Himalayan peaks. Each row is **one climber on one expedition**. We have the peak and its height, the year and season, the climber's age, sex, and whether they were hired (for example a guide or high-altitude porter), how high they got (`highpoint_metres`), whether they reached the summit (`success`), and whether they used supplemental oxygen (`oxygen_used`).
+
+```{r}
+glimpse(hm)
+
+hm %>%
+  summarise(n_climbers = n(),
+            share_reached_summit = mean(success),
+            share_used_oxygen = mean(oxygen_used))
+```
+
+Summit success is not very common, and it varies a lot by peak. Each dot below is one peak (with at least 300 climber records). Hover for details.
+
+```{r}
+by_peak <- hm %>%
+  group_by(peak_name, peak_height_m) %>%
+  summarise(n_climbers = n(),
+            success_rate = mean(success),
+            oxygen_rate = mean(oxygen_used),
+            .groups = "drop") %>%
+  filter(n_climbers >= 300)
+
+p_peaks <- by_peak %>%
+  mutate(label = paste0(peak_name, " (", peak_height_m, " m)",
+                        "<br>Reached summit: ", round(100 * success_rate), "%",
+                        "<br>Used oxygen: ", round(100 * oxygen_rate), "%",
+                        "<br>Climbers: ", n_climbers)) %>%
+  ggplot(aes(x = peak_height_m, y = success_rate, size = n_climbers,
+             color = oxygen_rate, text = label)) +
+  geom_point(alpha = 0.8) +
+  labs(x = "Height of the peak (m)", y = "Share of climbers who reached the summit",
+       color = "Share using\noxygen", size = "Climbers")
+
+ggplotly(p_peaks, tooltip = "text")
+```
+
+The peaks with the highest oxygen use are the very high ones. Keep that in mind.
+
+**PAUSE: everyone should be here. If not, run the next checkpoint.**
+
+# Section 2: Sentence 1, "far more likely"
+
+```{r}
+# CHECKPOINT 2 ------------------------------------------------------------
+require(tidyverse)
+require(plotly)
+hm <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/himalaya_members.rds")
+```
+
+*"Climbers who use supplemental oxygen are far more likely to reach the summit."* This is a descriptive claim, so we can check it directly.
+
+```{r}
+hm %>%
+  group_by(oxygen_used) %>%
+  summarise(n_climbers = n(),
+            summit_rate = mean(success))
+```
+
+The gap is enormous. The AI's sentence is, so far, accurate. But recall the lesson from last class: a comparison can be fair on the surface and still unfair underneath. Where is oxygen used?
+
+```{r}
+hm %>%
+  mutate(peak_class = if_else(peak_height_m >= 8000, "8,000 m and above", "Below 8,000 m")) %>%
+  group_by(peak_class, oxygen_used) %>%
+  summarise(n_climbers = n(),
+            summit_rate = mean(success),
+            .groups = "drop")
+```
+
+Almost all oxygen use is on peaks of 8,000 m and above, and those peaks are hard. Pooling all peaks might therefore *understate or overstate* the effect, depending on the peak. The fair comparison is **within** a peak. Here are the peaks of 8,000 m and above, comparing climbers with and without oxygen. We keep only peaks with at least 100 climbers in each group.
+
+```{r}
+e8 <- hm %>%
+  filter(peak_height_m >= 8000)
+
+ox_peak <- e8 %>%
+  group_by(peak_name, peak_height_m, oxygen_used) %>%
+  summarise(n_climbers = n(),
+            rate = mean(success),
+            .groups = "drop") %>%
+  group_by(peak_name) %>%
+  filter(n() == 2, all(n_climbers >= 100)) %>%
+  ungroup() %>%
+  mutate(peak_name = reorder(peak_name, peak_height_m),
+         group = if_else(oxygen_used, "Used oxygen", "No oxygen"))
+
+segments <- ox_peak %>%
+  select(peak_name, oxygen_used, rate) %>%
+  pivot_wider(names_from = oxygen_used, values_from = rate, names_prefix = "rate_")
+
+p_ox <- ggplot() +
+  geom_segment(data = segments,
+               aes(x = rate_FALSE, xend = rate_TRUE, y = peak_name, yend = peak_name),
+               color = "grey60") +
+  geom_point(data = ox_peak,
+             aes(x = rate, y = peak_name, color = group,
+                 text = paste0(peak_name, ", ", group,
+                               "<br>Reached summit: ", round(100 * rate), "%",
+                               "<br>Climbers: ", n_climbers)),
+             size = 2.5) +
+  labs(x = "Share who reached the summit", y = NULL, color = "")
+
+ggplotly(p_ox, tooltip = "text")
+```
+
+On every one of these peaks, climbers using oxygen reached the summit far more often. Separating the peaks did not make the association go away. **Sentence 1 holds up.** This is an important result in its own right: checking a possible confounder does not always overturn a finding.
+
+**PAUSE: everyone should be here. If not, run the next checkpoint.**
+
+# Section 3: Sentence 2a, "highly confident"
+
+```{r}
+# CHECKPOINT 3 ------------------------------------------------------------
+require(tidyverse)
+require(plotly)
+hm <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/himalaya_members.rds")
+e8 <- hm %>%
+  filter(peak_height_m >= 8000)
+```
+
+*"A regression model finds this relationship is highly confident."* Confident by what measure? We can use the bootstrap from Unit 3. We resample the 8,000 m climbers with replacement 300 times, and each time we recalculate the gap in summit rates between climbers with and without oxygen.
+
+```{r}
+set.seed(123)
+
+boot_diff <- map_dbl(1:300, function(i) {
+  s <- e8 %>% slice_sample(prop = 1, replace = TRUE)
+  mean(s$success[s$oxygen_used]) - mean(s$success[!s$oxygen_used])
+})
+
+observed_diff <- mean(e8$success[e8$oxygen_used]) - mean(e8$success[!e8$oxygen_used])
+
+c(observed = observed_diff, quantile(boot_diff, c(0.025, 0.975)))
+```
+
+```{r}
+p_boot <- tibble(boot_diff) %>%
+  ggplot(aes(x = boot_diff)) +
+  geom_histogram(bins = 30) +
+  geom_vline(xintercept = observed_diff, linetype = "dashed") +
+  labs(x = "Difference in summit rate (oxygen minus no oxygen)",
+       y = "Number of resamples",
+       title = "300 bootstrap resamples")
+
+ggplotly(p_boot)
+```
+
+The interval is very narrow, so the AI's word "confident" is justified in this sense: with this many climbers, the size of the association is estimated very precisely. But look at what the interval is about. It tells us how precisely we have measured the **gap between two groups**. It says nothing about whether oxygen **causes** the gap. A narrow interval around an association is still an association. **Sentence 2 is true about precision, and silent about cause.**
+
+# Section 4: Sentence 2b, "predicts accurately"
+
+```{r}
+# CHECKPOINT 4 ------------------------------------------------------------
+require(tidyverse)
+require(plotly)
+hm <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/himalaya_members.rds")
+e8 <- hm %>%
+  filter(peak_height_m >= 8000)
+```
+
+*"The model predicts summit success accurately."* Accurate on which data, and compared with what? We follow the steps from the classification unit. First we drop the climbers with a missing age, then split the climbers into a training half and a test half.
+
+```{r}
+d <- hm %>%
+  drop_na(age)
+
+set.seed(123)
+inds <- sample(1:nrow(d), size = round(nrow(d) / 2), replace = FALSE)
+train <- d %>% slice(inds)
+test <- d %>% slice(-inds)
+
+m_full <- lm(success ~ oxygen_used + peak_height_m + hired + age, data = train)
+
+accuracy <- function(model, data) {
+  mean((predict(model, newdata = data) >= 0.5) == data$success)
+}
+
+c(train = accuracy(m_full, train),
+  test = accuracy(m_full, test),
+  baseline = max(mean(test$success), 1 - mean(test$success)))
+```
+
+The accuracy on the test half is almost identical to the accuracy on the training half, so the model is not overfit. The model also beats the baseline of always guessing "no summit." Without oxygen in the model, how much worse is it?
+
+```{r}
+m_no_oxygen <- lm(success ~ peak_height_m + hired + age, data = train)
+
+c(with_oxygen = accuracy(m_full, test),
+  without_oxygen = accuracy(m_no_oxygen, test))
+```
+
+Now look inside the accuracy, as in Lecture 15:
+
+```{r}
+test %>%
+  mutate(predicted_summit = predict(m_full, newdata = test) >= 0.5) %>%
+  group_by(success) %>%
+  summarise(n_climbers = n(),
+            share_predicted_summit = mean(predicted_summit))
+```
+
+Of the climbers who actually reached the summit, the model caught only about 57 percent (its **sensitivity**). Of those who did not, it correctly ruled out about 88 percent (its **specificity**). Whether this counts as "accurate" depends on what the model is for. It is clearly better than guessing, and it misses more than 4 in 10 successful climbers.
+
+There is a second question, borrowed from Lecture 14: **would the predictor be available at the moment we need the prediction?** Climbers decide whether to use oxygen during the climb. Here is oxygen use by the highest point each climber reached (for the climbers with a recorded highpoint):
+
+```{r}
+by_height <- e8 %>%
+  filter(!is.na(highpoint_metres)) %>%
+  mutate(highpoint_band = cut(highpoint_metres,
+                              breaks = c(0, 6000, 7000, 7500, 8000, 8500, 9000),
+                              labels = c("Under 6,000", "6,000-7,000", "7,000-7,500",
+                                         "7,500-8,000", "8,000-8,500", "8,500+"),
+                              include.lowest = TRUE)) %>%
+  group_by(highpoint_band) %>%
+  summarise(n_climbers = n(),
+            oxygen_use = mean(oxygen_used))
+
+by_height
+
+p_timing <- by_height %>%
+  mutate(label = paste0("Highest point: ", highpoint_band, " m",
+                        "<br>Used oxygen: ", round(100 * oxygen_use), "%",
+                        "<br>Climbers: ", n_climbers)) %>%
+  ggplot(aes(x = highpoint_band, y = oxygen_use, group = 1, text = label)) +
+  geom_line() +
+  geom_point() +
+  labs(x = "Highest point reached (m)", y = "Share who used oxygen")
+
+ggplotly(p_timing, tooltip = "text")
+```
+
+Climbers who turned back low on the mountain rarely used oxygen, and nearly all of those who got to the very top did. Oxygen use and getting high on the mountain go together partly by construction. That means `oxygen_used` is not a clean "before the climb" predictor, and some of its power may come from knowing how the climb went. **Sentence 2's "predicts accurately" is true in a narrow sense (better than guessing, not overfit) and misleading in a wider one.**
+
+**PAUSE: everyone should be here. If not, run the next checkpoint.**
+
+# Section 5: Sentence 3, "confirms ... the key driver"
+
+```{r}
+# CHECKPOINT 5 ------------------------------------------------------------
+require(tidyverse)
+require(plotly)
+hm <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/himalaya_members.rds")
+e8 <- hm %>%
+  filter(peak_height_m >= 8000) %>%
+  mutate(decade = floor(year / 10) * 10)
+```
+
+*"This confirms that oxygen is the key driver of summit success."* Two words stand out: **confirms** and **driver**. To claim a cause, we would have to rule out other explanations. Climbers who use oxygen differ from those who do not. Here is one clear difference. Over the decades, expeditions have become more commercial, with more hired support. Both oxygen use and summit success have risen. Hover for the numbers.
+
+```{r}
+by_decade <- e8 %>%
+  filter(decade >= 1980) %>%
+  group_by(decade) %>%
+  summarise(n_climbers = n(),
+            `Used oxygen` = mean(oxygen_used),
+            `Reached summit` = mean(success),
+            `Hired` = mean(hired)) %>%
+  pivot_longer(c(`Used oxygen`, `Reached summit`, `Hired`),
+               names_to = "measure", values_to = "share")
+
+p_decade <- by_decade %>%
+  mutate(label = paste0(measure, ", ", decade, "s: ", round(100 * share), "%",
+                        "<br>Climbers: ", n_climbers)) %>%
+  ggplot(aes(x = decade, y = share, color = measure, group = measure, text = label)) +
+  geom_line() +
+  geom_point() +
+  labs(x = "Decade", y = "Share of climbers on 8,000 m peaks", color = "")
+
+ggplotly(p_decade, tooltip = "text")
+```
+
+Does adding these measured differences to the model change the size of the oxygen coefficient? We add the peak, whether the climber was hired, their age, and the decade, one at a time:
+
+```{r}
+tibble(model = c("Oxygen only",
+                 "+ peak",
+                 "+ peak, hired, age",
+                 "+ peak, hired, age, decade"),
+       oxygen_coefficient = c(
+         coef(lm(success ~ oxygen_used, data = e8))["oxygen_usedTRUE"],
+         coef(lm(success ~ oxygen_used + peak_name, data = e8))["oxygen_usedTRUE"],
+         coef(lm(success ~ oxygen_used + peak_name + hired + age, data = e8))["oxygen_usedTRUE"],
+         coef(lm(success ~ oxygen_used + peak_name + hired + age + factor(decade), data = e8))["oxygen_usedTRUE"])) %>%
+  mutate(oxygen_coefficient = round(oxygen_coefficient, 3))
+```
+
+The coefficient stays between roughly 0.6 and 0.7 throughout, so the association is robust to every difference we measured. That is a real finding, and it makes the first sentence stronger.
+
+It does not make the third sentence true. We did not randomly assign climbers to oxygen. Climbers who can afford oxygen, who are on well-supported expeditions, or who feel strong enough to continue are more likely to use it, and we have measured only some of those things. And as Section 4 showed, oxygen use is recorded after the fact, so part of the link may run from how far the climb went to whether oxygen was used. "Confirms" asks for more than an association can give. "Key driver" asks for a causal ranking of factors, and we never compared oxygen with anything else.
+
+# Section 6: Your turn
+
+```{r}
+# CHECKPOINT 6 ------------------------------------------------------------
+require(tidyverse)
+require(plotly)
+hm <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/himalaya_members.rds")
+```
+
+1. Rewrite the three-sentence report so that each claim is **no stronger than the evidence we found**. Keep the numbers.
+2. For each sentence, write down one thing the computer did and one thing only a person could decide.
+3. If your name is going on the report, what is one more check you would run before you sign it?
+
+Here is one possible answer. There are several good ones.
+
+> "Among climbers on Himalayan peaks of 8,000 m and above, those who used supplemental oxygen reached the summit far more often (about 78 percent, compared with about 16 percent), and the gap is large on every peak with enough climbers to compare. The estimate is precise (a bootstrap interval of about 61 to 63 percentage points). A model that includes oxygen predicts summit success better than guessing (76 percent accuracy, against a 62 percent baseline) but misses about 43 percent of successful climbers, and oxygen use is recorded during the climb, so it is not a clean advance predictor. These data show a large association that is robust to the peak, hiring, age, and decade, but they cannot show that oxygen causes success."
+
+```{r}
+tribble(
+  ~sentence, ~what_the_computer_did, ~what_a_person_had_to_decide,
+  "Far more likely", "Calculated summit rates with and without oxygen",
+  "Whether pooling the peaks was a fair comparison, and which peaks had enough climbers",
+  "Highly confident", "Ran 300 bootstrap resamples",
+  "That a narrow interval is about precision and not about cause",
+  "Predicts accurately", "Fit the model and calculated test accuracy",
+  "Which baseline to use, whether the predictor was available in advance, and what accuracy is good enough",
+  "Confirms ... key driver", "Nothing: no calculation can confirm a cause here",
+  "Whether the data could support a causal claim at all, and who is responsible for the wording"
+)
+```
+
+The last row is the point of the lecture. The computer can produce every number in the report. Choosing the comparison, reading the interval correctly, picking the baseline, and deciding what the evidence supports are all human decisions, and the person who signs the report is accountable for each of them.
+
+# Aside: why a second AI is not the answer
+
+You could ask another AI to review the report. That might catch some problems, and the checks above are the kind of thing it could do. But the review would still need a person to decide whether the review was right, and a person would still put their name on the claim. Responsibility does not disappear into a chain of tools. It lands on someone.
+
+# Summary
+
+1. Audit a report **sentence by sentence**, because each sentence is a different kind of claim (descriptive, precision, prediction, causal).
+2. Checking a confounder can **strengthen** a finding as well as weaken it. Here the oxygen association survived every adjustment we could make.
+3. A narrow interval tells you about precision, and nothing about cause.
+4. "Accurate" needs a baseline, a test set, a look inside the accuracy, and a question about whether the predictor is available in advance.
+5. "Confirms" and "key driver" are claims no association can support. Rewrite them so they match the evidence.
+6. AI can generate the analysis. Only you can be responsible for it.

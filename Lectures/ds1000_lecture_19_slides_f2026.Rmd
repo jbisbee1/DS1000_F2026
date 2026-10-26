@@ -45,6 +45,37 @@ spurious_dat <- tibble(
   series_b = cumsum(rnorm(20))
 )
 spurious_cor <- cor(spurious_dat$series_a, spurious_dat$series_b)
+
+# Penguins and wine sections (interactive plotly plots) -----------------------
+library(plotly)
+
+pg <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/penguins.rds") %>%
+  drop_na() %>%
+  mutate(male = sex == "male")
+
+adelie <- pg %>% filter(species == "Adelie")
+set.seed(123)
+inds_pg <- sample(1:nrow(adelie), size = round(nrow(adelie) / 2), replace = FALSE)
+train_adelie <- adelie %>% slice(inds_pg)
+test_adelie <- adelie %>% slice(-inds_pg)
+m_mass <- lm(male ~ body_mass_g, data = train_adelie)
+
+eval_pg <- bind_rows(test_adelie, pg %>% filter(species != "Adelie")) %>%
+  mutate(score = predict(m_mass, newdata = .),
+         predicted_male = score >= 0.5)
+
+wine <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/wine_reviews.rds")
+
+by_country <- wine %>%
+  group_by(country) %>%
+  summarise(n_reviews = n(),
+            mean_points = mean(points),
+            se = sd(points) / sqrt(n()),
+            lower = mean_points - 1.96 * se,
+            upper = mean_points + 1.96 * se) %>%
+  filter(n_reviews >= 100) %>%
+  arrange(desc(mean_points)) %>%
+  mutate(rank = row_number())
 ```
 
 <style>
@@ -72,6 +103,12 @@ spurious relationships, via a live-generated spurious correlation plus a
 callback to HW6's Simpson's paradox; (3) false precision from a measure
 that sounds exact but isn't (callback to Lecture 18's sentiment score);
 (4) AI hallucination -- fluency without verification.
+
+The penguin and wine sections (data/penguins.rds, data/wine_reviews.rds) give each
+mechanism a second, interactive example with new data (a sex-prediction rule trained
+on one species; Simpson's paradox in bill measurements; a wine ranking confounded by
+reviewer; claims to verify). The matching live-coding file is
+ds1000_lecture_19_notes.Rmd. Requires plotly.
 
 INSTRUCTOR NOTE:
 Avoid citing specific real-world statistics/studies that can't be verified
@@ -174,6 +211,41 @@ A number is a number. Nothing about `predict()`'s output announces "this estimat
 
 ---
 
+# Another Example: Penguins
+
+.big[
+Predict a penguin's sex from its body mass. The researcher only has **Adelie** penguins, so the model is trained on half of them.
+]
+
+```{r}
+eval_pg %>%
+  group_by(species) %>%
+  summarise(n = n(),
+            share_actually_male = round(mean(male), 2),
+            share_predicted_male = round(mean(predicted_male), 2),
+            accuracy = round(mean(predicted_male == male), 2))
+```
+
+---
+
+# Why It Fails (Hover Over the Points)
+
+```{r, out.width="100%"}
+p_pred <- eval_pg %>%
+  ggplot(aes(x = body_mass_g, y = score, color = species,
+             text = paste0(species, ", actually ", sex, "<br>", body_mass_g, " g"))) +
+  geom_point(alpha = .6) +
+  geom_hline(yintercept = .5, linetype = "dashed")
+
+ggplotly(p_pred, tooltip = "text", height = 340)
+```
+
+.big[
+"Heavy means male" is true for Adelie. A heavy Gentoo is just a typical Gentoo. The model predicts "male" for every Gentoo, and gives no warning.
+]
+
+---
+
 # Mechanism 2: Confounded and Spurious Relationships
 
 .big[
@@ -217,6 +289,41 @@ Misinformation frequently isn't a fabricated number — it's a real number, repo
 
 ---
 
+# A Real Relationship That Reverses
+
+```{r}
+pg %>%
+  summarise(pooled_correlation = round(cor(bill_length_mm, bill_depth_mm), 2))
+
+pg %>%
+  group_by(species) %>%
+  summarise(correlation_within_species = round(cor(bill_length_mm, bill_depth_mm), 2))
+```
+
+.big[
+Pooled across penguins, longer bills go with **shallower** bills. Within every species, longer bills go with **deeper** ones.
+]
+
+---
+
+# Simpson's Paradox, Interactively
+
+```{r, out.width="100%"}
+p_simpson <- pg %>%
+  ggplot(aes(x = bill_length_mm, y = bill_depth_mm)) +
+  geom_point(aes(color = species,
+                 text = paste0(species, "<br>", bill_length_mm, " mm long, ", bill_depth_mm, " mm deep")),
+             alpha = .6) +
+  geom_smooth(method = "lm", se = FALSE, color = "black", linetype = "dashed") +
+  geom_smooth(aes(color = species), method = "lm", se = FALSE)
+
+ggplotly(p_simpson, tooltip = "text", height = 340)
+```
+
+Click a species in the legend to hide it. Species is the third variable: ignore it and the sign flips.
+
+---
+
 # Mechanism 3: False Precision
 
 .big[
@@ -236,6 +343,56 @@ A single clean number invites more trust than the underlying measurement deserve
 Each of these is a specific-sounding number built from an imperfect proxy, exactly like the sentiment score. The precision of the number does not imply precision in what it measures.
 
 <!-- LO1: Reinforce construct validity from Unit 1 in a new register. -->
+
+---
+
+# A Ranking With Two Decimals
+
+10,000 wine reviews, scored 80 to 100. **Which country makes the best wine?**
+
+```{r}
+by_country %>%
+  transmute(rank, country, n_reviews, mean_points = round(mean_points, 2)) %>%
+  head(8)
+```
+
+.big[
+It looks exact. How precise is it?
+]
+
+---
+
+# Add the 95% Intervals (Hover for Details)
+
+```{r, out.width="100%"}
+p_rank <- by_country %>%
+  mutate(country = reorder(country, mean_points),
+         label = paste0("Rank ", rank, ": ", country, "<br>Mean: ", round(mean_points, 2),
+                        "<br>95% interval: ", round(lower, 2), " to ", round(upper, 2))) %>%
+  ggplot(aes(x = mean_points, y = country, text = label)) +
+  geom_pointrange(aes(xmin = lower, xmax = upper))
+
+ggplotly(p_rank, tooltip = "text", height = 340)
+```
+
+Neighboring countries in the middle overlap. The **order** is more precise on the page than in the data.
+
+---
+
+# Who Did the Scoring?
+
+```{r}
+wine %>%
+  filter(country %in% c("Argentina", "Austria", "Chile", "France", "Spain")) %>%
+  group_by(country) %>%
+  summarise(n_reviews = n(),
+            most_common_reviewer = names(sort(table(taster_name), decreasing = TRUE))[1],
+            share_by_that_reviewer = round(max(table(taster_name)) / sum(!is.na(taster_name)), 2))
+```
+
+.big[
+Each country is mostly scored by one reviewer. If reviewers differ in generosity, the ranking is partly a ranking of **reviewers**.
+]
 
 ---
 
@@ -282,6 +439,26 @@ Not "trust it" or "distrust it" — **verify it.**
 ]
 
 Find the actual study. Check the sample. Check what "productivity" was operationalized as. Check whether the number even appears in the source.
+
+---
+
+# Try It: Check Three Claims
+
+Three claims about the wine data, written the way an AI summary might write them:
+
+1. "Fewer than 1% of the wines cost more than $100."
+2. "Every wine in the data has a price listed."
+3. "Roughly 38% of the wines scored 90 or higher."
+
+```{r}
+round(mean(wine$price > 100, na.rm = TRUE), 3)
+sum(is.na(wine$price))
+round(mean(wine$points >= 90), 3)
+```
+
+.big[
+Which are true? Each sounds equally confident. Only the data can tell you.
+]
 
 ---
 

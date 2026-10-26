@@ -50,6 +50,31 @@ for (k in 1:8) {
 
 set.seed(123)
 km2_117 <- kmeans(h117 %>% select(nominate_dim1, nominate_dim2), centers = 2, nstart = 25)
+
+# Pokemon section (interactive plotly plots) ----------------------------------
+library(plotly)
+
+pk <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/pokemon_stats.rds")
+stat_cols <- c("hp", "attack", "defense", "special_attack", "special_defense", "speed")
+
+pk <- pk %>%
+  mutate(total = hp + attack + defense + special_attack + special_defense + speed,
+         across(all_of(stat_cols), ~ .x / total, .names = "share_{.col}"))
+share_cols <- paste0("share_", stat_cols)
+
+set.seed(123)
+km3_pk <- kmeans(pk %>% select(attack, defense), centers = 3, nstart = 25)
+
+set.seed(123)
+km4_pk <- kmeans(pk %>% select(all_of(stat_cols)), centers = 4, nstart = 25)
+
+set.seed(123)
+km4_shape <- kmeans(pk %>% select(all_of(share_cols)), centers = 4, nstart = 25)
+
+pk <- pk %>%
+  mutate(cluster2 = factor(km3_pk$cluster),
+         cluster6 = factor(km4_pk$cluster),
+         shape = factor(km4_shape$cluster))
 ```
 
 <style>
@@ -72,6 +97,10 @@ distinct from explanation (Units 1-3) and prediction (Lecture 13-15): no
 outcome variable, no labeled groups, just structure. Uses DW-NOMINATE
 ideology scores (H097/H117_members.csv) so students can compare Congresses
 83 years apart on a question the course cares about (polarization).
+
+The Pokemon section (data/pokemon_stats.rds, 802 base species) repeats the
+workflow on a second dataset and adds interactive plotly plots; the matching
+live-coding file is ds1000_lecture_16_notes.Rmd. Requires the plotly package.
 
 INSTRUCTOR NOTE:
 This is the last instructional lecture before the Unit 4 Assessment Day
@@ -331,6 +360,137 @@ Look at the two plots: are the clusters closer together, farther apart, more sep
 ]
 
 Clustering didn't test the polarization claim for us. It gave us a structured way to **look**.
+
+---
+
+# Same Method, New Data: Pokémon
+
+.big[
+802 Pokémon species, six **base stats** each:
+
+`hp`, `attack`, `defense`, `special_attack`, `special_defense`, `speed`
+]
+
+No one has labeled any Pokémon as a "tank" or a "speedster." **Is there structure in the stats themselves?**
+
+(Hover over any point on the next few slides to see which Pokémon it is.)
+
+---
+
+# Look First, Interactively
+
+```{r, out.width="100%"}
+p_look <- pk %>%
+  ggplot(aes(x = attack, y = defense, text = pokemon)) +
+  geom_point(alpha = .5)
+
+ggplotly(p_look, tooltip = "text", height = 380)
+```
+
+---
+
+# $k$-means on Attack and Defense
+
+```{r, eval=FALSE}
+set.seed(123)
+km3_pk <- kmeans(pk %>% select(attack, defense), centers = 3, nstart = 25)
+```
+
+```{r, out.width="100%"}
+p_km <- pk %>%
+  ggplot(aes(x = attack, y = defense, color = cluster2, text = pokemon)) +
+  geom_point(alpha = .6)
+
+ggplotly(p_km, tooltip = "text", height = 330)
+```
+
+---
+
+# Who Is in Each Cluster?
+
+```{r}
+pk %>%
+  group_by(cluster2) %>%
+  summarise(n = n(),
+            attack = round(mean(attack)),
+            defense = round(mean(defense)),
+            speed = round(mean(speed)),
+            examples = paste(head(pokemon, 3), collapse = ", "))
+```
+
+.big[
+The algorithm only saw attack and defense. We learn what the clusters *mean* by looking at who is in them, and at variables it did not use.
+]
+
+---
+
+# All Six Stats: What Does Each Cluster Look Like?
+
+```{r, out.width="100%"}
+prof <- as_tibble(km4_pk$centers) %>%
+  mutate(cluster = factor(row_number())) %>%
+  pivot_longer(-cluster, names_to = "stat", values_to = "average") %>%
+  mutate(stat = factor(stat, levels = stat_cols))
+
+p_prof <- prof %>%
+  ggplot(aes(x = stat, y = average, color = cluster, group = cluster)) +
+  geom_line() + geom_point()
+
+ggplotly(p_prof, height = 330)
+```
+
+---
+
+# Strength Tiers, Mixed With Styles
+
+.big[
+Two clusters are **tiers** (a weak one and an elite one). The other two are about equally strong but differ in shape: one is fast, one is slow and bulky.
+]
+
+The clusters blend two ideas: **how strong** a Pokémon is and **what kind of fighter** it is.
+
+What if we only want the second one?
+
+---
+
+# What We Measure Decides What We Find
+
+Convert each stat to a **share of that Pokémon's total**, then cluster on the shares:
+
+```{r, eval=FALSE}
+share_speed = speed / total   # and the same for the other five stats
+km4_shape <- kmeans(pk %>% select(starts_with("share_")), centers = 4, nstart = 25)
+```
+
+```{r, out.width="100%"}
+prof_shape <- as_tibble(km4_shape$centers) %>%
+  mutate(cluster = factor(row_number())) %>%
+  pivot_longer(-cluster, names_to = "stat", values_to = "share") %>%
+  mutate(stat = factor(str_remove(stat, "share_"), levels = stat_cols))
+
+p_shape <- prof_shape %>%
+  ggplot(aes(x = stat, y = share, color = cluster, group = cluster)) +
+  geom_line() + geom_point()
+
+ggplotly(p_shape, height = 300)
+```
+
+---
+
+# Same Data, Different Question
+
+```{r, out.width="100%"}
+p_map <- pk %>%
+  ggplot(aes(x = total, y = share_speed, color = shape, text = pokemon)) +
+  geom_point(alpha = .6) +
+  labs(x = "Total base stats", y = "Speed share of total")
+
+ggplotly(p_map, tooltip = "text", height = 330)
+```
+
+.big[
+All four clusters have similar average strength. Taking strength out of the picture revealed a different structure. **Our choice of what "close" means changed the groups.**
+]
 
 ---
 

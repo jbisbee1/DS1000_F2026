@@ -143,7 +143,7 @@ test <- test %>%
   mutate(pred_prob = predict(m_fight, newdata = test))
 
 test %>%
-  select(placed, top10, eliminations, damage_to_players, pred_prob) %>%
+  select(placed, top10,pred_prob) %>%
   arrange(desc(pred_prob)) %>%
   head(10)
 ```

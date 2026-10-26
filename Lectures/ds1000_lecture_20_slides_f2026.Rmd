@@ -18,6 +18,64 @@ options(width=60)
 knitr::opts_chunk$set(fig.align='center',fig.width=9,fig.height=5,message=F,warning=F)
 
 library(tidyverse)
+
+# Himalayan audit section (interactive plotly plots) --------------------------
+library(plotly)
+
+hm <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/himalaya_members.rds")
+e8 <- hm %>%
+  filter(peak_height_m >= 8000) %>%
+  mutate(decade = floor(year / 10) * 10)
+
+# Sentence 1: within-peak comparison
+ox_peak <- e8 %>%
+  group_by(peak_name, peak_height_m, oxygen_used) %>%
+  summarise(n_climbers = n(), rate = mean(success), .groups = "drop") %>%
+  group_by(peak_name) %>%
+  filter(n() == 2, all(n_climbers >= 100)) %>%
+  ungroup() %>%
+  mutate(peak_name = reorder(peak_name, peak_height_m),
+         group = if_else(oxygen_used, "Used oxygen", "No oxygen"))
+
+segments <- ox_peak %>%
+  select(peak_name, oxygen_used, rate) %>%
+  pivot_wider(names_from = oxygen_used, values_from = rate, names_prefix = "rate_")
+
+# Sentence 2: bootstrap interval and out-of-sample accuracy
+set.seed(123)
+boot_diff <- map_dbl(1:300, function(i) {
+  s <- e8 %>% slice_sample(prop = 1, replace = TRUE)
+  mean(s$success[s$oxygen_used]) - mean(s$success[!s$oxygen_used])
+})
+observed_diff <- mean(e8$success[e8$oxygen_used]) - mean(e8$success[!e8$oxygen_used])
+
+d_model <- hm %>% drop_na(age)
+set.seed(123)
+inds_hm <- sample(1:nrow(d_model), size = round(nrow(d_model) / 2), replace = FALSE)
+train_hm <- d_model %>% slice(inds_hm)
+test_hm <- d_model %>% slice(-inds_hm)
+m_full <- lm(success ~ oxygen_used + peak_height_m + hired + age, data = train_hm)
+acc_hm <- function(model, data) mean((predict(model, newdata = data) >= 0.5) == data$success)
+
+# Timing and era
+by_height <- e8 %>%
+  filter(!is.na(highpoint_metres)) %>%
+  mutate(highpoint_band = cut(highpoint_metres,
+                              breaks = c(0, 6000, 7000, 7500, 8000, 8500, 9000),
+                              labels = c("Under 6,000", "6,000-7,000", "7,000-7,500",
+                                         "7,500-8,000", "8,000-8,500", "8,500+"),
+                              include.lowest = TRUE)) %>%
+  group_by(highpoint_band) %>%
+  summarise(n_climbers = n(), oxygen_use = mean(oxygen_used))
+
+by_decade <- e8 %>%
+  filter(decade >= 1980) %>%
+  group_by(decade) %>%
+  summarise(n_climbers = n(),
+            `Used oxygen` = mean(oxygen_used),
+            `Reached summit` = mean(success),
+            `Hired` = mean(hired)) %>%
+  pivot_longer(c(`Used oxygen`, `Reached summit`, `Hired`), names_to = "measure", values_to = "share")
 ```
 
 <style>
@@ -42,6 +100,12 @@ implicitly since Lecture 1, walks the full recurring workflow stage by
 stage asking what AI can help with vs. what a human must judge, and works
 through one synthesized AI-generated "mini report" on the semester's
 running college-selectivity claim as a capstone audit exercise.
+
+The Himalayan audit section (data/himalaya_members.rds) works through a second
+AI-style report sentence by sentence with real data and interactive plotly plots,
+rather than leaving the audit abstract. The report is written for the exercise; it
+is not output from a real model. The matching live-coding file is
+ds1000_lecture_20_notes.Rmd. Requires plotly.
 
 INSTRUCTOR NOTE:
 This is the last instructional lecture before the Unit 5 Assessment Day
@@ -206,6 +270,129 @@ Nothing in that paragraph is necessarily false. Every phrase is just slightly lo
 ]
 
 That gap — between "consistent with" and "confirms," between "confident" and "confident by what measure" — is exactly where a human's judgment has to sit.
+
+---
+
+# A Second Audit, With Real Data
+
+Himalayan climbing records: one row per climber per expedition. A report written in the style of an AI summary:
+
+> "Climbers who use supplemental oxygen are far more likely to reach the summit. A regression model finds this relationship is highly confident, and the model predicts summit success accurately. This confirms that oxygen is the key driver of summit success."
+
+.big[
+Same task as before: check each sentence, and decide what the evidence supports.
+]
+
+---
+
+# Sentence 1: "Far More Likely"
+
+```{r}
+e8 %>%
+  group_by(oxygen_used) %>%
+  summarise(n_climbers = n(), summit_rate = round(mean(success), 3))
+```
+
+Oxygen is used mostly on the highest, hardest peaks. Is the comparison fair **within** a peak?
+
+---
+
+# Within Each Peak (Hover for Details)
+
+```{r, out.width="100%"}
+p_ox <- ggplot() +
+  geom_segment(data = segments,
+               aes(x = rate_FALSE, xend = rate_TRUE, y = peak_name, yend = peak_name),
+               color = "grey60") +
+  geom_point(data = ox_peak,
+             aes(x = rate, y = peak_name, color = group,
+                 text = paste0(peak_name, ", ", group, "<br>Reached summit: ",
+                               round(100 * rate), "%<br>Climbers: ", n_climbers)),
+             size = 2.5)
+
+ggplotly(p_ox, tooltip = "text", height = 330)
+```
+
+The gap is large on every peak. **Sentence 1 holds up**: checking a confounder does not always overturn a result.
+
+---
+
+# Sentence 2: "Highly Confident"
+
+```{r, out.width="100%"}
+p_boot <- tibble(boot_diff) %>%
+  ggplot(aes(x = boot_diff)) +
+  geom_histogram(bins = 30) +
+  geom_vline(xintercept = observed_diff, linetype = "dashed")
+
+ggplotly(p_boot, height = 300)
+```
+
+.big[
+Narrow interval: the **size of the gap** is measured very precisely. Nothing here says oxygen **causes** the gap.
+]
+
+---
+
+# Sentence 2: "Predicts Accurately"
+
+```{r}
+tibble(measure = c("Training half", "Test half", "Baseline (always guess the common outcome)"),
+       accuracy = round(c(acc_hm(m_full, train_hm), acc_hm(m_full, test_hm),
+                          max(mean(test_hm$success), 1 - mean(test_hm$success))), 3))
+
+test_hm %>%
+  mutate(predicted_summit = predict(m_full, newdata = test_hm) >= 0.5) %>%
+  group_by(success) %>%
+  summarise(share_predicted_summit = round(mean(predicted_summit), 3))
+```
+
+.big[
+Not overfit, and better than guessing. It also misses more than 4 in 10 climbers who did reach the summit.
+]
+
+---
+
+# Is the Predictor Available in Advance?
+
+```{r, out.width="100%"}
+p_timing <- by_height %>%
+  mutate(label = paste0("Highest point: ", highpoint_band, " m<br>Used oxygen: ",
+                        round(100 * oxygen_use), "%<br>Climbers: ", n_climbers)) %>%
+  ggplot(aes(x = highpoint_band, y = oxygen_use, group = 1, text = label)) +
+  geom_line() + geom_point()
+
+ggplotly(p_timing, tooltip = "text", height = 300)
+```
+
+Climbers who turned back low rarely used oxygen. `oxygen_used` is partly a **result** of how the climb went (recall Lecture 14's "predictor that is too good").
+
+---
+
+# Sentence 3: "Confirms the Key Driver"
+
+```{r, out.width="100%"}
+p_decade <- by_decade %>%
+  mutate(label = paste0(measure, ", ", decade, "s: ", round(100 * share), "%")) %>%
+  ggplot(aes(x = decade, y = share, color = measure, group = measure, text = label)) +
+  geom_line() + geom_point()
+
+ggplotly(p_decade, tooltip = "text", height = 300)
+```
+
+Oxygen use, hiring, and summit success all rose together. Adjusting for peak, hiring, age, and decade leaves the oxygen coefficient at about 0.6: a **robust association**.
+
+---
+
+# What the Human Decided
+
+.big[
+**Computer:** summit rates, a bootstrap, a model, an accuracy number.
+
+**Person:** whether the comparison was fair, what the interval is about, which baseline to use, whether the predictor exists in advance, and whether "confirms" and "key driver" are earned.
+]
+
+The data support a large, robust **association**. No calculation on this page can support **"confirms"**. The person who signs the report owns that wording.
 
 ---
 

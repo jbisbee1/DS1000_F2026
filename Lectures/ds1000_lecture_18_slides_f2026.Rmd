@@ -40,6 +40,33 @@ tweet_sentiment_summary <- tweet_sentiment %>%
 sentiment_means <- tweet_sentiment_summary %>%
   group_by(PostPresident) %>%
   summarise(mean_sentiment = mean(net_sentiment), .groups = "drop")
+
+# Novels section (interactive plotly plots) -----------------------------------
+library(plotly)
+library(tidytext)
+
+novels <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/novel_passages.rds")
+nov_tok <- novels %>% unnest_tokens(word, text)
+
+score_books <- function(tokens, drop = character()) {
+  s <- tokens %>%
+    filter(!word %in% drop) %>%
+    inner_join(nrc, by = "word") %>%
+    filter(sentiment %in% c("positive", "negative")) %>%
+    count(book, passage, sentiment) %>%
+    pivot_wider(names_from = sentiment, values_from = n, values_fill = 0)
+
+  novels %>%
+    select(book, passage, text) %>%
+    left_join(s, by = c("book", "passage")) %>%
+    replace_na(list(positive = 0, negative = 0)) %>%
+    mutate(net_sentiment = positive - negative)
+}
+
+nov_ps <- score_books(nov_tok) %>%
+  group_by(book) %>%
+  mutate(position = passage / max(passage)) %>%
+  ungroup()
 ```
 
 <style>
@@ -64,6 +91,11 @@ the construct-validity audit: dictionary coverage is incomplete, negation
 and sarcasm break word-level scoring, and a crude sentiment count is not
 the same as knowing what someone felt. This is the same "what does this
 variable actually measure" habit from Unit 1, applied to text.
+
+The novels section (data/novel_passages.rds: Frankenstein, Dracula, and Pride and
+Prejudice from Project Gutenberg, in 300-word passages) applies the same
+dictionary to a second dataset with interactive plotly plots; the matching
+live-coding file is ds1000_lecture_18_notes.Rmd. Requires plotly and tidytext.
 
 INSTRUCTOR NOTE:
 Keep the bootstrap-confidence callback to Unit 3 light (one slide, no new
@@ -278,6 +310,113 @@ No — but it is a **proxy**, not a direct read of emotion.
 ]
 
 It can still be useful for large-scale comparisons, as long as you communicate what it is: an imperfect, dictionary-based approximation, not a direct measurement of what someone felt.
+
+---
+
+# New Data: Three Classic Novels
+
+.big[
+*Frankenstein* (1818), *Dracula* (1897), *Pride and Prejudice* (1813)
+]
+
+Each novel is cut into passages of exactly 300 words. Score every passage with the same dictionary.
+
+```{r}
+novels %>% count(book)
+
+nov_tok %>%
+  group_by(book) %>%
+  summarise(pct_words_in_dictionary = round(100 * n_distinct(word[word %in% nrc$word]) / n_distinct(word), 1))
+```
+
+Which novel do you predict is the most positive?
+
+---
+
+# Which Novel Is Most Positive?
+
+```{r}
+nov_ps %>%
+  group_by(book) %>%
+  summarise(mean_net = round(mean(net_sentiment), 2),
+            share_passages_negative = round(mean(net_sentiment < 0), 2))
+```
+
+.big[
+*Dracula* — a horror novel about a vampire — scores more positive than *Frankenstein*. Is that plausible?
+]
+
+---
+
+# Sentiment Arcs (Hover to Read the Passage)
+
+```{r, out.width="100%"}
+p_arc <- nov_ps %>%
+  mutate(label = paste0(book, "<br>Net: ", net_sentiment, "<br>", str_trunc(text, 100))) %>%
+  ggplot(aes(x = position, y = net_sentiment, color = book)) +
+  geom_point(aes(text = label), alpha = .15, size = .8) +
+  geom_smooth(se = FALSE) +
+  labs(x = "Position in the book (0 = start, 1 = end)", y = "Net sentiment")
+
+ggplotly(p_arc, tooltip = "text", height = 340)
+```
+
+*Frankenstein* starts positive and ends negative. *Pride and Prejudice* stays positive throughout.
+
+---
+
+# Look Inside the Score
+
+```{r}
+nov_tok %>%
+  inner_join(nrc, by = "word") %>%
+  filter(book == "Dracula", sentiment %in% c("positive", "negative")) %>%
+  count(word, sentiment, sort = TRUE) %>%
+  head(8)
+```
+
+.big[
+"Count" is the villain's title. "Professor" is a character. The dictionary tags both as **positive**: a **domain mismatch**.
+]
+
+---
+
+# Does It Matter?
+
+```{r}
+full <- score_books(nov_tok) %>%
+  group_by(book) %>% summarise(all_words = round(mean(net_sentiment), 2))
+
+without <- score_books(nov_tok, drop = c("count", "professor")) %>%
+  group_by(book) %>% summarise(drop_count_professor = round(mean(net_sentiment), 2))
+
+left_join(full, without, by = "book")
+```
+
+.big[
+Dropping two words lowers *Dracula*'s score noticeably and barely moves the others. The book did not change. **The measure did.**
+]
+
+---
+
+# Negation Is Smaller, but Not Zero
+
+```{r}
+nov_bigrams <- novels %>%
+  unnest_tokens(bigram, text, token = "ngrams", n = 2) %>%
+  separate(bigram, into = c("first", "second"), sep = " ")
+
+nov_bigrams %>%
+  filter(first %in% c("not", "never")) %>%
+  inner_join(nrc, by = c("second" = "word")) %>%
+  filter(sentiment %in% c("positive", "negative")) %>%
+  count(first, second, sentiment, sort = TRUE) %>%
+  head(6)
+```
+
+.big[
+"Not afraid" is counted as a **negative** word. In long novels only 2 to 3 percent of scored words follow a negator, but in a single tweet it can flip the answer.
+]
 
 ---
 

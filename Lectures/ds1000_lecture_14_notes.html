@@ -522,22 +522,22 @@ never saw:</p>
   mutate(pred_prob = predict(m_fight, newdata = test))
 
 test %&gt;%
-  select(placed, top10, eliminations, damage_to_players, pred_prob) %&gt;%
+  select(placed, top10,pred_prob) %&gt;%
   arrange(desc(pred_prob)) %&gt;%
   head(10)</code></pre>
-<pre><code>## # A tibble: 10 × 5
-##    placed top10 eliminations damage_to_players pred_prob
-##     &lt;dbl&gt; &lt;lgl&gt;        &lt;dbl&gt;             &lt;dbl&gt;     &lt;dbl&gt;
-##  1      2 TRUE             8              1492     0.768
-##  2      1 TRUE             7              1399     0.668
-##  3      1 TRUE             6              1308     0.570
-##  4      4 TRUE             5              1081     0.449
-##  5      4 TRUE             5               894     0.420
-##  6     18 FALSE            5               766     0.400
-##  7     15 FALSE            3              1014     0.270
-##  8      5 TRUE             3               787     0.234
-##  9     29 FALSE            3               659     0.214
-## 10     10 TRUE             3               651     0.212</code></pre>
+<pre><code>## # A tibble: 10 × 3
+##    placed top10 pred_prob
+##     &lt;dbl&gt; &lt;lgl&gt;     &lt;dbl&gt;
+##  1      2 TRUE      0.768
+##  2      1 TRUE      0.668
+##  3      1 TRUE      0.570
+##  4      4 TRUE      0.449
+##  5      4 TRUE      0.420
+##  6     18 FALSE     0.400
+##  7     15 FALSE     0.270
+##  8      5 TRUE      0.234
+##  9     29 FALSE     0.214
+## 10     10 TRUE      0.212</code></pre>
 <p><code>pred_prob</code> is a score. Higher means the model thinks a
 top-10 finish is more likely. As in Lecture 13, these are not true
 probabilities (some can be below 0), but we can still use them to make a

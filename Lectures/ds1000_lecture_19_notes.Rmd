@@ -1,0 +1,376 @@
+---
+title: "How Data Can Mislead: Penguins and Wine"
+output: html_document
+date: "2026-11-11"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+# How to use these notes
+
+This file has the full code for today's live coding, posted before class.
+
+The code is split into sections. Each section starts with a **CHECKPOINT** chunk. A checkpoint chunk rebuilds everything the section needs from scratch: it loads the packages, loads the data, and redoes the earlier steps. If you hit an error or fall behind, run the most recent checkpoint chunk and you are caught up. You do not need to fix the earlier error first.
+
+The plots are interactive (`plotly`): hover to read the details, and click an entry in a legend to hide or show that group. If you have not installed the package, run this once in the console:
+
+```{r, eval=FALSE}
+install.packages("plotly")
+```
+
+Today's question: **how do data and models produce misleading claims even when nobody is trying to mislead anyone?** We take the first three mechanisms from the slides (unrepresentative data, spurious or confounded relationships, and false precision) and the fourth (claims that sound right but were never verified), using two data sets: penguins and wine reviews.
+
+# Section 1: Load and look at the penguin data
+
+```{r}
+# CHECKPOINT 1 ------------------------------------------------------------
+require(tidyverse)
+require(plotly)
+
+pg <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/penguins.rds")
+```
+
+Each row is one penguin measured at a research station in Antarctica. There are three species (Adelie, Chinstrap, and Gentoo) and several body measurements.
+
+```{r}
+glimpse(pg)
+
+colSums(is.na(pg))
+```
+
+A few penguins are missing a measurement or the recorded sex. We drop them, and create a TRUE/FALSE variable for being male.
+
+```{r}
+pg <- pg %>%
+  drop_na() %>%
+  mutate(male = sex == "male")
+
+nrow(pg)
+
+pg %>%
+  count(species, sex)
+```
+
+Within each species the sexes are balanced. That fact matters in a moment. Now look at body mass and flipper length. Hover over a point to see the details.
+
+```{r}
+p_look <- pg %>%
+  ggplot(aes(x = body_mass_g, y = flipper_length_mm, color = species,
+             text = paste0(species, ", ", sex, "<br>", body_mass_g, " g"))) +
+  geom_point(alpha = 0.7) +
+  labs(x = "Body mass (g)", y = "Flipper length (mm)", color = "Species")
+
+ggplotly(p_look, tooltip = "text")
+```
+
+The Gentoo penguins are much heavier than the other two species.
+
+**PAUSE: everyone should be here. If not, run the next checkpoint.**
+
+# Section 2: Mechanism 1, a model trained on one slice of the world
+
+```{r}
+# CHECKPOINT 2 ------------------------------------------------------------
+require(tidyverse)
+require(plotly)
+pg <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/penguins.rds") %>%
+  drop_na() %>%
+  mutate(male = sex == "male")
+```
+
+Suppose a researcher wants a quick rule that predicts a penguin's sex from its body mass. The researcher has data only from **Adelie** penguins, so they fit the model on half of those and keep the other half for testing.
+
+```{r}
+adelie <- pg %>%
+  filter(species == "Adelie")
+
+set.seed(123)
+inds <- sample(1:nrow(adelie), size = round(nrow(adelie) / 2), replace = FALSE)
+
+train_adelie <- adelie %>% slice(inds)
+test_adelie <- adelie %>% slice(-inds)
+
+m_mass <- lm(male ~ body_mass_g, data = train_adelie)
+```
+
+As in the classification unit, we turn the score into a prediction with a threshold of 0.5, and calculate the accuracy on each group of penguins the model did not train on.
+
+```{r}
+eval_set <- bind_rows(test_adelie,
+                      pg %>% filter(species != "Adelie")) %>%
+  mutate(score = predict(m_mass, newdata = .),
+         predicted_male = score >= 0.5)
+
+eval_set %>%
+  group_by(species) %>%
+  summarise(n_penguins = n(),
+            share_actually_male = mean(male),
+            share_predicted_male = mean(predicted_male),
+            accuracy = mean(predicted_male == male))
+```
+
+On held-out Adelie penguins the rule is right most of the time. On Gentoo penguins it is no better than a coin flip: the model predicts "male" for **every** Gentoo penguin, and about half of them are. Hover over the plot to see why.
+
+```{r}
+p_pred <- eval_set %>%
+  ggplot(aes(x = body_mass_g, y = score, color = species,
+             text = paste0(species, ", actually ", sex, "<br>", body_mass_g, " g",
+                           "<br>Score: ", round(score, 2)))) +
+  geom_point(alpha = 0.6) +
+  geom_hline(yintercept = 0.5, linetype = "dashed") +
+  labs(x = "Body mass (g)", y = "Predicted score (0.5 = threshold)", color = "Species")
+
+ggplotly(p_pred, tooltip = "text")
+```
+
+The model learned that "heavy means male" from Adelie penguins. A heavy Gentoo is just a typical Gentoo. The model's predictions arrive as clean numbers with no warning that this species is outside what it learned from. Nobody intended to build a biased rule. The training data were simply a slice of the penguins.
+
+**PAUSE: everyone should be here. If not, run the next checkpoint.**
+
+# Section 3: Mechanism 2, a relationship that reverses
+
+```{r}
+# CHECKPOINT 3 ------------------------------------------------------------
+require(tidyverse)
+require(plotly)
+pg <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/penguins.rds") %>%
+  drop_na() %>%
+  mutate(male = sex == "male")
+```
+
+Do penguins with longer bills have deeper bills or shallower bills? Pool all the penguins first:
+
+```{r}
+cor(pg$bill_length_mm, pg$bill_depth_mm)
+
+lm(bill_depth_mm ~ bill_length_mm, data = pg)
+```
+
+The pooled relationship is **negative**. Each extra millimeter of bill length goes with a shallower bill. Now look inside each species:
+
+```{r}
+pg %>%
+  group_by(species) %>%
+  summarise(n_penguins = n(),
+            correlation = cor(bill_length_mm, bill_depth_mm))
+```
+
+Within every species the relationship is **positive**. The pooled result has the opposite sign. This is Simpson's paradox, the same pattern as the ice cream and drowning example in Homework 6. In the plot below, the dashed black line is the pooled trend and the colored lines are the trends within each species. Click a species in the legend to hide it.
+
+```{r}
+p_simpson <- pg %>%
+  ggplot(aes(x = bill_length_mm, y = bill_depth_mm)) +
+  geom_point(aes(color = species,
+                 text = paste0(species, ", ", sex, "<br>Length: ", bill_length_mm,
+                               " mm<br>Depth: ", bill_depth_mm, " mm")),
+             alpha = 0.6) +
+  geom_smooth(method = "lm", se = FALSE, color = "black", linetype = "dashed") +
+  geom_smooth(aes(color = species), method = "lm", se = FALSE) +
+  labs(x = "Bill length (mm)", y = "Bill depth (mm)", color = "Species")
+
+ggplotly(p_simpson, tooltip = "text")
+```
+
+Species is the third variable. It is related to both bill length and bill depth (Gentoo have long, shallow bills), so ignoring it reverses the sign. Adding species to the model shows the within-species relationship:
+
+```{r}
+lm(bill_depth_mm ~ bill_length_mm + species, data = pg)
+```
+
+The coefficient on `bill_length_mm` is now positive. Someone who reported only the pooled number would be reporting a real number that points the wrong way for every single species. No fabrication is needed.
+
+# Section 4: Mechanism 3, a number that sounds more precise than it is
+
+```{r}
+# CHECKPOINT 4 ------------------------------------------------------------
+require(tidyverse)
+require(plotly)
+wine <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/wine_reviews.rds")
+```
+
+Our second data set is a random sample of 10,000 wine reviews from a professional wine magazine. Each review gives the wine's country, grape variety, price, the reviewer (`taster_name`), and a score from 80 to 100 points.
+
+```{r}
+glimpse(wine)
+
+colSums(is.na(wine))
+```
+
+Some prices and reviewer names are missing. Keep that in mind. A common headline is a ranking: **which country makes the best wine?** Here is the average score for every country with at least 100 reviews.
+
+```{r}
+by_country <- wine %>%
+  group_by(country) %>%
+  summarise(n_reviews = n(),
+            mean_points = mean(points),
+            se = sd(points) / sqrt(n()),
+            lower = mean_points - 1.96 * se,
+            upper = mean_points + 1.96 * se) %>%
+  filter(n_reviews >= 100) %>%
+  arrange(desc(mean_points)) %>%
+  mutate(rank = row_number())
+
+by_country %>%
+  select(rank, country, n_reviews, mean_points) %>%
+  mutate(mean_points = round(mean_points, 2))
+```
+
+A ranking with two decimals looks exact. Add the 95% interval for each average and the picture changes. Hover for the numbers.
+
+```{r}
+p_rank <- by_country %>%
+  mutate(country = reorder(country, mean_points),
+         label = paste0("Rank ", rank, ": ", country,
+                        "<br>Mean: ", round(mean_points, 2),
+                        "<br>95% interval: ", round(lower, 2), " to ", round(upper, 2),
+                        "<br>Reviews: ", n_reviews)) %>%
+  ggplot(aes(x = mean_points, y = country, text = label)) +
+  geom_pointrange(aes(xmin = lower, xmax = upper)) +
+  labs(x = "Average points", y = NULL)
+
+ggplotly(p_rank, tooltip = "text")
+```
+
+Several countries in the middle of the ranking have overlapping intervals, so the order of those countries is not something these data can establish. The ranking presents a precision the measurement does not have. And there is a second problem. Do all countries get scored by the same people?
+
+```{r}
+wine %>%
+  filter(country %in% c("Argentina", "Austria", "Chile", "France", "Italy", "Spain", "US")) %>%
+  group_by(country) %>%
+  summarise(n_reviews = n(),
+            share_reviewer_missing = mean(is.na(taster_name)),
+            most_common_reviewer = names(sort(table(taster_name), decreasing = TRUE))[1],
+            share_by_that_reviewer = max(table(taster_name)) / sum(!is.na(taster_name)))
+```
+
+Argentina's reviews, and almost all of Chile's and Spain's, are by the same reviewer. Most of France's are by one reviewer, and most of Austria's are by another. If reviewers differ in how generous they are, a country's ranking is partly a ranking of its reviewer. Here are the American wines only, split by reviewer (for the reviewers with at least 50 American reviews):
+
+```{r}
+by_taster_us <- wine %>%
+  filter(country == "US", !is.na(taster_name)) %>%
+  group_by(taster_name) %>%
+  summarise(n_reviews = n(),
+            mean_points = mean(points),
+            se = sd(points) / sqrt(n()),
+            lower = mean_points - 1.96 * se,
+            upper = mean_points + 1.96 * se) %>%
+  filter(n_reviews >= 50)
+
+p_taster <- by_taster_us %>%
+  mutate(taster_name = reorder(taster_name, mean_points),
+         label = paste0(taster_name, "<br>Mean: ", round(mean_points, 2),
+                        "<br>95% interval: ", round(lower, 2), " to ", round(upper, 2),
+                        "<br>Reviews: ", n_reviews)) %>%
+  ggplot(aes(x = mean_points, y = taster_name, text = label)) +
+  geom_pointrange(aes(xmin = lower, xmax = upper)) +
+  labs(x = "Average points for American wines", y = NULL)
+
+ggplotly(p_taster, tooltip = "text")
+```
+
+For the same country, the reviewers' averages span about two and a half points. That is larger than most of the gaps between neighboring countries in the ranking. How much of each country's lead comes from who reviewed it? One way to look is to compare each country with Argentina (the first alphabetically) before and after adding the reviewer to the model:
+
+```{r}
+d <- wine %>%
+  filter(!is.na(taster_name),
+         country %in% c("Argentina", "Austria", "Chile", "France", "Italy", "Spain", "US"))
+
+m_raw <- lm(points ~ country, data = d)
+m_taster <- lm(points ~ country + taster_name, data = d)
+
+tibble(country = names(coef(m_raw))[-1],
+       difference_from_argentina = coef(m_raw)[-1],
+       difference_after_adjusting_for_reviewer = coef(m_taster)[names(coef(m_raw))[-1]]) %>%
+  mutate(across(where(is.numeric), ~ round(.x, 2)))
+```
+
+Austria's lead over Argentina shrinks by more than half (from about 3.9 points to 1.7), and the United States goes from about 2.6 points ahead to roughly level. To be clear, this adjustment is itself a modeling choice, and reviewers who cover only one country cannot be separated from that country. The point is not that the adjusted numbers are the truth. The point is that the headline ranking depends on a variable that the headline never mentions.
+
+**PAUSE: everyone should be here. If not, run the next checkpoint.**
+
+# Section 5: Mechanism 4, claims that sound right
+
+```{r}
+# CHECKPOINT 5 ------------------------------------------------------------
+require(tidyverse)
+require(plotly)
+wine <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/wine_reviews.rds")
+```
+
+A language model writes fluent, confident text whether or not a claim is true. Below are seven claims about **this** wine data set, written in the style of an AI-generated summary. Some are true and some are not. You will not be able to tell which from the writing, so you will check each one with code.
+
+1. "The most frequently reviewed grape variety is Pinot Noir."
+2. "Among countries with at least 100 reviews, Italy has the highest median price."
+3. "Roughly 38% of the wines scored 90 points or higher."
+4. "Price and points are almost perfectly correlated (r above 0.9)."
+5. "Fewer than 1% of the wines cost more than $100."
+6. "Every wine in the data set has a price listed."
+7. "The median price of a wine in the data is $25."
+
+```{r}
+# Claim 1
+wine %>%
+  count(variety, sort = TRUE) %>%
+  head(3)
+
+# Claim 2
+wine %>%
+  group_by(country) %>%
+  filter(n() >= 100) %>%
+  summarise(median_price = median(price, na.rm = TRUE)) %>%
+  arrange(desc(median_price)) %>%
+  head(4)
+
+# Claim 3
+mean(wine$points >= 90)
+```
+
+```{r}
+# Claim 4
+cor(wine$points, wine$price, use = "complete.obs")
+
+# Claim 5
+mean(wine$price > 100, na.rm = TRUE)
+
+# Claim 6
+sum(is.na(wine$price))
+
+# Claim 7
+median(wine$price, na.rm = TRUE)
+```
+
+Claims 1, 3, and 7 are true. Claims 2, 4, 5, and 6 are not: the highest median price among the larger countries belongs to the United States, the correlation is about 0.4 (not 0.9), about 2.7% of the wines cost more than $100, and 672 prices are missing. Each false claim has a specific, checkable structure, and each sounds just as confident as the true ones.
+
+Claim 4 deserves a plot. Price is very skewed, so we use a log scale. Hover to see which wines are the expensive outliers.
+
+```{r}
+p_price <- wine %>%
+  filter(!is.na(price)) %>%
+  ggplot(aes(x = price, y = points, text = paste0(title, "<br>", country, ": $", price, ", ", points, " points"))) +
+  geom_point(alpha = 0.25) +
+  scale_x_log10() +
+  labs(x = "Price in dollars (log scale)", y = "Points")
+
+ggplotly(p_price, tooltip = "text")
+```
+
+The relationship is clearly positive but far from perfect, and a log scale makes it close to linear. A report of "r above 0.9" overstates it. The only reliable defense against a fluent false claim is the one you just used: find the data and check.
+
+# Aside: skipped steps
+
+Notice that none of the four mechanisms required anyone to lie.
+
+- The penguin rule skipped the question **"who is missing from the training data?"**
+- The pooled bill result skipped **"what else could explain this?"**
+- The country ranking skipped **"how precise is this number, and who produced it?"**
+- The seven claims skipped **"has anyone verified this?"**
+
+# Summary
+
+1. A model trained on one slice of the world can fail completely on another, and its output carries no warning. Check who is in the training data.
+2. A real relationship can reverse when a third variable is ignored (Simpson's paradox). Check what else could explain it.
+3. A precise-looking number or ranking can hide uncertainty and measurement differences (here, reviewers). Report intervals and ask how the measure was produced.
+4. Fluent claims, including AI-generated ones, are not evidence. Verify the source, the sample, and the measurement.
+5. Misinformation is rarely a single lie. It is usually a skipped step.

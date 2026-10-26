@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>What Should Humans Remain Responsible For?</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Prof. Bisbee" />
+    <script src="ds1000_lecture_20_slides_f2026_files/header-attrs-2.30/header-attrs.js"></script>
+    <link href="ds1000_lecture_20_slides_f2026_files/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="ds1000_lecture_20_slides_f2026_files/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
+    <link href="ds1000_lecture_20_slides_f2026_files/remark-css-0.0.1/metropolis-fonts.css" rel="stylesheet" />
+    <script src="ds1000_lecture_20_slides_f2026_files/htmlwidgets-1.6.4/htmlwidgets.js"></script>
+    <script src="ds1000_lecture_20_slides_f2026_files/plotly-binding-4.12.1/plotly.js"></script>
+    <script src="ds1000_lecture_20_slides_f2026_files/typedarray-0.1/typedarray.min.js"></script>
+    <script src="ds1000_lecture_20_slides_f2026_files/jquery-3.5.1/jquery.min.js"></script>
+    <link href="ds1000_lecture_20_slides_f2026_files/crosstalk-1.2.2/css/crosstalk.min.css" rel="stylesheet" />
+    <script src="ds1000_lecture_20_slides_f2026_files/crosstalk-1.2.2/js/crosstalk.min.js"></script>
+    <link href="ds1000_lecture_20_slides_f2026_files/plotly-htmlwidgets-css-2.25.2/plotly-htmlwidgets.css" rel="stylesheet" />
+    <script src="ds1000_lecture_20_slides_f2026_files/plotly-main-2.25.2/plotly-latest.min.js"></script>
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# What Should Humans Remain Responsible For?
+]
+.subtitle[
+## DS 1000
+]
+.author[
+### Prof. Bisbee
+]
+
+---
+
+
+
+
+&lt;style&gt;
+.big { font-size: 130%; }
+.huge { font-size: 180%; }
+.small { font-size: 80%; }
+&lt;/style&gt;
+
+&lt;!--
+LEARNING OBJECTIVES
+
+LO1: Interrogate empirical claims.
+LO3: Select and justify analytical approaches.
+LO4: Conduct and evaluate data analyses.
+LO5: Critically use AI as an analytical tool.
+LO6: Communicate evidence responsibly.
+
+Lecture 20 closes Unit 5's instructional content and, with it, the core
+lecture sequence for the semester. It makes explicit the "human specifies,
+AI implements, human verifies" division of labor the course has practiced
+implicitly since Lecture 1, walks the full recurring workflow stage by
+stage asking what AI can help with vs. what a human must judge, and works
+through one synthesized AI-generated "mini report" on the semester's
+running college-selectivity claim as a capstone audit exercise.
+
+The Himalayan audit section (data/himalaya_members.rds) works through a second
+AI-style report sentence by sentence with real data and interactive plotly plots,
+rather than leaving the audit abstract. The report is written for the exercise; it
+is not output from a real model. The matching live-coding file is
+ds1000_lecture_20_notes.Rmd. Requires plotly.
+
+INSTRUCTOR NOTE:
+This is the last instructional lecture before the Unit 5 Assessment Day
+(Evidence Debate 5 + Unit Test 5). Per the established course pattern, it
+closes with a Daily Quiz callout, not a "Homework N" slide -- there is no
+HW16; the next class sessions are Project Development / Workshop, which
+carry no numbered homework in the syllabus.
+--&gt;
+
+# What Should Humans Remain Responsible For?
+
+.big[
+Last class:
+
+&gt; **How do misleading claims get produced?**
+
+Today:
+
+&gt; **Given everything AI can now do, what is left that only a human can do?**
+]
+
+---
+
+# Where We Are
+
+.big[
+**Question → ... → recognize how misleading claims get produced → decide what stays human**
+]
+
+Today, and for the rest of the semester:
+
+**Decide what stays human**
+
+---
+
+# A Principle You've Already Been Using
+
+.big[
+Every homework this semester has quietly run on the same rule:
+]
+
+.huge[
+**Human specifies → AI generates or implements → Human verifies and judges.**
+]
+
+Today we say it out loud, and take it seriously as a professional practice, not just a homework policy.
+
+---
+
+# Why Say It Out Loud Now
+
+.big[
+AI can now draft code, propose analyses, explain unfamiliar syntax, and write fluent summaries — genuinely useful, genuinely fast.
+]
+
+None of that changes who is accountable for the claim that goes out the door.
+
+---
+
+# Walking the Whole Workflow
+
+Recall the recurring workflow from Lecture 1:
+
+.big[
+**Claim → Concepts → Variables → Unit of analysis → Understand each variable → Prepare the evidence → Put variables together → Evaluate → Communicate**
+]
+
+For each stage: what can AI help with, and what must a human still decide?
+
+---
+
+# Concepts → Variables
+
+.big[
+**AI can:** propose candidate variables, generate code to construct them.
+
+**A human must:** judge whether a variable is a *valid* operationalization of the concept — whether `adm_rate` really captures "selectivity," and what it leaves out.
+]
+
+AI has no way to know what you actually meant by the concept.
+
+---
+
+# Understand Each Variable / Prepare the Evidence
+
+.big[
+**AI can:** generate summary statistics, flag missing data, draft wrangling code.
+
+**A human must:** decide whether the missingness matters, whether a filtering choice changes who the conclusion is about, and whether the resulting sample still answers the original question.
+]
+
+---
+
+# Put Variables Together / Evaluate
+
+.big[
+**AI can:** fit models, calculate RMSE or AUC, generate a confusion matrix, run a bootstrap loop.
+
+**A human must:** decide whether the comparison is fair, whether a confounder is plausible, whether the evaluation used data the model wasn't fit to, and whether "better" (lower RMSE, higher AUC) is even the right goal for this question.
+]
+
+---
+
+# Communicate
+
+.big[
+**AI can:** draft a summary sentence, propose language, tighten prose.
+
+**A human must:** decide whether that sentence claims more than the evidence supports.
+]
+
+Every "audit an AI claim" exercise this semester has been practicing exactly this stage.
+
+---
+
+# The Stage AI Cannot Do For You
+
+.big[
+Notice a pattern: at every stage, AI can produce an artifact — code, a number, a sentence — but a human has to decide whether that artifact is **appropriate for this specific question**.
+]
+
+That judgment is not a technical skill you delegate. It's the actual job.
+
+---
+
+# A Synthesis Exercise
+
+Here is an AI-generated summary of this semester's running claim:
+
+&gt; "Using the College Scorecard data, we find that more selective colleges (lower admission rate) are associated with higher graduate earnings. A regression model finds this relationship is highly confident and the model predicts outcomes accurately. This confirms that college selectivity is a key driver of financial success."
+
+.big[
+Three sentences. At least four things need verifying.
+]
+
+---
+
+# Verify Sentence by Sentence
+
+.big[
+**"Associated with higher graduate earnings"** — associated, or caused? (Unit 2)
+
+**"Highly confident"** — confident by what measure? Bootstrapped? A p-value? Compared to what baseline? (Unit 3)
+]
+
+---
+
+# Verify Sentence by Sentence
+
+.big[
+**"Predicts outcomes accurately"** — accurate on the training data, or on a held-out test set? (Unit 3/4)
+
+**"Confirms college selectivity is a key driver"** — confirms, or is consistent with? Were confounders (student preparation, family background) ruled out? (Unit 2)
+]
+
+---
+
+# What the Human Adds
+
+.big[
+Nothing in that paragraph is necessarily false. Every phrase is just slightly looser than the evidence actually supports.
+]
+
+That gap — between "consistent with" and "confirms," between "confident" and "confident by what measure" — is exactly where a human's judgment has to sit.
+
+---
+
+# A Second Audit, With Real Data
+
+Himalayan climbing records: one row per climber per expedition. A report written in the style of an AI summary:
+
+&gt; "Climbers who use supplemental oxygen are far more likely to reach the summit. A regression model finds this relationship is highly confident, and the model predicts summit success accurately. This confirms that oxygen is the key driver of summit success."
+
+.big[
+Same task as before: check each sentence, and decide what the evidence supports.
+]
+
+---
+
+# Sentence 1: "Far More Likely"
+
+
+``` r
+e8 %&gt;%
+  group_by(oxygen_used) %&gt;%
+  summarise(n_climbers = n(), summit_rate = round(mean(success), 3))
+```
+
+```
+## # A tibble: 2 × 3
+##   oxygen_used n_climbers summit_rate
+##   &lt;lgl&gt;            &lt;int&gt;       &lt;dbl&gt;
+## 1 FALSE            28454       0.158
+## 2 TRUE             17973       0.779
+```
+
+Oxygen is used mostly on the highest, hardest peaks. Is the comparison fair **within** a peak?
+
+---
+
+# Within Each Peak (Hover for Details)
+
+
+``` r
+p_ox &lt;- ggplot() +
+  geom_segment(data = segments,
+               aes(x = rate_FALSE, xend = rate_TRUE, y = peak_name, yend = peak_name),
+               color = "grey60") +
+  geom_point(data = ox_peak,
+             aes(x = rate, y = peak_name, color = group,
+                 text = paste0(peak_name, ", ", group, "&lt;br&gt;Reached summit: ",
+                               round(100 * rate), "%&lt;br&gt;Climbers: ", n_climbers)),
+             size = 2.5)
+
+ggplotly(p_ox, tooltip = "text", height = 330)
+```
+
+<div id="htmlwidget-77321425a2698caeba1a" style="width:100%;height:330px;" class="plotly html-widget"></div>
+<script type="application/json" data-for="htmlwidget-77321425a2698caeba1a">{"x":{"data":[{"x":[0.13548387096774195,0.73949579831932777,null,0.33147787364319509,0.84507042253521125,null,0.15848406546080965,0.66666666666666663,null,0.022531838467399586,0.77847299223823851,null,0.15580448065173116,0.71215880893300243,null,0.11989630589760207,0.80980861244019142,null,0.12718600953895071,0.63127413127413123,null,0.20592775548008643,0.79320531757754797],"y":[1,1,null,4,4,null,3,3,null,8,8,null,7,7,null,6,6,null,5,5,null,2,2],"text":"","type":"scatter","mode":"lines","line":{"width":1.8897637795275593,"color":"rgba(153,153,153,1)","dash":"solid"},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[0.13548387096774195,0.33147787364319509,0.15848406546080965,0.022531838467399586,0.15580448065173116,0.11989630589760207,0.12718600953895071,0.20592775548008643],"y":[1,4,3,8,7,6,5,2],"text":["Annapurna I, No oxygen<br>Reached summit: 14%<br>Climbers: 1550","Cho Oyu, No oxygen<br>Reached summit: 33%<br>Climbers: 7186","Dhaulagiri I, No oxygen<br>Reached summit: 16%<br>Climbers: 2322","Everest, No oxygen<br>Reached summit: 2%<br>Climbers: 9187","Kangchenjunga, No oxygen<br>Reached summit: 16%<br>Climbers: 982","Lhotse, No oxygen<br>Reached summit: 12%<br>Climbers: 1543","Makalu, No oxygen<br>Reached summit: 13%<br>Climbers: 1887","Manaslu, No oxygen<br>Reached summit: 21%<br>Climbers: 3239"],"type":"scatter","mode":"markers","marker":{"autocolorscale":false,"color":"rgba(248,118,109,1)","opacity":1,"size":9.4488188976377963,"symbol":"circle","line":{"width":1.8897637795275593,"color":"rgba(248,118,109,1)"}},"hoveron":"points","name":"No oxygen","legendgroup":"No oxygen","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[0.73949579831932777,0.84507042253521125,0.66666666666666663,0.77847299223823851,0.71215880893300243,0.80980861244019142,0.63127413127413123,0.79320531757754797],"y":[1,4,3,8,7,6,5,2],"text":["Annapurna I, Used oxygen<br>Reached summit: 74%<br>Climbers: 119","Cho Oyu, Used oxygen<br>Reached summit: 85%<br>Climbers: 1704","Dhaulagiri I, Used oxygen<br>Reached summit: 67%<br>Climbers: 270","Everest, Used oxygen<br>Reached summit: 78%<br>Climbers: 12626","Kangchenjunga, Used oxygen<br>Reached summit: 71%<br>Climbers: 403","Lhotse, Used oxygen<br>Reached summit: 81%<br>Climbers: 836","Makalu, Used oxygen<br>Reached summit: 63%<br>Climbers: 518","Manaslu, Used oxygen<br>Reached summit: 79%<br>Climbers: 1354"],"type":"scatter","mode":"markers","marker":{"autocolorscale":false,"color":"rgba(0,191,196,1)","opacity":1,"size":9.4488188976377963,"symbol":"circle","line":{"width":1.8897637795275593,"color":"rgba(0,191,196,1)"}},"hoveron":"points","name":"Used oxygen","legendgroup":"Used oxygen","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null}],"layout":{"margin":{"t":23.305936073059364,"r":7.3059360730593621,"b":37.260273972602747,"l":101.55251141552515},"plot_bgcolor":"rgba(235,235,235,1)","paper_bgcolor":"rgba(255,255,255,1)","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118722},"xaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[-0.018595090735991002,0.88619735173860181],"tickmode":"array","ticktext":["0.0","0.2","0.4","0.6","0.8"],"tickvals":[0,0.20000000000000001,0.40000000000000002,0.60000000000000009,0.80000000000000004],"categoryorder":"array","categoryarray":["0.0","0.2","0.4","0.6","0.8"],"nticks":null,"ticks":"outside","tickcolor":"rgba(51,51,51,1)","ticklen":3.6529680365296806,"tickwidth":0.66417600664176002,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.68949771689498},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(255,255,255,1)","gridwidth":0.66417600664176002,"zeroline":false,"anchor":"y","title":{"text":"rate_FALSE","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118722}},"hoverformat":".2f"},"yaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[0.40000000000000002,8.5999999999999996],"tickmode":"array","ticktext":["Annapurna I","Manaslu","Dhaulagiri I","Cho Oyu","Makalu","Lhotse","Kangchenjunga","Everest"],"tickvals":[1,2,3,4,5,6,7,8],"categoryorder":"array","categoryarray":["Annapurna I","Manaslu","Dhaulagiri I","Cho Oyu","Makalu","Lhotse","Kangchenjunga","Everest"],"nticks":null,"ticks":"outside","tickcolor":"rgba(51,51,51,1)","ticklen":3.6529680365296811,"tickwidth":0.66417600664176002,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.68949771689498},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(255,255,255,1)","gridwidth":0.66417600664176002,"zeroline":false,"anchor":"x","title":{"text":"peak_name","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118722}},"hoverformat":".2f"},"shapes":[],"showlegend":true,"legend":{"bgcolor":"rgba(255,255,255,1)","bordercolor":"transparent","borderwidth":1.8897637795275593,"font":{"color":"rgba(0,0,0,1)","family":"","size":11.68949771689498},"title":{"text":"group","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118722}}},"hovermode":"closest","height":330,"barmode":"relative"},"config":{"doubleClick":"reset","modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false},"source":"A","attrs":{"2db049a967f6":{"x":{},"y":{},"xend":{},"yend":{},"type":"scatter"},"2db05a947b58":{"x":{},"y":{},"colour":{},"text":{}}},"cur_data":"2db049a967f6","visdat":{"2db049a967f6":["function (y) ","x"],"2db05a947b58":["function (y) ","x"]},"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.20000000000000001,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+
+The gap is large on every peak. **Sentence 1 holds up**: checking a confounder does not always overturn a result.
+
+---
+
+# Sentence 2: "Highly Confident"
+
+
+``` r
+p_boot &lt;- tibble(boot_diff) %&gt;%
+  ggplot(aes(x = boot_diff)) +
+  geom_histogram(bins = 30) +
+  geom_vline(xintercept = observed_diff, linetype = "dashed")
+
+ggplotly(p_boot, height = 300)
+```
+
+<div id="htmlwidget-509e6feaa62642f71b5b" style="width:100%;height:300px;" class="plotly html-widget"></div>
+<script type="application/json" data-for="htmlwidget-509e6feaa62642f71b5b">{"x":{"data":[{"orientation":"v","width":[0.00081616176102139448,0.00081616176102139448,0.00081616176102139448,0.00081616176102139448,0.00081616176102139448,0.00081616176102139448,0.00081616176102139448,0.00081616176102117244,0.00081616176102139448,0.00081616176102139448,0.00081616176102139448,0.00081616176102139448,0.00081616176102139448,0.00081616176102139448,0.00081616176102139448,0.00081616176102139448,0.00081616176102139448,0.00081616176102139448,0.00081616176102139448,0.00081616176102139448,0.00081616176102139448,0.00081616176102117244,0.00081616176102139448,0.00081616176102139448,0.00081616176102139448,0.00081616176102139448,0.00081616176102139448,0.00081616176102139448,0.00081616176102139448,0.00081616176102139448],"base":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"x":[0.61074383949373745,0.61156000125475862,0.61237616301578002,0.61319232477680119,0.61400848653782258,0.61482464829884376,0.61564081005986515,0.61645697182088632,0.6172731335819075,0.61808929534292889,0.61890545710395006,0.61972161886497146,0.62053778062599263,0.62135394238701402,0.6221701041480352,0.62298626590905659,0.62380242767007776,0.62461858943109916,0.62543475119212033,0.62625091295314173,0.6270670747141629,0.62788323647518418,0.62869939823620546,0.62951555999722664,0.63033172175824803,0.6311478835192692,0.6319640452802906,0.63278020704131177,0.63359636880233317,0.63441253056335434],"y":[1,2,1,7,4,4,8,10,11,22,24,27,26,14,29,21,16,16,15,10,9,8,4,3,5,1,0,1,0,1],"text":["count:  1<br />boot_diff: 0.6107438","count:  2<br />boot_diff: 0.6115600","count:  1<br />boot_diff: 0.6123762","count:  7<br />boot_diff: 0.6131923","count:  4<br />boot_diff: 0.6140085","count:  4<br />boot_diff: 0.6148246","count:  8<br />boot_diff: 0.6156408","count: 10<br />boot_diff: 0.6164570","count: 11<br />boot_diff: 0.6172731","count: 22<br />boot_diff: 0.6180893","count: 24<br />boot_diff: 0.6189055","count: 27<br />boot_diff: 0.6197216","count: 26<br />boot_diff: 0.6205378","count: 14<br />boot_diff: 0.6213539","count: 29<br />boot_diff: 0.6221701","count: 21<br />boot_diff: 0.6229863","count: 16<br />boot_diff: 0.6238024","count: 16<br />boot_diff: 0.6246186","count: 15<br />boot_diff: 0.6254348","count: 10<br />boot_diff: 0.6262509","count:  9<br />boot_diff: 0.6270671","count:  8<br />boot_diff: 0.6278832","count:  4<br />boot_diff: 0.6286994","count:  3<br />boot_diff: 0.6295156","count:  5<br />boot_diff: 0.6303317","count:  1<br />boot_diff: 0.6311479","count:  0<br />boot_diff: 0.6319640","count:  1<br />boot_diff: 0.6327802","count:  0<br />boot_diff: 0.6335964","count:  1<br />boot_diff: 0.6344125"],"type":"bar","textposition":"none","marker":{"autocolorscale":false,"color":"rgba(89,89,89,1)","line":{"width":1.8897637795275593,"color":"transparent"}},"showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[0.62150493415826435,0.62150493415826435],"y":[-1.4500000000000002,30.449999999999999],"text":"xintercept: 0.6215049","type":"scatter","mode":"lines","line":{"width":1.8897637795275593,"color":"rgba(0,0,0,1)","dash":"dash"},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null}],"layout":{"margin":{"t":23.305936073059364,"r":7.3059360730593621,"b":37.260273972602747,"l":37.260273972602747},"plot_bgcolor":"rgba(235,235,235,1)","paper_bgcolor":"rgba(255,255,255,1)","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724},"xaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[0.60911151597169488,0.6360448540853969],"tickmode":"array","ticktext":["0.610","0.615","0.620","0.625","0.630","0.635"],"tickvals":[0.60999999999999999,0.61499999999999999,0.62,0.625,0.63,0.63500000000000001],"categoryorder":"array","categoryarray":["0.610","0.615","0.620","0.625","0.630","0.635"],"nticks":null,"ticks":"outside","tickcolor":"rgba(51,51,51,1)","ticklen":3.6529680365296811,"tickwidth":0.66417600664176002,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.68949771689498},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(255,255,255,1)","gridwidth":0.66417600664176002,"zeroline":false,"anchor":"y","title":{"text":"boot_diff","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724}},"hoverformat":".2f"},"yaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[-1.4500000000000002,30.449999999999999],"tickmode":"array","ticktext":["0","10","20","30"],"tickvals":[0,10,20,30],"categoryorder":"array","categoryarray":["0","10","20","30"],"nticks":null,"ticks":"outside","tickcolor":"rgba(51,51,51,1)","ticklen":3.6529680365296811,"tickwidth":0.66417600664176002,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.68949771689498},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(255,255,255,1)","gridwidth":0.66417600664176002,"zeroline":false,"anchor":"x","title":{"text":"count","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724}},"hoverformat":".2f"},"shapes":[],"showlegend":false,"legend":{"bgcolor":"rgba(255,255,255,1)","bordercolor":"transparent","borderwidth":1.8897637795275593,"font":{"color":"rgba(0,0,0,1)","family":"","size":11.68949771689498}},"hovermode":"closest","height":300,"barmode":"relative"},"config":{"doubleClick":"reset","modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false},"source":"A","attrs":{"2db0686c3e27":{"x":{},"type":"bar"},"2db018f37449":{"xintercept":{}}},"cur_data":"2db0686c3e27","visdat":{"2db0686c3e27":["function (y) ","x"],"2db018f37449":["function (y) ","x"]},"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.20000000000000001,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+
+.big[
+Narrow interval: the **size of the gap** is measured very precisely. Nothing here says oxygen **causes** the gap.
+]
+
+---
+
+# Sentence 2: "Predicts Accurately"
+
+
+``` r
+tibble(measure = c("Training half", "Test half", "Baseline (always guess the common outcome)"),
+       accuracy = round(c(acc_hm(m_full, train_hm), acc_hm(m_full, test_hm),
+                          max(mean(test_hm$success), 1 - mean(test_hm$success))), 3))
+```
+
+```
+## # A tibble: 3 × 2
+##   measure                                    accuracy
+##   &lt;chr&gt;                                         &lt;dbl&gt;
+## 1 Training half                                 0.76 
+## 2 Test half                                     0.761
+## 3 Baseline (always guess the common outcome)    0.617
+```
+
+``` r
+test_hm %&gt;%
+  mutate(predicted_summit = predict(m_full, newdata = test_hm) &gt;= 0.5) %&gt;%
+  group_by(success) %&gt;%
+  summarise(share_predicted_summit = round(mean(predicted_summit), 3))
+```
+
+```
+## # A tibble: 2 × 2
+##   success share_predicted_summit
+##   &lt;lgl&gt;                    &lt;dbl&gt;
+## 1 FALSE                    0.117
+## 2 TRUE                     0.565
+```
+
+.big[
+Not overfit, and better than guessing. It also misses more than 4 in 10 climbers who did reach the summit.
+]
+
+---
+
+# Is the Predictor Available in Advance?
+
+
+``` r
+p_timing &lt;- by_height %&gt;%
+  mutate(label = paste0("Highest point: ", highpoint_band, " m&lt;br&gt;Used oxygen: ",
+                        round(100 * oxygen_use), "%&lt;br&gt;Climbers: ", n_climbers)) %&gt;%
+  ggplot(aes(x = highpoint_band, y = oxygen_use, group = 1, text = label)) +
+  geom_line() + geom_point()
+
+ggplotly(p_timing, tooltip = "text", height = 300)
+```
+
+<div id="htmlwidget-1795bb7abbeb3a875ca7" style="width:100%;height:300px;" class="plotly html-widget"></div>
+<script type="application/json" data-for="htmlwidget-1795bb7abbeb3a875ca7">{"x":{"data":[{"x":[1,2,3,4,5,6],"y":[0.013786764705882353,0.017923649906890129,0.077123050259965339,0.28208346407279572,0.49273314493338716,0.94494818652849744],"text":["Highest point: Under 6,000 m<br>Used oxygen: 1%<br>Climbers: 1088","Highest point: 6,000-7,000 m<br>Used oxygen: 2%<br>Climbers: 4296","Highest point: 7,000-7,500 m<br>Used oxygen: 8%<br>Climbers: 3462","Highest point: 7,500-8,000 m<br>Used oxygen: 28%<br>Climbers: 3187","Highest point: 8,000-8,500 m<br>Used oxygen: 49%<br>Climbers: 9908","Highest point: 8,500+ m<br>Used oxygen: 94%<br>Climbers: 12352"],"type":"scatter","mode":"lines+markers","line":{"width":1.8897637795275593,"color":"rgba(0,0,0,1)","dash":"solid"},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","marker":{"autocolorscale":false,"color":"rgba(0,0,0,1)","opacity":1,"size":5.6692913385826778,"symbol":"circle","line":{"width":1.8897637795275593,"color":"rgba(0,0,0,1)"}},"frame":null}],"layout":{"margin":{"t":23.305936073059364,"r":7.3059360730593621,"b":37.260273972602747,"l":48.949771689497723},"plot_bgcolor":"rgba(235,235,235,1)","paper_bgcolor":"rgba(255,255,255,1)","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724},"xaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[0.40000000000000002,6.5999999999999996],"tickmode":"array","ticktext":["Under 6,000","6,000-7,000","7,000-7,500","7,500-8,000","8,000-8,500","8,500+"],"tickvals":[1,2,3,3.9999999999999996,5,6],"categoryorder":"array","categoryarray":["Under 6,000","6,000-7,000","7,000-7,500","7,500-8,000","8,000-8,500","8,500+"],"nticks":null,"ticks":"outside","tickcolor":"rgba(51,51,51,1)","ticklen":3.6529680365296811,"tickwidth":0.66417600664176002,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.68949771689498},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(255,255,255,1)","gridwidth":0.66417600664176002,"zeroline":false,"anchor":"y","title":{"text":"highpoint_band","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724}},"hoverformat":".2f"},"yaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[-0.032771306385248403,0.99150625761962818],"tickmode":"array","ticktext":["0.00","0.25","0.50","0.75"],"tickvals":[0,0.25,0.5,0.75],"categoryorder":"array","categoryarray":["0.00","0.25","0.50","0.75"],"nticks":null,"ticks":"outside","tickcolor":"rgba(51,51,51,1)","ticklen":3.6529680365296811,"tickwidth":0.66417600664176002,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.68949771689498},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(255,255,255,1)","gridwidth":0.66417600664176002,"zeroline":false,"anchor":"x","title":{"text":"oxygen_use","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724}},"hoverformat":".2f"},"shapes":[],"showlegend":false,"legend":{"bgcolor":"rgba(255,255,255,1)","bordercolor":"transparent","borderwidth":1.8897637795275593,"font":{"color":"rgba(0,0,0,1)","family":"","size":11.68949771689498}},"hovermode":"closest","height":300,"barmode":"relative"},"config":{"doubleClick":"reset","modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false},"source":"A","attrs":{"2db058c53f55":{"x":{},"y":{},"text":{},"type":"scatter"},"2db0385a605c":{"x":{},"y":{},"text":{}}},"cur_data":"2db058c53f55","visdat":{"2db058c53f55":["function (y) ","x"],"2db0385a605c":["function (y) ","x"]},"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.20000000000000001,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+
+Climbers who turned back low rarely used oxygen. `oxygen_used` is partly a **result** of how the climb went (recall Lecture 14's "predictor that is too good").
+
+---
+
+# Sentence 3: "Confirms the Key Driver"
+
+
+``` r
+p_decade &lt;- by_decade %&gt;%
+  mutate(label = paste0(measure, ", ", decade, "s: ", round(100 * share), "%")) %&gt;%
+  ggplot(aes(x = decade, y = share, color = measure, group = measure, text = label)) +
+  geom_line() + geom_point()
+
+ggplotly(p_decade, tooltip = "text", height = 300)
+```
+
+<div id="htmlwidget-5c16448e666b107e17c7" style="width:100%;height:300px;" class="plotly html-widget"></div>
+<script type="application/json" data-for="htmlwidget-5c16448e666b107e17c7">{"x":{"data":[{"x":[1980,1990,2000,2010],"y":[0.067687653620722252,0.10687988955361252,0.24467772720599032,0.37963645295996068],"text":["Hired, 1980s: 7%","Hired, 1990s: 11%","Hired, 2000s: 24%","Hired, 2010s: 38%"],"type":"scatter","mode":"lines+markers","line":{"width":1.8897637795275593,"color":"rgba(248,118,109,1)","dash":"solid"},"hoveron":"points","name":"Hired","legendgroup":"Hired","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","marker":{"autocolorscale":false,"color":"rgba(248,118,109,1)","opacity":1,"size":5.6692913385826778,"symbol":"circle","line":{"width":1.8897637795275593,"color":"rgba(248,118,109,1)"}},"frame":null},{"x":[1980,1990,2000,2010],"y":[0.14823217999621857,0.27139898757478143,0.45815592424019969,0.5427413411938099],"text":["Reached summit, 1980s: 15%","Reached summit, 1990s: 27%","Reached summit, 2000s: 46%","Reached summit, 2010s: 54%"],"type":"scatter","mode":"lines+markers","line":{"width":1.8897637795275593,"color":"rgba(0,186,56,1)","dash":"solid"},"hoveron":"points","name":"Reached summit","legendgroup":"Reached summit","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","marker":{"autocolorscale":false,"color":"rgba(0,186,56,1)","opacity":1,"size":5.6692913385826778,"symbol":"circle","line":{"width":1.8897637795275593,"color":"rgba(0,186,56,1)"}},"frame":null},{"x":[1980,1990,2000,2010],"y":[0.12535450935904707,0.20605154164749195,0.42548818088386436,0.56951608941292065],"text":["Used oxygen, 1980s: 13%","Used oxygen, 1990s: 21%","Used oxygen, 2000s: 43%","Used oxygen, 2010s: 57%"],"type":"scatter","mode":"lines+markers","line":{"width":1.8897637795275593,"color":"rgba(97,156,255,1)","dash":"solid"},"hoveron":"points","name":"Used oxygen","legendgroup":"Used oxygen","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","marker":{"autocolorscale":false,"color":"rgba(97,156,255,1)","opacity":1,"size":5.6692913385826778,"symbol":"circle","line":{"width":1.8897637795275593,"color":"rgba(97,156,255,1)"}},"frame":null}],"layout":{"margin":{"t":23.305936073059364,"r":7.3059360730593621,"b":37.260273972602747,"l":43.105022831050235},"plot_bgcolor":"rgba(235,235,235,1)","paper_bgcolor":"rgba(255,255,255,1)","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724},"xaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[1978.5,2011.5],"tickmode":"array","ticktext":["1980","1990","2000","2010"],"tickvals":[1980,1990,2000,2010],"categoryorder":"array","categoryarray":["1980","1990","2000","2010"],"nticks":null,"ticks":"outside","tickcolor":"rgba(51,51,51,1)","ticklen":3.6529680365296811,"tickwidth":0.66417600664176002,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.68949771689498},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(255,255,255,1)","gridwidth":0.66417600664176002,"zeroline":false,"anchor":"y","title":{"text":"decade","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724}},"hoverformat":".2f"},"yaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[0.04259623183111233,0.59460751120253053],"tickmode":"array","ticktext":["0.1","0.2","0.3","0.4","0.5"],"tickvals":[0.10000000000000001,0.20000000000000001,0.30000000000000004,0.40000000000000002,0.5],"categoryorder":"array","categoryarray":["0.1","0.2","0.3","0.4","0.5"],"nticks":null,"ticks":"outside","tickcolor":"rgba(51,51,51,1)","ticklen":3.6529680365296811,"tickwidth":0.66417600664176002,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.68949771689498},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(255,255,255,1)","gridwidth":0.66417600664176002,"zeroline":false,"anchor":"x","title":{"text":"share","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724}},"hoverformat":".2f"},"shapes":[],"showlegend":true,"legend":{"bgcolor":"rgba(255,255,255,1)","bordercolor":"transparent","borderwidth":1.8897637795275593,"font":{"color":"rgba(0,0,0,1)","family":"","size":11.68949771689498},"title":{"text":"measure","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724}}},"hovermode":"closest","height":300,"barmode":"relative"},"config":{"doubleClick":"reset","modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false},"source":"A","attrs":{"2db010195f2":{"x":{},"y":{},"colour":{},"text":{},"type":"scatter"},"2db067207316":{"x":{},"y":{},"colour":{},"text":{}}},"cur_data":"2db010195f2","visdat":{"2db010195f2":["function (y) ","x"],"2db067207316":["function (y) ","x"]},"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.20000000000000001,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+
+Oxygen use, hiring, and summit success all rose together. Adjusting for peak, hiring, age, and decade leaves the oxygen coefficient at about 0.6: a **robust association**.
+
+---
+
+# What the Human Decided
+
+.big[
+**Computer:** summit rates, a bootstrap, a model, an accuracy number.
+
+**Person:** whether the comparison was fair, what the interval is about, which baseline to use, whether the predictor exists in advance, and whether "confirms" and "key driver" are earned.
+]
+
+The data support a large, robust **association**. No calculation on this page can support **"confirms"**. The person who signs the report owns that wording.
+
+---
+
+# Can AI Verify Itself?
+
+.big[
+You might ask a second AI system to check the first one's work. That can genuinely help.
+]
+
+But someone still has to decide whether **that** verification is trustworthy, and someone still signs their name to the final claim. The responsibility doesn't disappear into the chain — it has to land somewhere, and it lands on a person.
+
+---
+
+# Why This Isn't Optional
+
+.big[
+Recall Lecture 13: a prediction used to make a real decision — a loan, a diagnosis, a hire — carries consequences that an accuracy number alone doesn't capture.
+]
+
+When the stakes are real, "the AI said it was accurate" is not an acceptable final answer.
+
+---
+
+# What a Principled Skeptic Looks Like
+
+.big[
+Not someone who refuses to use AI.
+
+Not someone who accepts AI output uncritically.
+]
+
+.huge[
+Someone who uses AI to move faster, and remains personally responsible for what the evidence does and does not support.
+]
+
+---
+
+# Looking Ahead
+
+.big[
+For the rest of the semester, you will build your own empirical claim for the Project — with AI available at every step of implementation.
+]
+
+The habit this lecture asks you to keep is the same one: you may not personally write every line of code, but you must be able to explain, defend, and stand behind every claim.
+
+---
+
+# Before You Leave
+
+Before accepting any AI-assisted analytical output, ask:
+
+1. Did I specify the analytical decision, or did the AI make it for me by default?
+2. Have I verified the output, or just found it plausible?
+3. Does the language match what the evidence actually supports?
+4. If this informs a real decision, have I checked for the specific failure modes (bias, confounding, overfitting, fabrication) from this unit?
+5. Am I prepared to defend this claim myself, in my own words?
+
+---
+
+# The Rule to Remember
+
+.huge[
+**AI can generate the analysis.**
+
+**Only you can be responsible for it.**
+]
+
+---
+
+# The Unit 5 Workflow, Complete
+
+.big[
+**Treat text as evidence**
+
+↓
+
+**Measure meaning, not just topic**
+
+↓
+
+**Recognize how misleading claims get produced**
+
+↓
+
+**Decide what stays human**
+]
+
+This is the same reasoning pattern the Evidence Debate and Unit Test will ask you to transfer.
+
+---
+
+# Daily Quiz 20
+
+.huge[
+
+Now test yourself independently.
+
+]
+
+.big[
+
+Open **Daily Quiz 20** in Brightspace.
+
+]
+
+.small[
+
+No AI or internet access during the quiz.
+
+]
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+  "ratio": "16:9",
+  "highlightStyle": "github",
+  "highlightLines": true,
+  "countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

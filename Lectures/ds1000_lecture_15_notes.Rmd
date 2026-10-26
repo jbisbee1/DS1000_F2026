@@ -1,0 +1,521 @@
+---
+title: "Classification Part 3: Sensitivity, Specificity, and ROC Curves"
+output: html_document
+date: "2026-10-26"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+# How to use these notes
+
+This file has the full code for today's live coding, posted before class.
+
+The code is split into sections. Each section starts with a **CHECKPOINT** chunk. A checkpoint chunk rebuilds everything the section needs from scratch: it loads the packages, loads the data, and redoes the earlier steps. If you hit an error or fall behind, run the most recent checkpoint chunk and you are caught up. You do not need to fix the earlier error first.
+
+**New today: interactive plots.** We use the `plotly` package, so you can hover over points and drag sliders. If you have never installed it, run this once in the console (not in the notes):
+
+```{r, eval=FALSE}
+install.packages("plotly")
+```
+
+Today's question: **using the audio features of a song, can we predict whether it becomes a hit? And what exactly is our classifier good and bad at?**
+
+# Section 1: Load and look at the data
+
+```{r}
+# CHECKPOINT 1 ------------------------------------------------------------
+require(tidyverse)
+require(plotly)
+
+sp <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/spotify_songs.rds")
+```
+
+Each row is one song on Spotify. The data are a random sample of 4,000 songs from a larger collection of Spotify playlists.
+
+```{r}
+glimpse(sp)
+```
+
+`track_popularity` is a score from 0 to 100 that Spotify calculates from recent plays. The other columns are audio features that Spotify computes for every song, for example `danceability`, `energy`, `valence` (how happy a song sounds), and `loudness` (in decibels).
+
+```{r}
+sp %>%
+  ggplot(aes(x = track_popularity)) +
+  geom_histogram(binwidth = 5) +
+  geom_vline(xintercept = 70, linetype = "dashed") +
+  labs(x = "Spotify popularity score (0-100)",
+       y = "Number of songs",
+       title = "How popular are the songs in our sample?",
+       subtitle = "Dashed line = our cutoff for a 'hit'")
+```
+
+We define a **hit** as a popularity score of 70 or more.
+
+```{r}
+sp <- sp %>%
+  mutate(hit = track_popularity >= 70)
+
+sp %>%
+  count(hit) %>%
+  mutate(share = n / sum(n))
+```
+
+Only about 1 song in 10 is a hit. As with the Fortnite wins, that rarity is going to matter.
+
+## An interactive look
+
+Wrap a normal `ggplot` in `ggplotly()` and it becomes interactive. Hover over a point to see which song it is. Double-click the legend to isolate one group.
+
+```{r}
+p_scatter <- sp %>%
+  ggplot(aes(x = energy, y = loudness, color = hit,
+             text = paste0(track_name, " (", track_artist, ")",
+                           "<br>Popularity: ", track_popularity))) +
+  geom_point(alpha = 0.5) +
+  labs(x = "Energy", y = "Loudness (dB)", color = "Hit?",
+       title = "Do hits sound different from other songs?")
+
+ggplotly(p_scatter, tooltip = "text")
+```
+
+The `text` aesthetic is only used for the hover label. Hits and non-hits overlap heavily. Keep that overlap in mind: it tells us that no classifier is going to be perfect here.
+
+**PAUSE: everyone should be here. If not, run the next checkpoint.**
+
+# Section 2: The baseline
+
+```{r}
+# CHECKPOINT 2 ------------------------------------------------------------
+require(tidyverse)
+require(plotly)
+sp <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/spotify_songs.rds") %>%
+  mutate(hit = track_popularity >= 70)
+```
+
+The laziest classifier predicts "not a hit" for every song.
+
+```{r}
+sp %>%
+  summarise(share_hit = mean(hit),
+            baseline_accuracy = max(mean(hit), 1 - mean(hit)))
+```
+
+Any model we build has to beat this baseline to be worth anything.
+
+# Section 3: Split into training and test sets
+
+```{r}
+set.seed(123)
+inds <- sample(1:nrow(sp),
+               size = round(nrow(sp) / 2),
+               replace = FALSE)
+
+train <- sp %>% slice(inds)
+test <- sp %>% slice(-inds)
+
+nrow(train)
+nrow(test)
+
+test %>%
+  count(hit)
+```
+
+# Section 4: Fit a model and predict on the test set
+
+```{r}
+# CHECKPOINT 4 ------------------------------------------------------------
+require(tidyverse)
+require(plotly)
+sp <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/spotify_songs.rds") %>%
+  mutate(hit = track_popularity >= 70)
+set.seed(123)
+inds <- sample(1:nrow(sp), size = round(nrow(sp) / 2), replace = FALSE)
+train <- sp %>% slice(inds)
+test <- sp %>% slice(-inds)
+```
+
+As in Lecture 14, we use a linear regression with a TRUE/FALSE outcome. The predictors are the audio features and the genre of the playlist the song appears in.
+
+```{r}
+m_full <- lm(hit ~ danceability + energy + loudness + valence +
+               acousticness + speechiness + playlist_genre,
+             data = train)
+
+summary(m_full)
+```
+
+Now predict for the **test** songs, which the model never saw:
+
+```{r}
+test <- test %>%
+  mutate(pred_prob = predict(m_full, newdata = test))
+
+test %>%
+  select(track_name, track_artist, hit, pred_prob) %>%
+  arrange(desc(pred_prob)) %>%
+  head(10)
+```
+
+Check the range of the scores. Before we choose a threshold, we should know what thresholds are even possible.
+
+```{r}
+range(test$pred_prob)
+```
+
+The highest score is well below 0.5. What does that mean for a threshold of 0.5?
+
+```{r}
+test %>%
+  ggplot(aes(x = pred_prob, fill = hit)) +
+  geom_histogram(binwidth = 0.02, position = "identity", alpha = 0.6) +
+  geom_vline(xintercept = 0.5, linetype = "dashed") +
+  labs(x = "Predicted score", y = "Number of test songs",
+       fill = "Actually a hit?",
+       title = "Predicted scores for the test songs",
+       subtitle = "Dashed line = threshold of 0.5")
+```
+
+**PAUSE: everyone should be here. If not, run the next checkpoint.**
+
+# Section 5: Sensitivity and specificity at one threshold
+
+```{r}
+# CHECKPOINT 5 ------------------------------------------------------------
+require(tidyverse)
+require(plotly)
+sp <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/spotify_songs.rds") %>%
+  mutate(hit = track_popularity >= 70)
+set.seed(123)
+inds <- sample(1:nrow(sp), size = round(nrow(sp) / 2), replace = FALSE)
+train <- sp %>% slice(inds)
+test <- sp %>% slice(-inds)
+m_full <- lm(hit ~ danceability + energy + loudness + valence +
+               acousticness + speechiness + playlist_genre,
+             data = train)
+test <- test %>% mutate(pred_prob = predict(m_full, newdata = test))
+```
+
+Start with the default threshold of 0.5 and the confusion matrix from last class. Remember to use factors and `.drop = FALSE` so empty cells are kept.
+
+```{r}
+test <- test %>%
+  mutate(pred_class = pred_prob >= 0.5)
+
+test %>%
+  mutate(hit = factor(hit, levels = c(TRUE, FALSE)),
+         pred_class = factor(pred_class, levels = c(TRUE, FALSE))) %>%
+  count(hit, pred_class, .drop = FALSE)
+```
+
+At 0.5 the model never predicts a hit. Its accuracy equals the baseline. Now the two questions from the slides:
+
+- **Sensitivity:** of the songs that actually were hits, what share did we flag as hits?
+- **Specificity:** of the songs that actually were not hits, what share did we correctly rule out?
+
+```{r}
+test %>%
+  group_by(hit) %>%
+  summarise(n_songs = n(),
+            share_flagged_as_hit = mean(pred_class))
+```
+
+The row for `hit = TRUE` is the sensitivity. The row for `hit = FALSE` is `1 - specificity`. At 0.5, sensitivity is 0 and specificity is 1. A model that never says "hit" is perfect at ruling out non-hits and useless at finding hits.
+
+Now lower the threshold to 0.15:
+
+```{r}
+test <- test %>%
+  mutate(pred_class_15 = pred_prob >= 0.15)
+
+test %>%
+  group_by(hit) %>%
+  summarise(n_songs = n(),
+            share_flagged_as_hit = mean(pred_class_15))
+
+test %>%
+  summarise(accuracy_50 = mean(pred_class == hit),
+            accuracy_15 = mean(pred_class_15 == hit))
+```
+
+We now catch some hits, but we also flag many non-hits, and overall accuracy **falls**. Lowering the threshold bought sensitivity at the cost of specificity (and accuracy).
+
+# Section 6: Sweeping the threshold
+
+```{r}
+# CHECKPOINT 6 ------------------------------------------------------------
+require(tidyverse)
+require(plotly)
+sp <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/spotify_songs.rds") %>%
+  mutate(hit = track_popularity >= 70)
+set.seed(123)
+inds <- sample(1:nrow(sp), size = round(nrow(sp) / 2), replace = FALSE)
+train <- sp %>% slice(inds)
+test <- sp %>% slice(-inds)
+m_full <- lm(hit ~ danceability + energy + loudness + valence +
+               acousticness + speechiness + playlist_genre,
+             data = train)
+test <- test %>% mutate(pred_prob = predict(m_full, newdata = test))
+```
+
+Instead of picking one threshold, we try many. We write a function that takes the predicted scores, the truth, and a set of thresholds, and returns the confusion matrix counts for each threshold.
+
+```{r}
+sweep_thresholds <- function(probs, truth,
+                             thresholds = seq(min(probs), max(probs), length.out = 101)) {
+  map_dfr(thresholds, function(t) {
+    tibble(threshold = t,
+           tp = sum(probs >= t & truth),
+           fn = sum(probs < t & truth),
+           tn = sum(probs < t & !truth),
+           fp = sum(probs >= t & !truth))
+  }) %>%
+    mutate(sensitivity = tp / (tp + fn),
+           specificity = tn / (tn + fp))
+}
+
+roc_full <- sweep_thresholds(test$pred_prob, test$hit)
+
+roc_full %>%
+  select(threshold, tp, fn, tn, fp, sensitivity, specificity) %>%
+  slice(c(1, 25, 50, 75, 101))
+```
+
+The thresholds run from the lowest score (everything is called a hit) to the highest score (almost nothing is). Now plot both metrics against the threshold. Hover to read off the exact values at any threshold.
+
+```{r}
+p_tradeoff <- roc_full %>%
+  pivot_longer(c(sensitivity, specificity),
+               names_to = "metric", values_to = "value") %>%
+  ggplot(aes(x = threshold, y = value, color = metric)) +
+  geom_line() +
+  labs(x = "Threshold", y = "Value", color = "",
+       title = "Sensitivity and specificity move in opposite directions")
+
+ggplotly(p_tradeoff)
+```
+
+There is no threshold that maximizes both at once. Which one we should prefer depends on the cost of each kind of mistake, which is a judgment call and not a statistical one.
+
+## Drag the threshold yourself
+
+This version animates the four cells of the confusion matrix. Drag the slider (or press Play) and watch the counts move.
+
+```{r}
+cells <- roc_full %>%
+  mutate(step = round(threshold, 3)) %>%
+  select(step, `True positive` = tp, `False negative` = fn,
+         `False positive` = fp, `True negative` = tn) %>%
+  pivot_longer(-step, names_to = "cell", values_to = "n_songs") %>%
+  mutate(cell = factor(cell, levels = c("True positive", "False negative",
+                                        "False positive", "True negative")))
+
+plot_ly(cells, x = ~cell, y = ~n_songs, color = ~cell,
+        frame = ~step, type = "bar") %>%
+  layout(xaxis = list(title = ""),
+         yaxis = list(title = "Number of test songs", range = c(0, nrow(test)))) %>%
+  animation_slider(currentvalue = list(prefix = "Threshold: "))
+```
+
+Notice that the true positives and false positives shrink together as the threshold rises. You cannot lower one without lowering the other.
+
+**PAUSE: everyone should be here. If not, run the next checkpoint.**
+
+# Section 7: The ROC curve and AUC
+
+```{r}
+# CHECKPOINT 7 ------------------------------------------------------------
+require(tidyverse)
+require(plotly)
+sp <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/spotify_songs.rds") %>%
+  mutate(hit = track_popularity >= 70)
+set.seed(123)
+inds <- sample(1:nrow(sp), size = round(nrow(sp) / 2), replace = FALSE)
+train <- sp %>% slice(inds)
+test <- sp %>% slice(-inds)
+m_full <- lm(hit ~ danceability + energy + loudness + valence +
+               acousticness + speechiness + playlist_genre,
+             data = train)
+test <- test %>% mutate(pred_prob = predict(m_full, newdata = test))
+
+sweep_thresholds <- function(probs, truth,
+                             thresholds = seq(min(probs), max(probs), length.out = 101)) {
+  map_dfr(thresholds, function(t) {
+    tibble(threshold = t,
+           tp = sum(probs >= t & truth),
+           fn = sum(probs < t & truth),
+           tn = sum(probs < t & !truth),
+           fp = sum(probs >= t & !truth))
+  }) %>%
+    mutate(sensitivity = tp / (tp + fn),
+           specificity = tn / (tn + fp))
+}
+roc_full <- sweep_thresholds(test$pred_prob, test$hit)
+```
+
+The **ROC curve** plots the whole tradeoff at once. The x-axis is `1 - specificity` (how often we wrongly flag a non-hit) and the y-axis is sensitivity (how often we correctly catch a hit). Hover over the curve to see which threshold produced each point.
+
+```{r}
+p_roc <- roc_full %>%
+  mutate(fpr = 1 - specificity,
+         label = paste0("Threshold: ", round(threshold, 3),
+                        "<br>Sensitivity: ", round(sensitivity, 3),
+                        "<br>Specificity: ", round(specificity, 3))) %>%
+  ggplot(aes(x = fpr, y = sensitivity, text = label, group = 1)) +
+  geom_line() +
+  geom_point(size = 0.8) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed") +
+  labs(x = "1 - specificity", y = "Sensitivity",
+       title = "ROC curve for the full model")
+
+ggplotly(p_roc, tooltip = "text")
+```
+
+The dashed diagonal is what a coin flip would produce. The farther the curve bows up and to the left, the better the classifier separates hits from non-hits.
+
+**AUC** is the area under that curve, a single number between 0.5 (no better than guessing) and 1 (perfect). We compute it with the trapezoid rule:
+
+```{r}
+compute_auc <- function(roc_dat) {
+  roc_sorted <- roc_dat %>%
+    mutate(fpr = 1 - specificity) %>%
+    drop_na(sensitivity, fpr) %>%
+    arrange(fpr)
+  sum(diff(roc_sorted$fpr) *
+        (head(roc_sorted$sensitivity, -1) + tail(roc_sorted$sensitivity, -1)) / 2)
+}
+
+auc_full <- compute_auc(roc_full)
+auc_full
+```
+
+Unlike accuracy, AUC does not depend on a threshold we had to choose.
+
+# Section 8: Your turn
+
+```{r}
+# CHECKPOINT 8 ------------------------------------------------------------
+require(tidyverse)
+require(plotly)
+sp <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/spotify_songs.rds") %>%
+  mutate(hit = track_popularity >= 70)
+
+sweep_thresholds <- function(probs, truth,
+                             thresholds = seq(min(probs), max(probs), length.out = 101)) {
+  map_dfr(thresholds, function(t) {
+    tibble(threshold = t,
+           tp = sum(probs >= t & truth),
+           fn = sum(probs < t & truth),
+           tn = sum(probs < t & !truth),
+           fp = sum(probs >= t & !truth))
+  }) %>%
+    mutate(sensitivity = tp / (tp + fn),
+           specificity = tn / (tn + fp))
+}
+compute_auc <- function(roc_dat) {
+  roc_sorted <- roc_dat %>%
+    mutate(fpr = 1 - specificity) %>%
+    drop_na(sensitivity, fpr) %>%
+    arrange(fpr)
+  sum(diff(roc_sorted$fpr) *
+        (head(roc_sorted$sensitivity, -1) + tail(roc_sorted$sensitivity, -1)) / 2)
+}
+
+set.seed(123)
+inds <- sample(1:nrow(sp), size = round(nrow(sp) / 2), replace = FALSE)
+train <- sp %>% slice(inds)
+test <- sp %>% slice(-inds)
+```
+
+**Claim:** "You only need to know how a song *sounds* to predict a hit. Knowing the genre adds nothing."
+
+1. Fit a model with only audio features: `hit ~ danceability + energy + loudness + valence + acousticness + speechiness`.
+2. Fit the full model from today, which also includes `playlist_genre`.
+3. Predict on `test` for both, sweep the thresholds, and compute each AUC.
+4. Plot both ROC curves on the same graph. Is the claim supported?
+
+```{r}
+m_audio <- lm(hit ~ danceability + energy + loudness + valence +
+                acousticness + speechiness,
+              data = train)
+m_genre <- lm(hit ~ danceability + energy + loudness + valence +
+                acousticness + speechiness + playlist_genre,
+              data = train)
+
+roc_audio <- sweep_thresholds(predict(m_audio, newdata = test), test$hit) %>%
+  mutate(model = "Audio features only")
+roc_genre <- sweep_thresholds(predict(m_genre, newdata = test), test$hit) %>%
+  mutate(model = "Audio features + genre")
+
+c(audio_only = compute_auc(roc_audio),
+  with_genre = compute_auc(roc_genre))
+```
+
+```{r}
+p_compare <- bind_rows(roc_audio, roc_genre) %>%
+  mutate(fpr = 1 - specificity,
+         label = paste0(model,
+                        "<br>Threshold: ", round(threshold, 3),
+                        "<br>Sensitivity: ", round(sensitivity, 3),
+                        "<br>Specificity: ", round(specificity, 3))) %>%
+  ggplot(aes(x = fpr, y = sensitivity, color = model, text = label, group = model)) +
+  geom_line() +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed") +
+  labs(x = "1 - specificity", y = "Sensitivity", color = "",
+       title = "Do the two models separate hits equally well?")
+
+ggplotly(p_compare, tooltip = "text")
+```
+
+One test set is one draw of the data. To see whether the gap is stable, we repeat the split many times, as in Lecture 12. We use 25 repeats to keep this fast; the slides use 100.
+
+```{r}
+set.seed(123)
+cv_auc <- map_dfr(1:25, function(i) {
+  inds_i <- sample(1:nrow(sp), size = round(nrow(sp) / 2), replace = FALSE)
+  train_i <- sp %>% slice(inds_i)
+  test_i <- sp %>% slice(-inds_i)
+
+  m_audio_i <- lm(hit ~ danceability + energy + loudness + valence +
+                    acousticness + speechiness, data = train_i)
+  m_genre_i <- lm(hit ~ danceability + energy + loudness + valence +
+                    acousticness + speechiness + playlist_genre, data = train_i)
+
+  tibble(sim = i,
+         `Audio features only` = compute_auc(sweep_thresholds(predict(m_audio_i, newdata = test_i), test_i$hit)),
+         `Audio features + genre` = compute_auc(sweep_thresholds(predict(m_genre_i, newdata = test_i), test_i$hit)))
+}) %>%
+  pivot_longer(-sim, names_to = "model", values_to = "auc")
+
+cv_auc %>%
+  group_by(model) %>%
+  summarise(mean_auc = mean(auc))
+```
+
+```{r}
+p_cv <- cv_auc %>%
+  ggplot(aes(x = auc, fill = model)) +
+  geom_density(alpha = 0.4) +
+  labs(x = "AUC on the test half", y = "Density", fill = "",
+       title = "AUC across 25 random train/test splits")
+
+ggplotly(p_cv)
+```
+
+# Aside: which mistake is worse?
+
+The "right" threshold depends on who is asking.
+
+- A **record label scout** wants to find every future hit and does not mind listening to some duds. That favors a **low** threshold (high sensitivity).
+- A **radio station** has a few slots and wants every song it plays to land. That favors a **high** threshold (high specificity).
+
+The model is the same. The costs of the two mistakes are different, so the best threshold is different. The statistics tell us what each threshold gives up. They do not tell us which price to pay.
+
+# Summary
+
+1. A classifier's accuracy at one threshold is a snapshot. Compare it to the baseline first.
+2. **Sensitivity** is the share of actual positives we catch. **Specificity** is the share of actual negatives we correctly rule out.
+3. Raising the threshold pushes the two in opposite directions. No threshold maximizes both.
+4. The **ROC curve** plots the whole tradeoff, and **AUC** summarizes it in one number that does not depend on the threshold.
+5. Compare models on held-out data, ideally across many splits, and remember that a better AUC does not tell us what *causes* a hit.

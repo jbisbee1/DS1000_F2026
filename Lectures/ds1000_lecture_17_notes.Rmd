@@ -1,0 +1,389 @@
+---
+title: "Text as Data: What Do Bigfoot Witnesses Say?"
+output: html_document
+date: "2026-11-04"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+# How to use these notes
+
+This file has the full code for today's live coding, posted before class.
+
+The code is split into sections. Each section starts with a **CHECKPOINT** chunk. A checkpoint chunk rebuilds everything the section needs from scratch: it loads the packages, loads the data, and redoes the earlier steps. If you hit an error or fall behind, run the most recent checkpoint chunk and you are caught up. You do not need to fix the earlier error first.
+
+The plots are interactive (`plotly`): hover to see the details, and double-click a legend entry to isolate a group. Today we also use the `tidytext` package for one step. If you have not installed these packages, run this once in the console:
+
+```{r, eval=FALSE}
+install.packages(c("plotly", "tidytext"))
+```
+
+Today's question: **eyewitnesses have been reporting Bigfoot sightings to a public database for decades. What do those reports talk about, and does it differ across places and kinds of encounters?**
+
+# Section 1: Load and look at the data
+
+```{r}
+# CHECKPOINT 1 ------------------------------------------------------------
+require(tidyverse)
+require(plotly)
+require(tidytext)
+
+reports <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/bigfoot_reports.rds")
+words <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/bigfoot_words.rds")
+```
+
+`reports` has one row per eyewitness report, with the witness's own words in `observed`. The reports come from a public database (the Bigfoot Field Researchers Organization). `classification` is the database's own label: **Class A** is a clear sighting, and **Class B** is an encounter where the witness heard something, found tracks, or saw too little to be sure.
+
+```{r}
+glimpse(reports)
+
+reports %>%
+  count(classification)
+```
+
+Here is what the raw text looks like. We cut each report to its first 250 characters.
+
+```{r}
+reports %>%
+  filter(document %in% c(1, 3, 10)) %>%
+  mutate(start_of_report = str_trunc(observed, 250)) %>%
+  select(document, state, classification, start_of_report)
+```
+
+Reports with coordinates can be put on a map. Hover over a dot to read the start of the report.
+
+```{r}
+p_map <- reports %>%
+  filter(!is.na(latitude)) %>%
+  plot_geo(lat = ~latitude, lon = ~longitude) %>%
+  add_markers(color = ~classification, alpha = 0.5,
+              text = ~paste0(state, " (", season, ")<br>", str_trunc(observed, 150)),
+              hoverinfo = "text") %>%
+  layout(geo = list(scope = "usa", projection = list(type = "albers usa")),
+         title = "Bigfoot reports with a location")
+
+p_map
+```
+
+**PAUSE: everyone should be here. If not, run the next checkpoint.**
+
+# Section 2: From text to a table
+
+```{r}
+# CHECKPOINT 2 ------------------------------------------------------------
+require(tidyverse)
+require(plotly)
+require(tidytext)
+reports <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/bigfoot_reports.rds")
+words <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/bigfoot_words.rds")
+```
+
+A report is a wall of text. To count anything, we **tokenize** it: split it into words, one row per word per report. `unnest_tokens()` does this for us. Try it on a single short sentence first.
+
+```{r}
+tibble(document = 1, text = "I heard a very loud howl near the river at dusk.") %>%
+  unnest_tokens(word, text)
+```
+
+Notice that the words are lower-cased and the punctuation is gone. That is the "bag of words": order and grammar are thrown away, and only which words appeared and how often is kept.
+
+Many of the words ("a", "the", "near") are in every report and tell us nothing. These are **stop words**, and `tidytext` has a list of them. The `words` table you loaded was made from `reports` by tokenizing and dropping stop words, so we don't need to redo this for all 4,953 reports.
+
+```{r, eval=FALSE}
+# How `words` was made (you do not need to run this chunk):
+reports %>%
+  unnest_tokens(word, observed) %>%
+  filter(!word %in% stop_words$word)
+```
+
+```{r}
+words %>%
+  head(8)
+
+nrow(words)
+```
+
+Every row is one word from one report. We carry along the state and the classification so that we can compare groups.
+
+# Section 3: Counting words by group
+
+```{r}
+# CHECKPOINT 3 ------------------------------------------------------------
+require(tidyverse)
+require(plotly)
+require(tidytext)
+reports <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/bigfoot_reports.rds")
+words <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/bigfoot_words.rds")
+```
+
+Our first comparison: reports from **Washington** (home of the Pacific Northwest legend) and **Florida** (home of the "skunk ape"). Same structure as every group comparison this semester.
+
+```{r}
+wa_fl <- words %>%
+  filter(state %in% c("Washington", "Florida"))
+
+wa_fl %>%
+  filter(word %in% c("elk", "swamp", "skunk", "road", "woods")) %>%
+  count(word, state) %>%
+  pivot_wider(names_from = state, values_from = n, values_fill = 0)
+```
+
+Washington has more of almost every word. Is that because Washington witnesses talk about these things more, or because there are more Washington reports?
+
+```{r}
+reports %>%
+  filter(state %in% c("Washington", "Florida")) %>%
+  count(state)
+
+wa_fl %>%
+  count(state)
+```
+
+Washington has about twice as many reports and more than twice as many words. **Raw counts are not a fair comparison when the groups are different sizes.** Look at "road": Washington's raw count is about twice Florida's. Now turn the counts into proportions of all the words in each state:
+
+```{r}
+wa_fl %>%
+  count(word, state) %>%
+  group_by(state) %>%
+  mutate(prop = n / sum(n)) %>%
+  ungroup() %>%
+  filter(word %in% c("road", "swamp", "elk")) %>%
+  select(word, state, n, prop) %>%
+  arrange(word, state)
+```
+
+Once we account for the amount of text, "road" is actually used at about the same rate, and slightly **more** in Florida. The raw count told the wrong story.
+
+**PAUSE: everyone should be here. If not, run the next checkpoint.**
+
+# Section 4: Odds ratios and logs
+
+```{r}
+# CHECKPOINT 4 ------------------------------------------------------------
+require(tidyverse)
+require(plotly)
+require(tidytext)
+reports <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/bigfoot_reports.rds")
+words <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/bigfoot_words.rds")
+wa_fl <- words %>%
+  filter(state %in% c("Washington", "Florida"))
+```
+
+To compare one word's use across the two states in a single number, we divide the two proportions. This is the **odds ratio**: above 1 means the word is more common in Washington, below 1 means more common in Florida. We keep only words used at least 15 times in total, because ratios built on a handful of uses are unreliable. We also add 1 to each count so that a word never used in one state does not produce a division by zero.
+
+```{r}
+odds <- wa_fl %>%
+  count(word, state) %>%
+  group_by(word) %>%
+  filter(sum(n) >= 15) %>%
+  ungroup() %>%
+  pivot_wider(names_from = state, values_from = n, values_fill = 0) %>%
+  mutate(total = Washington + Florida,
+         prop_wa = (Washington + 1) / (sum(Washington) + 1),
+         prop_fl = (Florida + 1) / (sum(Florida) + 1),
+         odds_ratio = prop_wa / prop_fl)
+
+nrow(odds)
+
+odds %>%
+  ggplot(aes(x = odds_ratio)) +
+  geom_histogram(bins = 30) +
+  labs(x = "Odds ratio (Washington / Florida)", y = "Number of words")
+```
+
+The ratios are heavily skewed. A word used twice as often in Washington (ratio 2) and one used twice as often in Florida (ratio 0.5) should look like mirror images, and they don't. As with budgets and gross revenue earlier in the semester, we take the log:
+
+```{r}
+odds <- odds %>%
+  mutate(log_odds = log(odds_ratio))
+
+odds %>%
+  ggplot(aes(x = log_odds)) +
+  geom_histogram(bins = 30) +
+  labs(x = "Log odds (positive = more Washington)", y = "Number of words")
+```
+
+Now doubling and halving are symmetric around zero. Which words are most distinctive of each state? Hover over a bar to see the raw counts.
+
+```{r}
+p_top <- odds %>%
+  group_by(log_odds > 0) %>%
+  slice_max(abs(log_odds), n = 10) %>%
+  ungroup() %>%
+  mutate(word = reorder(word, log_odds),
+         label = paste0(word, "<br>Washington: ", Washington, "<br>Florida: ", Florida)) %>%
+  ggplot(aes(x = log_odds, y = word, fill = log_odds > 0, text = label)) +
+  geom_col() +
+  labs(x = "Log odds (positive = more Washington)", y = NULL) +
+  theme(legend.position = "none")
+
+ggplotly(p_top, tooltip = "text")
+```
+
+Most of the distinctive words are **places and things in the landscape**: the Pacific Northwest has elk, snow, and ridges, and Florida has cypress, the Everglades, and hogs. A few of Florida's top words are people's names. Names like these probably belong to people who appear in many reports from one area, which is a reminder to look at what is behind a word before interpreting it. This is a measurement of **topic**. It says nothing about how the witnesses felt.
+
+# Section 5: A map of every word
+
+```{r}
+# CHECKPOINT 5 ------------------------------------------------------------
+require(tidyverse)
+require(plotly)
+require(tidytext)
+reports <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/bigfoot_reports.rds")
+words <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/bigfoot_words.rds")
+wa_fl <- words %>%
+  filter(state %in% c("Washington", "Florida"))
+odds <- wa_fl %>%
+  count(word, state) %>%
+  group_by(word) %>%
+  filter(sum(n) >= 15) %>%
+  ungroup() %>%
+  pivot_wider(names_from = state, values_from = n, values_fill = 0) %>%
+  mutate(total = Washington + Florida,
+         prop_wa = (Washington + 1) / (sum(Washington) + 1),
+         prop_fl = (Florida + 1) / (sum(Florida) + 1),
+         odds_ratio = prop_wa / prop_fl,
+         log_odds = log(odds_ratio))
+```
+
+A bar chart shows only the extremes. Here every word is a dot. The vertical position is the log odds, and the horizontal position is how often the word is used overall (on a log scale). Hover to find any word. Look for the words you would have guessed, and for the surprises.
+
+```{r}
+p_map_words <- odds %>%
+  mutate(label = paste0(word, "<br>Washington: ", Washington, "<br>Florida: ", Florida,
+                        "<br>Log odds: ", round(log_odds, 2))) %>%
+  ggplot(aes(x = total, y = log_odds, text = label, color = log_odds)) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_point(alpha = 0.6) +
+  scale_x_log10() +
+  scale_color_gradient2(low = "darkgreen", mid = "grey70", high = "navy", midpoint = 0) +
+  labs(x = "Total uses (log scale)", y = "Log odds (positive = more Washington)") +
+  theme(legend.position = "none")
+
+ggplotly(p_map_words, tooltip = "text")
+```
+
+The funnel shape is informative. Rare words (on the left) swing to extreme values because a few uses can move the ratio a lot. Common words (on the right) stay close to zero. That is why we set a minimum count.
+
+To use the same steps again without copying the code, we wrap them in a function. It takes the word table, the name of the column that holds the groups, and the two groups to compare.
+
+```{r}
+make_odds <- function(w, group_col, g1, g2, min_n = 15) {
+  w %>%
+    rename(group = all_of(group_col)) %>%
+    filter(group %in% c(g1, g2)) %>%
+    count(word, group) %>%
+    group_by(word) %>%
+    filter(sum(n) >= min_n) %>%
+    ungroup() %>%
+    pivot_wider(names_from = group, values_from = n, values_fill = 0) %>%
+    rename(n_g1 = all_of(g1), n_g2 = all_of(g2)) %>%
+    mutate(total = n_g1 + n_g2,
+           prop_g1 = (n_g1 + 1) / (sum(n_g1) + 1),
+           prop_g2 = (n_g2 + 1) / (sum(n_g2) + 1),
+           log_odds = log(prop_g1 / prop_g2))
+}
+
+# The function reproduces our result for Washington vs. Florida:
+make_odds(words, "state", "Washington", "Florida") %>%
+  slice_max(log_odds, n = 5) %>%
+  select(word, n_g1, n_g2, log_odds)
+```
+
+**PAUSE: everyone should be here. If not, run the next checkpoint.**
+
+# Section 6: Your turn
+
+```{r}
+# CHECKPOINT 6 ------------------------------------------------------------
+require(tidyverse)
+require(plotly)
+require(tidytext)
+reports <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/bigfoot_reports.rds")
+words <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/bigfoot_words.rds")
+
+make_odds <- function(w, group_col, g1, g2, min_n = 15) {
+  w %>%
+    rename(group = all_of(group_col)) %>%
+    filter(group %in% c(g1, g2)) %>%
+    count(word, group) %>%
+    group_by(word) %>%
+    filter(sum(n) >= min_n) %>%
+    ungroup() %>%
+    pivot_wider(names_from = group, values_from = n, values_fill = 0) %>%
+    rename(n_g1 = all_of(g1), n_g2 = all_of(g2)) %>%
+    mutate(total = n_g1 + n_g2,
+           prop_g1 = (n_g1 + 1) / (sum(n_g1) + 1),
+           prop_g2 = (n_g2 + 1) / (sum(n_g2) + 1),
+           log_odds = log(prop_g1 / prop_g2))
+}
+```
+
+**Claim:** "Class A and Class B reports are really the same stories. The database's label tells us nothing about what the witnesses say."
+
+1. Use `make_odds()` to compare **Class A** with **Class B**. The group column is `"classification"`.
+2. Look at the most distinctive words in each direction. Do they tell you about the reports?
+3. Plot the 10 most distinctive words in each direction, with hover labels.
+4. What kinds of words separate the two classes? Is the claim supported?
+5. Check one word with raw counts and with proportions. Do they agree?
+
+Start with the default minimum of 15 uses:
+
+```{r}
+make_odds(words, "classification", "Class A", "Class B") %>%
+  slice_max(abs(log_odds), n = 12) %>%
+  select(word, n_g1, n_g2, log_odds)
+```
+
+Many of these words are **first names and surnames** (such as `david`, `kenny`, `baddour`, and `brock`), and one is a repeated misspelling (`disapeared`). A name that appears 15 to 30 times, almost always in one class, probably belongs to one person who wrote up or was named in many reports. The numbers are correct, but these words tell us about who filed reports, not what witnesses described. Raising the minimum to 30 uses removes most of them:
+
+```{r}
+odds_class <- make_odds(words, "classification", "Class A", "Class B", min_n = 30)
+
+nrow(odds_class)
+
+p_class <- odds_class %>%
+  group_by(log_odds > 0) %>%
+  slice_max(abs(log_odds), n = 10) %>%
+  ungroup() %>%
+  mutate(word = reorder(word, log_odds),
+         label = paste0(word, "<br>Class A: ", n_g1, "<br>Class B: ", n_g2)) %>%
+  ggplot(aes(x = log_odds, y = word, fill = log_odds > 0, text = label)) +
+  geom_col() +
+  labs(x = "Log odds (positive = more Class A)", y = NULL) +
+  theme(legend.position = "none")
+
+ggplotly(p_class, tooltip = "text")
+```
+
+The words that mark Class A are mostly about **appearance**: a forehead, a nose, muscles, shaggy reddish hair. The words that mark Class B are mostly about **sound and recordings** (howls, whoops, knocks, audio), along with camping gear such as tarps and hammocks. The classification tracks what the witness could actually perceive, so the claim is not supported. The labels capture different kinds of encounters. Notice also that the answer depended on a researcher's choice, the minimum count, so it is worth stating that choice when reporting the result.
+
+Now compare raw counts with proportions for the word "heard":
+
+```{r}
+words %>%
+  filter(classification %in% c("Class A", "Class B")) %>%
+  group_by(classification) %>%
+  summarise(total_words = n(),
+            heard = sum(word == "heard"),
+            heard_share = mean(word == "heard"))
+```
+
+The two classes have nearly the same number of words, so here the raw counts and the shares agree. That is not guaranteed. It is a feature of these two groups being similar in size, and it is the reason to check the denominator every time.
+
+# Aside: topic is not tone
+
+Everything today measured **which words** differ between groups. That is topic. "Howl" is more common in Class B reports, but the data do not tell us whether those witnesses were frightened, thrilled, or amused. Measuring tone needs a different tool, and that is the next lecture.
+
+A second caution: these are reports submitted to a hobbyist database, not a random sample of anything. The comparison tells us how *reporters* write, not how often Bigfoot appears in each place.
+
+# Summary
+
+1. **Tokenizing** turns text into a table with one row per word per document. It throws away order and grammar and keeps counts.
+2. **Raw counts** are unfair when the groups have different amounts of text. Compare **proportions**.
+3. The **odds ratio** divides one group's proportion by the other's. Taking the **log** makes doubling and halving symmetric.
+4. A minimum word count keeps rare words from producing extreme ratios.
+5. The log-odds measure tells us which topics differ. It does not tell us tone, intent, or why the groups differ.
+6. Always ask who produced the text, and whether the comparison groups are comparable.

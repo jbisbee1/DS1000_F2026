@@ -39,6 +39,32 @@ odds <- tweet_words %>%
   )
 
 n_tweets <- tweet_words %>% distinct(document, PostPresident) %>% count(PostPresident)
+
+# Bigfoot section (interactive plotly plots) ----------------------------------
+library(plotly)
+
+bf_reports <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/bigfoot_reports.rds")
+bf_words <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/bigfoot_words.rds")
+
+make_odds <- function(w, group_col, g1, g2, min_n = 15) {
+  w %>%
+    rename(group = all_of(group_col)) %>%
+    filter(group %in% c(g1, g2)) %>%
+    count(word, group) %>%
+    group_by(word) %>%
+    filter(sum(n) >= min_n) %>%
+    ungroup() %>%
+    pivot_wider(names_from = group, values_from = n, values_fill = 0) %>%
+    rename(n_g1 = all_of(g1), n_g2 = all_of(g2)) %>%
+    mutate(total = n_g1 + n_g2,
+           prop_g1 = (n_g1 + 1) / (sum(n_g1) + 1),
+           prop_g2 = (n_g2 + 1) / (sum(n_g2) + 1),
+           log_odds = log(prop_g1 / prop_g2))
+}
+
+bf_wa_fl <- bf_words %>% filter(state %in% c("Washington", "Florida"))
+odds_state <- make_odds(bf_words, "state", "Washington", "Florida")
+odds_class <- make_odds(bf_words, "classification", "Class A", "Class B", min_n = 30)
 ```
 
 <style>
@@ -63,6 +89,10 @@ established for numeric variables. Uses Trump_tweet_words.Rds, comparing
 pre- and post-presidency tweets. Sentiment dictionaries are deliberately
 NOT introduced here -- that is Lecture 18's job. This lecture stops at
 "which words distinguish the two groups," a measurement/description task.
+
+The Bigfoot section (data/bigfoot_reports.rds and data/bigfoot_words.rds)
+repeats the workflow on a second text dataset with interactive plotly plots;
+the matching live-coding file is ds1000_lecture_17_notes.Rmd. Requires plotly.
 
 INSTRUCTOR NOTE:
 No new modeling machinery (lm/glm) is used today. The core move is treating
@@ -276,6 +306,141 @@ A word like "fake" appearing more often tells us a **topic** became more promine
 ]
 
 It doesn't tell us whether the person's overall tone became more positive or negative — that requires a different kind of measurement, which is next class's question.
+
+---
+
+# Same Method, New Data: Bigfoot Reports
+
+.big[
+Thousands of eyewitnesses have filed Bigfoot reports with a public database.
+
+Each report is a paragraph in the witness's own words.
+]
+
+Hover over a dot to read the start of a report.
+
+```{r, out.width="100%"}
+bf_reports %>%
+  filter(!is.na(latitude)) %>%
+  plot_geo(lat = ~latitude, lon = ~longitude) %>%
+  add_markers(color = ~classification, alpha = 0.5,
+              text = ~paste0(state, "<br>", str_trunc(observed, 120)),
+              hoverinfo = "text") %>%
+  layout(geo = list(scope = "usa", projection = list(type = "albers usa")),
+         height = 320, margin = list(t = 0, b = 0))
+```
+
+---
+
+# Washington vs. Florida: Raw Counts
+
+```{r}
+bf_wa_fl %>%
+  filter(word %in% c("road", "swamp", "elk")) %>%
+  count(word, state) %>%
+  pivot_wider(names_from = state, values_from = n)
+
+bf_wa_fl %>% count(state, name = "total_words")
+```
+
+.big[
+Washington has more reports and more than twice as many words. Is "road" more of a Washington word?
+]
+
+---
+
+# Washington vs. Florida: Proportions
+
+```{r}
+bf_wa_fl %>%
+  count(word, state) %>%
+  group_by(state) %>%
+  mutate(prop = round(n / sum(n), 4)) %>%
+  ungroup() %>%
+  filter(word == "road")
+```
+
+.big[
+Once we account for how much text there is, "road" is used at about the same rate, and slightly more in Florida. **The raw count told the wrong story.**
+]
+
+---
+
+# Which Words Distinguish the Two States?
+
+```{r, out.width="100%"}
+p_state <- odds_state %>%
+  group_by(log_odds > 0) %>%
+  slice_max(abs(log_odds), n = 8) %>%
+  ungroup() %>%
+  mutate(word = reorder(word, log_odds),
+         label = paste0(word, "<br>Washington: ", n_g1, "<br>Florida: ", n_g2)) %>%
+  ggplot(aes(x = log_odds, y = word, fill = log_odds > 0, text = label)) +
+  geom_col() +
+  labs(x = "Log odds (positive = more Washington)", y = NULL) +
+  theme(legend.position = "none")
+
+ggplotly(p_state, tooltip = "text", height = 340)
+```
+
+---
+
+# A Map of Every Word
+
+```{r, out.width="100%"}
+p_words <- odds_state %>%
+  mutate(label = paste0(word, "<br>Washington: ", n_g1, "<br>Florida: ", n_g2)) %>%
+  ggplot(aes(x = total, y = log_odds, text = label)) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_point(alpha = .5) +
+  scale_x_log10() +
+  labs(x = "Total uses (log scale)", y = "Log odds (positive = more Washington)")
+
+ggplotly(p_words, tooltip = "text", height = 330)
+```
+
+.big[
+Rare words swing to extreme values. Common words stay near zero. That is why we require a minimum count.
+]
+
+---
+
+# Look at What Is Behind the Words
+
+Compare **Class A** reports (a clear sighting) to **Class B** reports (heard something, found tracks, saw too little). With a minimum of 15 uses:
+
+```{r}
+make_odds(bf_words, "classification", "Class A", "Class B") %>%
+  slice_max(abs(log_odds), n = 8) %>%
+  select(word, n_g1, n_g2, log_odds)
+```
+
+.big[
+Many are first names and surnames: people who appear in many reports. The numbers are correct. These words say little about what witnesses *saw*.
+]
+
+---
+
+# A Higher Minimum, a Different Picture
+
+```{r, out.width="100%"}
+p_class <- odds_class %>%
+  group_by(log_odds > 0) %>%
+  slice_max(abs(log_odds), n = 8) %>%
+  ungroup() %>%
+  mutate(word = reorder(word, log_odds),
+         label = paste0(word, "<br>Class A: ", n_g1, "<br>Class B: ", n_g2)) %>%
+  ggplot(aes(x = log_odds, y = word, fill = log_odds > 0, text = label)) +
+  geom_col() +
+  labs(x = "Log odds (positive = more Class A)", y = NULL) +
+  theme(legend.position = "none")
+
+ggplotly(p_class, tooltip = "text", height = 340)
+```
+
+.big[
+Class A: **appearance** (forehead, nose, muscles). Class B: **sounds and recordings**. Our choices (like the minimum count) shape what we see, so we report them.
+]
 
 ---
 

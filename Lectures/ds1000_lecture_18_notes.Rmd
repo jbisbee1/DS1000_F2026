@@ -1,0 +1,380 @@
+---
+title: "Measuring Tone: Is Dracula a Happy Book?"
+output: html_document
+date: "2026-11-09"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+# How to use these notes
+
+This file has the full code for today's live coding, posted before class.
+
+The code is split into sections. Each section starts with a **CHECKPOINT** chunk. A checkpoint chunk rebuilds everything the section needs from scratch: it loads the packages, loads the data, and redoes the earlier steps. If you hit an error or fall behind, run the most recent checkpoint chunk and you are caught up. You do not need to fix the earlier error first.
+
+The plots are interactive (`plotly`): hover to read the details. You need the `plotly` and `tidytext` packages from last class. If you have not installed them, run this once in the console:
+
+```{r, eval=FALSE}
+install.packages(c("plotly", "tidytext"))
+```
+
+Today's question: **a sentiment dictionary can score any text as positive or negative. Three classic novels are in the public domain, so we can score them. What do the scores say, and should we believe them?**
+
+# Section 1: Load and look at the data
+
+```{r}
+# CHECKPOINT 1 ------------------------------------------------------------
+require(tidyverse)
+require(plotly)
+require(tidytext)
+
+passages <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/novel_passages.rds")
+nrc <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/nrc.Rds")
+```
+
+The data are three novels from Project Gutenberg: *Frankenstein* (Mary Shelley, 1818), *Dracula* (Bram Stoker, 1897), and *Pride and Prejudice* (Jane Austen, 1813). Each novel was cut into consecutive **passages of exactly 300 words**, so that every row is comparable in length.
+
+```{r}
+glimpse(passages)
+
+passages %>%
+  count(book)
+```
+
+```{r}
+passages %>%
+  filter(book == "Dracula", passage == 400) %>%
+  pull(text) %>%
+  str_trunc(300)
+```
+
+`nrc` is the same sentiment dictionary from the slides: each row is a word and one emotion it was hand-tagged with.
+
+```{r}
+nrc %>%
+  count(sentiment)
+```
+
+Before we measure anything, make a guess. Which of the three novels will have the most positive tone? Which will have the most negative?
+
+**PAUSE: everyone should be here. If not, run the next checkpoint.**
+
+# Section 2: Tokenize and check coverage
+
+```{r}
+# CHECKPOINT 2 ------------------------------------------------------------
+require(tidyverse)
+require(plotly)
+require(tidytext)
+passages <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/novel_passages.rds")
+nrc <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/nrc.Rds")
+```
+
+As last class, we tokenize: one row per word per passage.
+
+```{r}
+tok <- passages %>%
+  unnest_tokens(word, text)
+
+tok %>%
+  select(book, passage, word) %>%
+  head(6)
+
+nrow(tok)
+```
+
+The first problem comes before any scoring. What share of the distinct words in each book appear in the dictionary at all?
+
+```{r}
+tok %>%
+  group_by(book) %>%
+  summarise(distinct_words = n_distinct(word),
+            matched_words = n_distinct(word[word %in% nrc$word]),
+            pct_matched = matched_words / distinct_words)
+```
+
+Only about a quarter of the distinct words in each book are in the dictionary. Everything we calculate next is built from that small slice.
+
+# Section 3: Scoring each passage
+
+```{r}
+# CHECKPOINT 3 ------------------------------------------------------------
+require(tidyverse)
+require(plotly)
+require(tidytext)
+passages <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/novel_passages.rds")
+nrc <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/nrc.Rds")
+tok <- passages %>% unnest_tokens(word, text)
+```
+
+First attach the sentiment tags. `inner_join()` keeps only the words that appear in both the text and the dictionary, and we keep only the positive and negative tags.
+
+```{r}
+tok_sent <- tok %>%
+  inner_join(nrc, by = "word") %>%
+  filter(sentiment %in% c("positive", "negative"))
+
+tok_sent %>%
+  select(book, passage, word, sentiment) %>%
+  head(6)
+```
+
+Now count positive and negative words in each passage and take the difference, the **net sentiment**. A passage with no matched words would disappear at this step, so we join the counts back to the full list of passages and fill the gaps with zero.
+
+```{r}
+ps <- tok_sent %>%
+  count(book, passage, sentiment) %>%
+  pivot_wider(names_from = sentiment, values_from = n, values_fill = 0)
+
+ps <- passages %>%
+  select(book, passage, text) %>%
+  left_join(ps, by = c("book", "passage")) %>%
+  replace_na(list(positive = 0, negative = 0)) %>%
+  mutate(net_sentiment = positive - negative)
+
+ps %>%
+  select(book, passage, positive, negative, net_sentiment) %>%
+  head(5)
+```
+
+The average for each novel:
+
+```{r}
+ps %>%
+  group_by(book) %>%
+  summarise(n_passages = n(),
+            mean_net = mean(net_sentiment),
+            share_net_negative = mean(net_sentiment < 0))
+```
+
+*Pride and Prejudice* is far more positive than the other two. Now the same scores along the length of each book, which is called a **sentiment arc**. Each dot is one passage, and hovering shows the start of the text. The line is a smooth trend.
+
+```{r}
+p_arc <- ps %>%
+  mutate(label = paste0(book, ", passage ", passage,
+                        "<br>Net sentiment: ", net_sentiment,
+                        "<br>", str_trunc(text, 110))) %>%
+  ggplot(aes(x = passage, y = net_sentiment)) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_point(aes(text = label), alpha = 0.4, size = 0.8) +
+  geom_smooth(se = FALSE, linewidth = 0.8) +
+  facet_wrap(~ book, ncol = 1, scales = "free_x") +
+  labs(x = "Passage number (position in the book)", y = "Net sentiment")
+
+ggplotly(p_arc, tooltip = "text", height = 650)
+```
+
+Notice that the trend line for *Frankenstein* starts high (the opening letters and friendships) and falls below zero near the end. Hover over the lowest dots to read what is happening in the story at those points.
+
+**PAUSE: everyone should be here. If not, run the next checkpoint.**
+
+# Section 4: Is Dracula really a happy book?
+
+```{r}
+# CHECKPOINT 4 ------------------------------------------------------------
+require(tidyverse)
+require(plotly)
+require(tidytext)
+passages <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/novel_passages.rds")
+nrc <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/nrc.Rds")
+tok <- passages %>% unnest_tokens(word, text)
+tok_sent <- tok %>%
+  inner_join(nrc, by = "word") %>%
+  filter(sentiment %in% c("positive", "negative"))
+ps <- tok_sent %>%
+  count(book, passage, sentiment) %>%
+  pivot_wider(names_from = sentiment, values_from = n, values_fill = 0)
+ps <- passages %>%
+  select(book, passage, text) %>%
+  left_join(ps, by = c("book", "passage")) %>%
+  replace_na(list(positive = 0, negative = 0)) %>%
+  mutate(net_sentiment = positive - negative)
+```
+
+*Dracula* is a horror novel about a vampire, and the dictionary says its average tone is **positive** (more than *Frankenstein*'s). That is a reason to check what is inside the score. Which words contribute the most?
+
+```{r}
+top_words <- tok_sent %>%
+  count(book, word, sentiment) %>%
+  group_by(book) %>%
+  slice_max(n, n = 10, with_ties = FALSE) %>%
+  ungroup()
+
+top_words %>%
+  filter(book == "Dracula")
+```
+
+Two of the top "positive" words in *Dracula* are `count` and `professor`. In this novel, "Count" is the title of the villain, and Professor Van Helsing is a character. The dictionary tags them as positive because it was built from general language, not from Victorian horror. This is the **domain mismatch** from the slides. Hover over the bars to see how often each word is used.
+
+```{r}
+p_top <- top_words %>%
+  mutate(word = reorder_within(word, n, book),
+         label = paste0(str_remove(word, "___.*"), " (", sentiment, "): ", n)) %>%
+  ggplot(aes(x = n, y = word, fill = sentiment, text = label)) +
+  geom_col() +
+  scale_y_discrete(labels = function(x) str_remove(x, "___.*")) +
+  facet_wrap(~ book, scales = "free_y", ncol = 1) +
+  labs(x = "Number of uses", y = NULL, fill = "")
+
+ggplotly(p_top, tooltip = "text", height = 800)
+```
+
+How much does it matter? We drop those two words and rescore the novels. The function below takes the token table and a list of words to ignore, and returns each book's average.
+
+```{r}
+score_books <- function(tokens, drop = character()) {
+  s <- tokens %>%
+    filter(!word %in% drop) %>%
+    inner_join(nrc, by = "word") %>%
+    filter(sentiment %in% c("positive", "negative")) %>%
+    count(book, passage, sentiment) %>%
+    pivot_wider(names_from = sentiment, values_from = n, values_fill = 0)
+
+  passages %>%
+    select(book, passage) %>%
+    left_join(s, by = c("book", "passage")) %>%
+    replace_na(list(positive = 0, negative = 0)) %>%
+    mutate(net_sentiment = positive - negative)
+}
+
+full <- score_books(tok) %>% group_by(book) %>% summarise(all_words = mean(net_sentiment))
+without <- score_books(tok, drop = c("count", "professor")) %>%
+  group_by(book) %>% summarise(without_count_professor = mean(net_sentiment))
+
+left_join(full, without, by = "book")
+```
+
+Dropping two words moves *Dracula*'s average from about 3.5 to about 2.9, and the other two novels barely move. The tone of the book did not change. The measure changed.
+
+# Section 5: Negation
+
+```{r}
+# CHECKPOINT 5 ------------------------------------------------------------
+require(tidyverse)
+require(plotly)
+require(tidytext)
+passages <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/novel_passages.rds")
+nrc <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/nrc.Rds")
+tok <- passages %>% unnest_tokens(word, text)
+```
+
+A word counter scores "afraid" as negative, whether the sentence says "I was afraid" or "I was not afraid." To see how often this happens, we tokenize into **bigrams** (pairs of consecutive words) and look for a scored word preceded by "not", "never", or "no".
+
+```{r}
+bigrams <- passages %>%
+  unnest_tokens(bigram, text, token = "ngrams", n = 2) %>%
+  separate(bigram, into = c("first", "second"), sep = " ")
+
+negated <- bigrams %>%
+  filter(first %in% c("not", "never", "no")) %>%
+  inner_join(nrc, by = c("second" = "word")) %>%
+  filter(sentiment %in% c("positive", "negative"))
+
+negated %>%
+  count(first, second, sentiment, sort = TRUE) %>%
+  head(10)
+```
+
+Every row is a case where the dictionary would count the second word at face value even though it was negated. Some are idioms: "no doubt" usually means "certainly," yet the dictionary counts it as a negative word. How common is this overall?
+
+```{r}
+scored_tokens <- tok %>%
+  inner_join(nrc, by = "word") %>%
+  filter(sentiment %in% c("positive", "negative")) %>%
+  count(book, name = "scored_words")
+
+negated %>%
+  count(book, name = "negated_words") %>%
+  left_join(scored_tokens, by = "book") %>%
+  mutate(share_negated = negated_words / scored_words)
+```
+
+Roughly 2 to 3 percent of the scored words come right after a negator. That is not enough to overturn the pattern across whole novels, but it is not zero, and it matters much more when the text is short, like a single tweet or review.
+
+**PAUSE: everyone should be here. If not, run the next checkpoint.**
+
+# Section 6: Your turn
+
+```{r}
+# CHECKPOINT 6 ------------------------------------------------------------
+require(tidyverse)
+require(plotly)
+require(tidytext)
+passages <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/novel_passages.rds")
+nrc <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/nrc.Rds")
+tok <- passages %>% unnest_tokens(word, text)
+
+score_books <- function(tokens, drop = character()) {
+  s <- tokens %>%
+    filter(!word %in% drop) %>%
+    inner_join(nrc, by = "word") %>%
+    filter(sentiment %in% c("positive", "negative")) %>%
+    count(book, passage, sentiment) %>%
+    pivot_wider(names_from = sentiment, values_from = n, values_fill = 0)
+
+  passages %>%
+    select(book, passage) %>%
+    left_join(s, by = c("book", "passage")) %>%
+    replace_na(list(positive = 0, negative = 0)) %>%
+    mutate(net_sentiment = positive - negative)
+}
+```
+
+**Claim:** "*Pride and Prejudice* is the happiest of the three books."
+
+1. Calculate each book's mean net sentiment **with a 95% interval** (mean $\pm$ 1.96 standard errors, as in Lecture 9).
+2. Check the claim a second way. Instead of the net count, calculate the **share of scored words that are positive**: `sum(positive) / sum(positive + negative)`.
+3. Rescore after dropping words that are ambiguous in these books: `count`, `professor`, `found`, `god`, and `mother`. Does the ranking change?
+4. Is the claim supported? What would you want to say instead?
+
+```{r}
+ps <- score_books(tok)
+
+by_book <- ps %>%
+  group_by(book) %>%
+  summarise(mean_net = mean(net_sentiment),
+            se = sd(net_sentiment) / sqrt(n()),
+            lower = mean_net - 1.96 * se,
+            upper = mean_net + 1.96 * se,
+            positive_share = sum(positive) / sum(positive + negative))
+
+by_book
+```
+
+```{r}
+p_ci <- by_book %>%
+  mutate(label = paste0(book, "<br>Mean: ", round(mean_net, 2),
+                        "<br>95% interval: ", round(lower, 2), " to ", round(upper, 2))) %>%
+  ggplot(aes(x = mean_net, y = book, text = label)) +
+  geom_pointrange(aes(xmin = lower, xmax = upper)) +
+  labs(x = "Mean net sentiment per 300-word passage", y = NULL)
+
+ggplotly(p_ci, tooltip = "text")
+```
+
+```{r}
+ambiguous <- c("count", "professor", "found", "god", "mother")
+
+score_books(tok, drop = ambiguous) %>%
+  group_by(book) %>%
+  summarise(mean_net = mean(net_sentiment),
+            positive_share = sum(positive) / sum(positive + negative))
+```
+
+*Pride and Prejudice* comes out on top however we calculate it: by the net count, by the share of positive words, and after dropping the ambiguous words. Its interval does not overlap the other two. The intervals for *Frankenstein* and *Dracula* do overlap, so the data do not separate those two with confidence.
+
+The claim "has the highest dictionary-based net sentiment of the three" is supported. The claim that it is "the happiest" is stronger than the evidence. The measure counts word matches for about a quarter of the vocabulary. It cannot see irony (a major feature of Austen's narration), and it was built from modern general-purpose language, not from nineteenth-century novels.
+
+# Aside: the same method on a different question
+
+Everything today was measured with one dictionary. The `nrc` dictionary also tags words with emotions such as fear, trust, and joy. Try replacing `c("positive", "negative")` with `"fear"` and see which book has the most fear words per passage. Before you run it, predict the answer, and afterward ask whether the dictionary's idea of "fear" matches yours.
+
+# Summary
+
+1. A sentiment dictionary is a proxy. A score is the count of dictionary-matched positive words minus negative words, for the quarter of the vocabulary the dictionary recognizes.
+2. Look inside the score. The most frequent scored words showed a **domain mismatch** (a vampire's title counted as positive).
+3. Test whether the result depends on a few words by dropping them and rescoring.
+4. Negation affects only a small share of scored words in long texts, but it can matter a lot in short ones.
+5. Report intervals and robustness checks, and calibrate the claim: "highest dictionary score" is not "happiest."
