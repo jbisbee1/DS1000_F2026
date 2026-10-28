@@ -1,0 +1,392 @@
+<title>k-means Stepper</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: projector-first two-column lab bench — big plot left, controls + step log right; stacks on phones */
+:root {
+  --bg: #f3f5f7;
+  --panel: #ffffff;
+  --fg: #1d2630;
+  --muted: #5d6b78;
+  --rule: #d6dde3;
+  --accent: #0f5f8c;
+  --grid: #e6ebef;
+  --pt: #9aa6b1;
+  --font-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  /* Okabe–Ito: colorblind-safe cluster colors */
+  --c1: #d55e00; --c2: #0072b2; --c3: #009e73; --c4: #cc79a7;
+  --c5: #e69f00; --c6: #56b4e9; --c7: #7a5c00; --c8: #6a3d9a;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12181e; --panel: #1a222a; --fg: #e4e9ee; --muted: #94a3b0; --rule: #2d3943;
+    --accent: #6cc0ee; --grid: #222c35; --pt: #6b7884;
+    --c1: #ff8a3d; --c2: #4aa8e8; --c3: #2fcf9d; --c4: #e79ac6;
+    --c5: #f2b632; --c6: #8fd3f7; --c7: #d6b44a; --c8: #b394e0;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12181e; --panel: #1a222a; --fg: #e4e9ee; --muted: #94a3b0; --rule: #2d3943;
+  --accent: #6cc0ee; --grid: #222c35; --pt: #6b7884;
+  --c1: #ff8a3d; --c2: #4aa8e8; --c3: #2fcf9d; --c4: #e79ac6;
+  --c5: #f2b632; --c6: #8fd3f7; --c7: #d6b44a; --c8: #b394e0;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 16px;
+  padding-block: 20px 32px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 1180px; margin: 0 auto; display: grid; gap: 16px; }
+header h1 { font-size: 1.6rem; margin: 0; text-wrap: balance; }
+header h1 i { font-style: italic; }
+header p { margin: 4px 0 0; color: var(--muted); max-width: 70ch; }
+.bench { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; align-items: start; }
+@media (max-width: 860px) { .bench { grid-template-columns: minmax(0, 1fr); } }
+.plot { background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 8px; min-width: 0; }
+canvas { display: block; width: 100%; aspect-ratio: 1 / 1; max-width: 100%; touch-action: manipulation; cursor: crosshair; }
+.side { display: grid; gap: 14px; min-width: 0; }
+.card { background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 14px; display: grid; gap: 12px; }
+.label { font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 700; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+button, select {
+  font: inherit; font-size: .95rem; border-radius: 5px; border: 1px solid var(--rule);
+  background: var(--bg); color: var(--fg); padding: 8px 12px; cursor: pointer;
+}
+button:hover { border-color: var(--accent); }
+button:focus-visible, select:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+button.primary { background: var(--accent); color: var(--panel); border-color: var(--accent); font-weight: 700; font-size: 1.15rem; padding: 12px 18px; flex: 1; }
+button:disabled { opacity: .45; cursor: not-allowed; }
+.kpick { display: flex; align-items: center; gap: 10px; }
+.kpick input { flex: 1; accent-color: var(--accent); }
+.kval { font-family: var(--font-mono); font-size: 1.6rem; font-weight: 600; min-width: 2ch; text-align: right; }
+.phase { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+.phase span { font-size: .72rem; text-align: center; padding: 6px 2px; border-radius: 4px; background: var(--bg); color: var(--muted); border: 1px solid var(--rule); }
+.phase span.on { background: var(--accent); color: var(--panel); border-color: var(--accent); font-weight: 700; }
+.msg { font-size: 1.02rem; line-height: 1.45; min-height: 4.4em; }
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-variant-numeric: tabular-nums; }
+.stat .v { font-family: var(--font-mono); font-size: 1.35rem; font-weight: 600; }
+.stat .k { font-size: .78rem; color: var(--muted); }
+#spark { width: 100%; height: 64px; display: block; }
+.hint { font-size: .85rem; color: var(--muted); line-height: 1.4; }
+.done { color: var(--c3); font-weight: 700; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Step through <i>k</i>-means</h1>
+    <p>Each press of <b>Step</b> does one piece of the algorithm: place centroids, measure distances, reassign points, move centroids. Then it repeats until no point changes groups.</p>
+  </header>
+
+  <div class="bench">
+    <div class="plot"><canvas id="cv" aria-label="Scatter plot of points and centroids"></canvas></div>
+
+    <div class="side">
+      <div class="card">
+        <button class="primary" id="step">Step: place centroids</button>
+        <div class="row">
+          <button id="run">▶ Run</button>
+          <button id="restart">New random centroids</button>
+        </div>
+        <div class="phase" aria-label="Algorithm phase">
+          <span data-p="place">1 · Place</span><span data-p="measure">2 · Measure</span><span data-p="assign">3 · Assign</span><span data-p="update">4 · Update</span>
+        </div>
+        <div class="msg" id="msg" aria-live="polite"></div>
+      </div>
+
+      <div class="card">
+        <div class="stats">
+          <div class="stat"><div class="v" id="iter">0</div><div class="k">iterations</div></div>
+          <div class="stat"><div class="v" id="wss">—</div><div class="k">total WSS</div></div>
+        </div>
+        <div>
+          <div class="label">WSS after each update</div>
+          <canvas id="spark" aria-label="Total WSS by iteration"></canvas>
+        </div>
+      </div>
+
+      <div class="card">
+        <div>
+          <div class="label">Number of clusters (k)</div>
+          <div class="kpick"><input type="range" id="k" min="1" max="8" value="3"><span class="kval" id="kval">3</span></div>
+        </div>
+        <div>
+          <div class="label">Data</div>
+          <div class="row">
+            <select id="shape">
+              <option value="blobs">Clumps (clear groups)</option>
+              <option value="uneven">Uneven clumps</option>
+              <option value="uniform">No real groups (uniform)</option>
+              <option value="rings">Rings (k-means struggles)</option>
+            </select>
+            <button id="newdata">New data</button>
+          </div>
+        </div>
+        <p class="hint">Click the plot to add a point. Hover a point to see its distance to every centroid.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+  const sp = document.getElementById('spark'), sctx = sp.getContext('2d');
+  const $ = id => document.getElementById(id);
+  const stepBtn = $('step'), runBtn = $('run'), msg = $('msg');
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const LIM = 10; // plot spans 0..10 on both axes
+  let pts = [], cents = [], prevCents = null, assign = [], k = 3;
+  let phase = 'place';   // next action to perform
+  let lastDone = null;   // action just performed, highlighted in the phase strip
+  let iter = 0, wssHist = [], converged = false, hover = -1, timer = null, anim = null;
+
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const col = i => css('--c' + (i % 8 + 1));
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  const gauss = () => { let u = 0, v = 0; while (!u) u = Math.random(); while (!v) v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
+  const clamp = v => Math.min(LIM - .1, Math.max(.1, v));
+  const d2 = (a, b) => (a.x - b.x) ** 2 + (a.y - b.y) ** 2;
+
+  function makeData(kind) {
+    const out = [];
+    if (kind === 'uniform') {
+      for (let i = 0; i < 180; i++) out.push({ x: rnd(.5, 9.5), y: rnd(.5, 9.5) });
+    } else if (kind === 'rings') {
+      for (let i = 0; i < 200; i++) {
+        const r = i < 70 ? rnd(.3, 1.2) : rnd(3.2, 4);
+        const t = rnd(0, 2 * Math.PI);
+        out.push({ x: clamp(5 + r * Math.cos(t)), y: clamp(5 + r * Math.sin(t)) });
+      }
+    } else {
+      const n = kind === 'uneven' ? 3 : 2 + Math.floor(Math.random() * 3);
+      const centers = [];
+      while (centers.length < n) {
+        const c = { x: rnd(2, 8), y: rnd(2, 8) };
+        if (centers.every(o => d2(o, c) > 6)) centers.push(c);
+      }
+      centers.forEach((c, j) => {
+        const m = kind === 'uneven' ? [110, 35, 18][j] : 55;
+        const s = kind === 'uneven' ? [1.1, .45, .35][j] : rnd(.5, .9);
+        for (let i = 0; i < m; i++) out.push({ x: clamp(c.x + gauss() * s), y: clamp(c.y + gauss() * s) });
+      });
+    }
+    return out;
+  }
+
+  function nearest(p) {
+    let best = 0, bd = Infinity;
+    cents.forEach((c, j) => { const d = d2(p, c); if (d < bd) { bd = d; best = j; } });
+    return best;
+  }
+  const wss = () => pts.reduce((s, p, i) => assign[i] >= 0 ? s + d2(p, cents[assign[i]]) : s, 0);
+
+  function resetAlgo() {
+    stopRun();
+    cents = []; prevCents = null; assign = pts.map(() => -1);
+    phase = 'place'; lastDone = null; iter = 0; wssHist = []; converged = false;
+    setMsg('Points have no groups yet. Press <b>Step</b> to drop ' + k + ' centroid' + (k > 1 ? 's' : '') + ' at random spots.');
+    sync();
+  }
+
+  function step() {
+    if (anim) return;
+    if (converged) { resetAlgo(); return; }
+    lastDone = phase;
+    if (phase === 'place') {
+      cents = Array.from({ length: k }, () => ({ x: rnd(.5, 9.5), y: rnd(.5, 9.5) }));
+      phase = 'measure';
+      setMsg('Placed ' + k + ' centroid' + (k > 1 ? 's' : '') + ' (the <b>+</b> marks) at random. They know nothing about the data yet.');
+    } else if (phase === 'measure') {
+      phase = 'assign';
+      setMsg('Measured the straight-line (Euclidean) distance from every point to every centroid. Each line shows a point\'s <b>closest</b> centroid.');
+    } else if (phase === 'assign') {
+      const next = pts.map(nearest);
+      const changed = next.filter((a, i) => a !== assign[i]).length;
+      assign = next;
+      if (iter > 0 && changed === 0) {
+        converged = true;
+        setMsg('<span class="done">Converged.</span> No point switched groups, so the centroids will not move again. Total WSS = ' + wss().toFixed(1) + '. Press Step to start over with new random centroids.');
+      } else {
+        phase = 'update';
+        setMsg('Colored each point by its nearest centroid. <b>' + changed + '</b> point' + (changed === 1 ? '' : 's') + ' changed group' + (iter === 0 ? ' (all of them, on the first pass)' : '') + '.');
+      }
+    } else if (phase === 'update') {
+      prevCents = cents.map(c => ({ ...c }));
+      const target = cents.map((c, j) => {
+        const m = pts.filter((_, i) => assign[i] === j);
+        return m.length ? { x: m.reduce((s, p) => s + p.x, 0) / m.length, y: m.reduce((s, p) => s + p.y, 0) / m.length } : { ...c };
+      });
+      const empty = target.filter((t, j) => !pts.some((_, i) => assign[i] === j)).length;
+      iter++;
+      animateTo(target, () => {
+        wssHist.push(wss());
+        phase = 'measure';
+        setMsg('Moved each centroid to the <b>average</b> position of its points (faint ring = old spot). Total WSS is now ' + wss().toFixed(1) + '.' + (empty ? ' ' + empty + ' centroid' + (empty > 1 ? 's have' : ' has') + ' no points and stays put.' : ''));
+        sync();
+      });
+    }
+    sync();
+  }
+
+  function animateTo(target, done) {
+    const from = cents.map(c => ({ ...c }));
+    if (reduceMotion) { cents = target; done(); return; }
+    const t0 = performance.now(), dur = 550;
+    let finished = false;
+    const finish = () => { if (finished) return; finished = true; cancelAnimationFrame(anim); anim = null; cents = target; done(); };
+    const tick = now => {
+      const t = Math.min(1, (now - t0) / dur), e = 1 - (1 - t) ** 3;
+      cents = from.map((f, j) => ({ x: f.x + (target[j].x - f.x) * e, y: f.y + (target[j].y - f.y) * e }));
+      draw();
+      if (t < 1) anim = requestAnimationFrame(tick); else finish();
+    };
+    anim = requestAnimationFrame(tick);
+    setTimeout(finish, dur + 100); // rAF pauses in background tabs; never leave Step stuck
+  }
+
+  function setMsg(h) { msg.innerHTML = h; }
+
+  function sync() {
+    const labels = { place: 'Step: place centroids', measure: 'Step: measure distances', assign: 'Step: assign groups', update: 'Step: move centroids' };
+    stepBtn.textContent = converged ? 'Start over' : labels[phase];
+    document.querySelectorAll('.phase span').forEach(s => s.classList.toggle('on', s.dataset.p === lastDone));
+    $('iter').textContent = iter;
+    $('wss').textContent = assign.some(a => a >= 0) ? wss().toFixed(1) : '—';
+    if (converged) stopRun();
+    draw(); drawSpark();
+  }
+
+  // ---- drawing ----
+  let W = 0, PAD = 0;
+  function fit() {
+    const r = cv.getBoundingClientRect(), dpr = devicePixelRatio || 1;
+    cv.width = r.width * dpr; cv.height = r.width * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    W = r.width; PAD = Math.max(28, W * .06);
+    const sr = sp.getBoundingClientRect();
+    sp.width = sr.width * dpr; sp.height = sr.height * dpr;
+    sctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    draw(); drawSpark();
+  }
+  const sx = x => PAD + x / LIM * (W - PAD * 1.4);
+  const sy = y => W - PAD - y / LIM * (W - PAD * 1.4);
+  const ix = px => (px - PAD) / (W - PAD * 1.4) * LIM;
+  const iy = py => (W - PAD - py) / (W - PAD * 1.4) * LIM;
+
+  function plus(x, y, c, size, lw) {
+    ctx.strokeStyle = css('--panel'); ctx.lineWidth = lw + 4; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(x - size, y); ctx.lineTo(x + size, y); ctx.moveTo(x, y - size); ctx.lineTo(x, y + size); ctx.stroke();
+    ctx.strokeStyle = c; ctx.lineWidth = lw;
+    ctx.beginPath(); ctx.moveTo(x - size, y); ctx.lineTo(x + size, y); ctx.moveTo(x, y - size); ctx.lineTo(x, y + size); ctx.stroke();
+  }
+
+  function draw() {
+    if (!W) return;
+    ctx.clearRect(0, 0, W, W);
+    // grid + ticks
+    ctx.strokeStyle = css('--grid'); ctx.lineWidth = 1;
+    ctx.fillStyle = css('--muted'); ctx.font = `${Math.max(10, W * .02)}px ${css('--font-mono')}`;
+    for (let v = 0; v <= LIM; v++) {
+      ctx.beginPath(); ctx.moveTo(sx(v), sy(0)); ctx.lineTo(sx(v), sy(LIM)); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(sx(0), sy(v)); ctx.lineTo(sx(LIM), sy(v)); ctx.stroke();
+      if (v % 2 === 0) {
+        ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.fillText(v, sx(v), sy(0) + 6);
+        ctx.textAlign = 'right'; ctx.textBaseline = 'middle'; ctx.fillText(v, sx(0) - 6, sy(v));
+      }
+    }
+    const r = Math.max(3.5, W * .0085);
+    const showLines = phase === 'assign' && !converged && cents.length;
+    // distance lines to nearest centroid
+    if (showLines) {
+      ctx.globalAlpha = .45; ctx.lineWidth = 1.2;
+      pts.forEach(p => { const j = nearest(p); ctx.strokeStyle = col(j); ctx.beginPath(); ctx.moveTo(sx(p.x), sy(p.y)); ctx.lineTo(sx(cents[j].x), sy(cents[j].y)); ctx.stroke(); });
+      ctx.globalAlpha = 1;
+    }
+    // hover: lines to all centroids with distances
+    if (hover >= 0 && cents.length) {
+      const p = pts[hover], j0 = nearest(p);
+      cents.forEach((c, j) => {
+        ctx.setLineDash(j === j0 ? [] : [5, 4]); ctx.strokeStyle = col(j); ctx.lineWidth = j === j0 ? 2.5 : 1.5;
+        ctx.beginPath(); ctx.moveTo(sx(p.x), sy(p.y)); ctx.lineTo(sx(c.x), sy(c.y)); ctx.stroke();
+        ctx.setLineDash([]);
+        const mx = (sx(p.x) + sx(c.x)) / 2, my = (sy(p.y) + sy(c.y)) / 2, t = Math.sqrt(d2(p, c)).toFixed(2);
+        ctx.font = `600 ${Math.max(11, W * .022)}px ${css('--font-mono')}`;
+        const tw = ctx.measureText(t).width;
+        ctx.fillStyle = css('--panel'); ctx.fillRect(mx - tw / 2 - 4, my - 10, tw + 8, 20);
+        ctx.fillStyle = col(j); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(t, mx, my);
+      });
+    }
+    // points
+    pts.forEach((p, i) => {
+      ctx.beginPath(); ctx.arc(sx(p.x), sy(p.y), i === hover ? r * 1.6 : r, 0, 2 * Math.PI);
+      ctx.fillStyle = assign[i] >= 0 ? col(assign[i]) : css('--pt'); ctx.fill();
+      if (i === hover) { ctx.strokeStyle = css('--fg'); ctx.lineWidth = 2; ctx.stroke(); }
+    });
+    // previous centroid ghosts
+    if (prevCents && (phase === 'measure' || anim)) {
+      prevCents.forEach((c, j) => { ctx.beginPath(); ctx.arc(sx(c.x), sy(c.y), W * .018, 0, 2 * Math.PI); ctx.strokeStyle = col(j); ctx.globalAlpha = .4; ctx.lineWidth = 2; ctx.stroke(); ctx.globalAlpha = 1; });
+    }
+    cents.forEach((c, j) => plus(sx(c.x), sy(c.y), col(j), W * .03, Math.max(3, W * .008)));
+  }
+
+  function drawSpark() {
+    const w = sp.getBoundingClientRect().width, h = 64;
+    sctx.clearRect(0, 0, w, h);
+    sctx.font = `11px ${css('--font-mono')}`; sctx.fillStyle = css('--muted');
+    if (!wssHist.length) { sctx.textBaseline = 'middle'; sctx.fillText('appears after the first update', 0, h / 2); return; }
+    const max = Math.max(...wssHist), min = Math.min(...wssHist), n = Math.max(2, wssHist.length);
+    const X = i => 6 + i / (n - 1) * (w - 60), Y = v => 8 + (max === min ? .5 : (max - v) / (max - min)) * (h - 16);
+    sctx.strokeStyle = css('--grid'); sctx.beginPath(); sctx.moveTo(0, h - 8); sctx.lineTo(w, h - 8); sctx.stroke();
+    sctx.strokeStyle = css('--accent'); sctx.lineWidth = 2; sctx.beginPath();
+    wssHist.forEach((v, i) => i ? sctx.lineTo(X(i), Y(v)) : sctx.moveTo(X(i), Y(v))); sctx.stroke();
+    wssHist.forEach((v, i) => { sctx.beginPath(); sctx.arc(X(i), Y(v), i === wssHist.length - 1 ? 4 : 2.5, 0, 2 * Math.PI); sctx.fillStyle = css('--accent'); sctx.fill(); });
+    const last = wssHist[wssHist.length - 1];
+    sctx.fillStyle = css('--fg'); sctx.textBaseline = 'middle'; sctx.textAlign = 'left';
+    sctx.fillText(last.toFixed(1), X(wssHist.length - 1) + 8, Y(last));
+  }
+
+  // ---- run / controls ----
+  function stopRun() { clearInterval(timer); timer = null; runBtn.textContent = '▶ Run'; }
+  runBtn.onclick = () => {
+    if (timer) { stopRun(); return; }
+    if (converged) resetAlgo();
+    runBtn.textContent = '❚❚ Pause';
+    step(); timer = setInterval(step, 800);
+  };
+  stepBtn.onclick = () => { stopRun(); step(); };
+  $('restart').onclick = () => { resetAlgo(); step(); };
+  $('k').oninput = e => { k = +e.target.value; $('kval').textContent = k; resetAlgo(); };
+  $('newdata').onclick = () => { pts = makeData($('shape').value); resetAlgo(); };
+  $('shape').onchange = () => { pts = makeData($('shape').value); resetAlgo(); };
+
+  const pos = e => { const r = cv.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
+  cv.addEventListener('mousemove', e => {
+    const m = pos(e); let best = -1, bd = (W * .02) ** 2;
+    pts.forEach((p, i) => { const d = (sx(p.x) - m.x) ** 2 + (sy(p.y) - m.y) ** 2; if (d < bd) { bd = d; best = i; } });
+    if (best !== hover) { hover = best; draw(); }
+  });
+  cv.addEventListener('mouseleave', () => { hover = -1; draw(); });
+  cv.addEventListener('click', e => {
+    if (hover >= 0) return;
+    const m = pos(e), x = ix(m.x), y = iy(m.y);
+    if (x < 0 || x > LIM || y < 0 || y > LIM) return;
+    pts.push({ x, y }); assign.push(-1);
+    sync();
+  });
+  document.addEventListener('keydown', e => { if ((e.key === ' ' || e.key === 'ArrowRight') && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') { e.preventDefault(); stopRun(); step(); } });
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { draw(); drawSpark(); });
+  new MutationObserver(() => { draw(); drawSpark(); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  new ResizeObserver(fit).observe(cv);
+
+  pts = makeData('blobs');
+  resetAlgo();
+  document.fonts && document.fonts.ready.then(fit);
+})();
+</script>
