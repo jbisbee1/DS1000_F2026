@@ -51,6 +51,27 @@ for (k in 1:8) {
 set.seed(123)
 km2_117 <- kmeans(h117 %>% select(nominate_dim1, nominate_dim2), centers = 2, nstart = 25)
 
+# Three-point toy example for distance + k-means walkthrough -----------------
+toy <- tibble(x = c(1, 3, 3), y = c(3, 3, 5))
+centroid <- tibble(x = c(1.5, 3.5), y = c(4, 4.5))
+centroid2 <- tibble(x = c(1, 3), y = c(3, 4))
+
+toy_base <- function() {
+  toy %>%
+    ggplot(aes(x = x, y = y)) +
+    geom_point(size = 3) +
+    scale_x_continuous(breaks = 0:6, limits = c(0, 6)) +
+    scale_y_continuous(breaks = 0:6, limits = c(0, 6)) +
+    coord_fixed()
+}
+dist_bar <- function(x, y, xend, yend) {
+  annotate(geom = "segment", x = x, y = y, xend = xend, yend = yend,
+           arrow = arrow(ends = "both", angle = 90, length = unit(.2, "cm")))
+}
+plus <- function(cents, color = c("red", "darkgreen")) {
+  annotate(geom = "point", x = cents$x, y = cents$y, size = 10, color = color, shape = "+")
+}
+
 # Pokemon section (interactive plotly plots) ----------------------------------
 library(plotly)
 
@@ -173,7 +194,7 @@ h97 %>% head(5)
 
 # Look First
 
-```{r}
+```{r, fig.height=3.5}
 h97 %>%
   ggplot(aes(x = nominate_dim1, y = nominate_dim2)) +
   geom_point(alpha = .5)
@@ -195,7 +216,68 @@ Do you see groups? How many?
 
 ---
 
-# Distance in Two Dimensions
+# Euclidean Distance
+
+```{r,echo=FALSE,fig.width=5,fig.height=5}
+toy %>% slice(1) %>%
+  ggplot(aes(x = x, y = y)) +
+  geom_point(size = 3) +
+  scale_x_continuous(breaks = 0:6, limits = c(0, 6)) +
+  scale_y_continuous(breaks = 0:6, limits = c(0, 6)) +
+  coord_fixed()
+```
+
+---
+
+# Euclidean Distance
+
+```{r,echo=FALSE,fig.width=5,fig.height=5}
+toy %>% slice(1:2) %>%
+  ggplot(aes(x = x, y = y)) +
+  geom_point(size = 3) +
+  scale_x_continuous(breaks = 0:6, limits = c(0, 6)) +
+  scale_y_continuous(breaks = 0:6, limits = c(0, 6)) +
+  coord_fixed() +
+  dist_bar(1, 2.6, 3, 2.6)
+```
+
+---
+
+# Euclidean Distance
+
+```{r,echo=FALSE,fig.width=5,fig.height=5}
+toy_base() +
+  dist_bar(1, 2.6, 3, 2.6) +
+  dist_bar(3.4, 3, 3.4, 5)
+```
+
+---
+
+# Euclidean Distance
+
+.pull-left[
+```{r,echo=FALSE,fig.width=5,fig.height=5}
+toy_base() +
+  dist_bar(1, 2.6, 3, 2.6) +
+  dist_bar(3.4, 3, 3.4, 5) +
+  dist_bar(.8, 3.4, 2.8, 5.4) +
+  annotate(geom = "label", x = c(2, 3.8, 1.5), y = c(2.2, 4, 4.8), label = c("a", "b", "c"))
+```
+]
+
+.pull-right[
+<br>
+
+$c^2 = a^2 + b^2$ → $c = \sqrt{a^2 + b^2}$
+
+<br>
+
+In general: $\sqrt{\sum_i (q_i - p_i)^2}$
+]
+
+---
+
+# Distance in R
 
 ```{r}
 pt1 <- c(0, 0)
@@ -221,6 +303,65 @@ Same idea as the distance formula from geometry: $\sqrt{(x_2-x_1)^2 + (y_2-y_1)^
 
 ---
 
+# Step 1: Random Centroids
+
+```{r,echo=FALSE,fig.width=5,fig.height=5}
+toy_base() + plus(centroid)
+```
+
+---
+
+# Step 2: Assign Each Point to Its Nearest Centroid
+
+```{r,echo=FALSE,fig.width=5,fig.height=5}
+toy_base() + plus(centroid) +
+  annotate(geom = "segment", x = c(1, 1), y = c(3, 3), xend = centroid$x, yend = centroid$y)
+```
+
+---
+
+# Step 2: Assign Each Point to Its Nearest Centroid
+
+```{r,echo=FALSE,fig.width=5,fig.height=5}
+toy_base() + plus(centroid) +
+  annotate(geom = "point", x = 1, y = 3, size = 3, color = "red") +
+  annotate(geom = "segment", x = c(3, 3), y = c(3, 3), xend = centroid$x, yend = centroid$y)
+```
+
+---
+
+# Step 2: Assign Each Point to Its Nearest Centroid
+
+```{r,echo=FALSE,fig.width=5,fig.height=5}
+toy_base() + plus(centroid) +
+  annotate(geom = "point", x = c(1, 3), y = c(3, 3), size = 3, color = c("red", "darkgreen")) +
+  annotate(geom = "segment", x = c(3, 3), y = c(5, 5), xend = centroid$x, yend = centroid$y)
+```
+
+---
+
+# Step 2: Assign Each Point to Its Nearest Centroid
+
+```{r,echo=FALSE,fig.width=5,fig.height=5}
+toy_base() + plus(centroid) +
+  annotate(geom = "point", x = c(1, 3, 3), y = c(3, 3, 5), size = 3,
+           color = c("red", "darkgreen", "darkgreen"))
+```
+
+---
+
+# Step 3: Move Centroids to the Average of Their Points
+
+```{r,echo=FALSE,fig.width=5,fig.height=5}
+toy_base() + plus(centroid, color = "grey70") + plus(centroid2) +
+  annotate(geom = "point", x = c(1, 3, 3), y = c(3, 3, 5), size = 3,
+           color = c("red", "darkgreen", "darkgreen"))
+```
+
+.small[Then repeat. Try it yourself: [our step-by-step $k$-means demo](https://www.jamesbisbee.com/DS1000_F2026/Lectures/kmeans_demo.html) or [this visualization](https://www.naftaliharris.com/blog/visualizing-k-means-clustering/)]
+
+---
+
 # Running It
 
 ```{r}
@@ -236,7 +377,7 @@ km2_97$centers
 
 # Visualizing the Clusters
 
-```{r}
+```{r, fig.height=3.5}
 h97 %>%
   mutate(cluster = factor(km2_97$cluster)) %>%
   ggplot(aes(x = nominate_dim1, y = nominate_dim2, color = cluster)) +
@@ -256,6 +397,78 @@ h97 %>%
 .big[
 The algorithm was never told anyone's party. Does the structure it found line up with party anyway?
 ]
+
+---
+
+# Who Is Where? Hover to Find Out
+
+```{r, out.width="100%"}
+p_h97 <- h97 %>%
+  mutate(cluster = factor(km2_97$cluster)) %>%
+  ggplot(aes(x = nominate_dim1, y = nominate_dim2, color = cluster,
+             text = paste0(bioname, " (", party, ")"))) +
+  geom_point(alpha = .6)
+
+ggplotly(p_h97, tooltip = "text", height = 330)
+```
+
+.small[Look for the members who land in the "other" party's cluster. Who are they?]
+
+---
+
+# More Clusters: $k = 3$
+
+```{r}
+set.seed(123)
+km3_97 <- kmeans(h97 %>% select(nominate_dim1, nominate_dim2), centers = 3, nstart = 25)
+```
+
+```{r,echo=FALSE,out.width="100%"}
+p_k <- h97 %>%
+  mutate(cluster = factor(km3_97$cluster)) %>%
+  ggplot(aes(x = nominate_dim1, y = nominate_dim2, color = cluster,
+             text = paste0(bioname, " (", party, ")"))) +
+  geom_point(alpha = .6)
+ggplotly(p_k, tooltip = "text", height = 360)
+```
+
+---
+
+# More Clusters: $k = 5$
+
+```{r}
+set.seed(123)
+km5_97 <- kmeans(h97 %>% select(nominate_dim1, nominate_dim2), centers = 5, nstart = 25)
+```
+
+```{r,echo=FALSE,out.width="100%"}
+p_k <- h97 %>%
+  mutate(cluster = factor(km5_97$cluster)) %>%
+  ggplot(aes(x = nominate_dim1, y = nominate_dim2, color = cluster,
+             text = paste0(bioname, " (", party, ")"))) +
+  geom_point(alpha = .6)
+ggplotly(p_k, tooltip = "text", height = 360)
+```
+
+---
+
+# More Clusters: $k = 10$
+
+```{r}
+set.seed(123)
+km10_97 <- kmeans(h97 %>% select(nominate_dim1, nominate_dim2), centers = 10, nstart = 25)
+```
+
+```{r,echo=FALSE,out.width="100%"}
+p_k <- h97 %>%
+  mutate(cluster = factor(km10_97$cluster)) %>%
+  ggplot(aes(x = nominate_dim1, y = nominate_dim2, color = cluster,
+             text = paste0(bioname, " (", party, ")"))) +
+  geom_point(alpha = .6)
+ggplotly(p_k, tooltip = "text", height = 360)
+```
+
+.small[Every one of these is a valid answer to the question we asked. Which one is *useful*?]
 
 ---
 
@@ -290,7 +503,7 @@ for (k in 1:8) {
 }
 ```
 
-```{r}
+```{r, fig.height=2.8}
 wss_97 %>%
   ggplot(aes(x = k, y = tot_wss)) +
   geom_line() + geom_point() +
