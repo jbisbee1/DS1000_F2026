@@ -51,6 +51,11 @@ introduced), and closes by cross-validating AUC to compare two model
 specifications -- mirroring Lecture 12's cross-validated RMSE comparison,
 now applied to a classification metric.
 
+The running example is Spotify hits (popularity &gt;= 70), matching the live-code
+notes. Hits are rare (~1 in 10), so the default 0.5 threshold predicts no hits
+at all -- which is what makes sensitivity/specificity and the threshold sweep
+worth having.
+
 INSTRUCTOR NOTE:
 Logistic regression / GLMs are intentionally NOT introduced here. The course
 stays with the linear-probability-model classifier from Lecture 14; the
@@ -83,35 +88,100 @@ Today:
 
 ---
 
-# Picking Up the Confusion Matrix
+# Today's Question
 
-Same classifier as last class, same 0.5 threshold:
+.big[
+Using only how a song **sounds** (plus its playlist genre), can we predict whether it becomes a **hit**?
+]
+
+- Data: 4,000 Spotify songs, with audio features like `danceability`, `energy`, `loudness`, `valence`
+- A **hit** = Spotify popularity score of 70 or more
 
 
 ``` r
-test %&gt;% count(isWin, pred_class)
+sp %&gt;% count(hit) %&gt;% mutate(share = n / sum(n))
+```
+
+```
+## # A tibble: 2 × 3
+##   hit       n share
+##   &lt;lgl&gt; &lt;int&gt; &lt;dbl&gt;
+## 1 FALSE  3612 0.903
+## 2 TRUE    388 0.097
+```
+
+---
+
+# Hits Are Rare
+
+.big[
+Only about 10% of songs are hits.
+]
+
+The laziest classifier says "not a hit" for every song — and is right about 90% of the time.
+
+.big[
+Any model has to beat that baseline. And a single accuracy number is going to struggle to tell us whether it does anything useful.
+]
+
+---
+
+# The Classifier
+
+Same approach as last class: a linear regression with a TRUE/FALSE outcome, fit on a training half, predicted on a test half.
+
+
+``` r
+model_full &lt;- lm(hit ~ danceability + energy + loudness + valence +
+                   acousticness + speechiness + playlist_genre, data = train)
+test$pred_prob &lt;- predict(model_full, newdata = test)
+```
+
+
+``` r
+range(test$pred_prob)
+```
+
+```
+## [1] -0.2574037  0.2856576
+```
+
+.big[
+What happens with a 0.5 threshold?
+]
+
+---
+
+# The Confusion Matrix at 0.5
+
+
+``` r
+test %&gt;%
+  mutate(hit = factor(hit, levels = c(TRUE, FALSE)),
+         pred_class = factor(pred_class, levels = c(TRUE, FALSE))) %&gt;%
+  count(hit, pred_class, .drop = FALSE)
 ```
 
 ```
 ## # A tibble: 4 × 3
-##   isWin pred_class     n
-##   &lt;lgl&gt; &lt;lgl&gt;      &lt;int&gt;
-## 1 FALSE FALSE       1389
-## 2 FALSE TRUE         452
-## 3 TRUE  FALSE        454
-## 4 TRUE  TRUE        1395
+##   hit   pred_class     n
+##   &lt;fct&gt; &lt;fct&gt;      &lt;int&gt;
+## 1 TRUE  TRUE           0
+## 2 TRUE  FALSE        190
+## 3 FALSE TRUE           0
+## 4 FALSE FALSE       1810
 ```
 
-Last time we asked: what's the overall accuracy? Today: what's happening **inside** each row?
+Accuracy: **90.5%** — exactly the baseline. The model never predicts a hit.
 
 ---
 
 # Two Questions, Not One
 
 .big[
-**Sensitivity:** of the games actually **won**, what share did the model correctly flag as wins?
+**Sensitivity:** of the songs that actually **were hits**, what share did the model flag as hits?
 
-**Specificity:** of the games actually **lost**, what share did the model correctly flag as losses?
+**Specificity:** of the songs that actually **were not hits**, what share did the model correctly rule out?
 ]
 
 ---
@@ -128,11 +198,11 @@ round(c(sensitivity = sensitivity_50, specificity = specificity_50), 3)
 
 ```
 ## sensitivity specificity 
-##       0.754       0.754
+##           0           1
 ```
 
 .big[
-Are these close to each other, or far apart?
+Perfect at ruling out non-hits. Useless at finding hits.
 ]
 
 ---
@@ -140,20 +210,46 @@ Are these close to each other, or far apart?
 # Why Both Matter
 
 .big[
-A model that predicts "loss" for almost everything can have very high specificity and terrible sensitivity — and still post a respectable overall accuracy, if losses are common.
+A model that predicts "not a hit" for every song has perfect specificity and zero sensitivity — and still posts 90% accuracy, because non-hits are so common.
 ]
 
-Sensitivity and specificity separate "good at catching wins" from "good at catching losses."
+Sensitivity and specificity separate "good at catching hits" from "good at ruling out non-hits."
 
 ---
 
 # The Threshold Controls Both
 
-.big[
-Lecture 14 showed: change the 0.5 cutoff, and the confusion matrix changes.
-]
+Lower the threshold from 0.5 to 0.15:
 
-Raising the threshold makes the model more cautious about predicting "win" — which shifts sensitivity and specificity in **opposite directions**.
+
+``` r
+test %&gt;%
+  group_by(hit) %&gt;%
+  summarise(n_songs = n(), share_flagged_as_hit = mean(pred_class_15))
+```
+
+```
+## # A tibble: 2 × 3
+##   hit   n_songs share_flagged_as_hit
+##   &lt;lgl&gt;   &lt;int&gt;                &lt;dbl&gt;
+## 1 FALSE    1810                0.188
+## 2 TRUE      190                0.379
+```
+
+
+``` r
+test %&gt;% summarise(accuracy_50 = mean(pred_class == hit),
+                   accuracy_15 = mean(pred_class_15 == hit))
+```
+
+```
+## # A tibble: 1 × 2
+##   accuracy_50 accuracy_15
+##         &lt;dbl&gt;       &lt;dbl&gt;
+## 1       0.905       0.771
+```
+
+We now catch some hits — and overall accuracy **falls**.
 
 ---
 
@@ -161,7 +257,8 @@ Raising the threshold makes the model more cautious about predicting "win" — w
 
 
 ``` r
-sweep_thresholds &lt;- function(probs, truth, thresholds = seq(0, 1, by = 0.02)) {
+sweep_thresholds &lt;- function(probs, truth,
+                             thresholds = seq(min(probs), max(probs), length.out = 101)) {
   out &lt;- NULL
   for (t in thresholds) {
     pred_t &lt;- ifelse(probs &gt;= t, TRUE, FALSE)
@@ -177,6 +274,8 @@ sweep_thresholds &lt;- function(probs, truth, thresholds = seq(0, 1, by = 0.02))
 }
 ```
 
+The thresholds run from the lowest predicted score to the highest — 0.5 is not even in range.
+
 ---
 
 # Sensitivity and Specificity vs. Threshold
@@ -189,19 +288,32 @@ roc_full %&gt;%
   geom_line()
 ```
 
-&lt;img src="ds1000_lecture_15_slides_f2026_files/figure-html/unnamed-chunk-5-1.png" alt="" style="display: block; margin: auto;" /&gt;
+&lt;img src="ds1000_lecture_15_slides_f2026_files/figure-html/unnamed-chunk-10-1.png" alt="" style="display: block; margin: auto;" /&gt;
 
 ---
 
 # The Tradeoff, Visualized
 
 .big[
-As the threshold rises: specificity tends to rise, sensitivity tends to fall.
+As the threshold rises: specificity rises, sensitivity falls.
 
 There is no threshold that maximizes both at once.
 ]
 
 Which one matters more depends on the **cost of being wrong** in each direction — a judgment call, not a statistical one.
+
+---
+
+# Which Mistake Is Worse?
+
+.big[
+Same model, different users:
+]
+
+- A **record label scout** wants to find every future hit and doesn't mind listening to some duds → **low** threshold (high sensitivity).
+- A **radio station** has a few slots and needs every song it plays to land → **high** threshold (high specificity).
+
+The statistics tell us what each threshold gives up. They don't tell us which price to pay.
 
 ---
 
@@ -211,9 +323,9 @@ Which one matters more depends on the **cost of being wrong** in each direction 
 Instead of picking one threshold, plot the whole tradeoff:
 ]
 
-**x-axis:** 1 − specificity (how often we wrongly call a loss a win)
+**x-axis:** 1 − specificity (how often we wrongly flag a non-hit)
 
-**y-axis:** sensitivity (how often we correctly catch a win)
+**y-axis:** sensitivity (how often we correctly catch a hit)
 
 This is the **ROC curve** (Receiver Operating Characteristic).
 
@@ -231,14 +343,14 @@ roc_full %&gt;%
   labs(x = "1 − specificity", y = "sensitivity")
 ```
 
-&lt;img src="ds1000_lecture_15_slides_f2026_files/figure-html/unnamed-chunk-6-1.png" alt="" style="display: block; margin: auto;" /&gt;
+&lt;img src="ds1000_lecture_15_slides_f2026_files/figure-html/unnamed-chunk-11-1.png" alt="" style="display: block; margin: auto;" /&gt;
 
 ---
 
 # Reading the ROC Curve
 
 .big[
-The dashed diagonal line is what a **coin flip** would produce — no ability to distinguish wins from losses at any threshold.
+The dashed diagonal line is what a **coin flip** would produce — no ability to distinguish hits from non-hits at any threshold.
 
 A curve that bows **up and to the left**, away from the diagonal, means the classifier separates the two classes well across thresholds.
 ]
@@ -276,15 +388,19 @@ round(auc_full, 3)
 ```
 
 ```
-## [1] 0.786
+## [1] 0.682
 ```
+
+.big[
+At 0.5, this model looked no better than guessing "no." Across every threshold, it clearly is.
+]
 
 ---
 
 # Why AUC Is Useful for Comparison
 
 .big[
-Accuracy depends on a threshold you have to pick.
+Accuracy depends on a threshold you have to pick — and with rare outcomes, the default pick can hide everything.
 
 AUC does not — it summarizes performance **across every possible threshold**, which makes it a fairer way to compare two different classifiers.
 ]
@@ -299,8 +415,10 @@ Recall: to compare regression models, we cross-validated RMSE across 100 train/t
 Same idea, new metric: cross-validate **AUC** to compare two classifiers.
 ]
 
-- Full model: `isWin ~ tov + pts + treb + pctFG`
-- Simple model: `isWin ~ tov`
+**Claim:** "You only need to know how a song *sounds* to predict a hit. Knowing the genre adds nothing."
+
+- Audio only: `hit ~ danceability + energy + loudness + valence + acousticness + speechiness`
+- Audio + genre: the same, plus `playlist_genre`
 
 ---
 
@@ -309,12 +427,14 @@ Same idea, new metric: cross-validate **AUC** to compare two classifiers.
 
 ``` r
 for (i in 1:100) {
-  inds_i &lt;- sample(1:nrow(gms), size = round(nrow(gms) / 2), replace = FALSE)
-  train_i &lt;- gms %&gt;% slice(inds_i)
-  test_i &lt;- gms %&gt;% slice(-inds_i)
+  inds_i &lt;- sample(1:nrow(sp), size = round(nrow(sp) / 2), replace = FALSE)
+  train_i &lt;- sp %&gt;% slice(inds_i)
+  test_i &lt;- sp %&gt;% slice(-inds_i)
 
-  m_full_i &lt;- lm(isWin ~ tov + pts + treb + pctFG, data = train_i)
-  m_simple_i &lt;- lm(isWin ~ tov, data = train_i)
+  m_genre_i &lt;- lm(hit ~ danceability + energy + loudness + valence +
+                    acousticness + speechiness + playlist_genre, data = train_i)
+  m_audio_i &lt;- lm(hit ~ danceability + energy + loudness + valence +
+                    acousticness + speechiness, data = train_i)
   # ...compute AUC for each on test_i, store results...
 }
 ```
@@ -330,10 +450,10 @@ cv_auc_summary
 
 ```
 ## # A tibble: 2 × 2
-##   model                           mean_auc
-##   &lt;chr&gt;                              &lt;dbl&gt;
-## 1 Full (tov + pts + treb + pctFG)    0.760
-## 2 Simple (tov only)                  0.563
+##   model                  mean_auc
+##   &lt;chr&gt;                     &lt;dbl&gt;
+## 1 Audio features + genre    0.676
+## 2 Audio features only       0.635
 ```
 
 
@@ -343,17 +463,17 @@ cv_auc %&gt;%
   geom_density(alpha = .4)
 ```
 
-&lt;img src="ds1000_lecture_15_slides_f2026_files/figure-html/unnamed-chunk-11-1.png" alt="" style="display: block; margin: auto;" /&gt;
+&lt;img src="ds1000_lecture_15_slides_f2026_files/figure-html/unnamed-chunk-16-1.png" alt="" style="display: block; margin: auto;" /&gt;
 
 ---
 
 # What This Comparison Tells Us
 
 .big[
-The model with the higher average cross-validated AUC separates wins from losses more reliably, across thresholds, on data it wasn't fit to.
+The model with the higher average cross-validated AUC separates hits from non-hits more reliably, across thresholds, on songs it wasn't fit to.
 ]
 
-It does **not** tell us which predictor *causes* winning — same caution as every model comparison this semester.
+It does **not** tell us that genre *causes* a hit — same caution as every model comparison this semester.
 
 ---
 
@@ -361,7 +481,7 @@ It does **not** tell us which predictor *causes* winning — same caution as eve
 
 Suppose an AI assistant is shown only the model's accuracy at the default 0.5 threshold and says:
 
-&gt; "This model performs at 74% and that fully describes how good it is."
+&gt; "This model performs at 90% and that fully describes how good it is."
 
 .big[
 **What does a single-threshold accuracy number leave out?**
@@ -377,12 +497,12 @@ Suppose an AI assistant is shown only the model's accuracy at the default 0.5 th
 
 Instead of:
 
-&gt; "The model is 74% accurate."
+&gt; "The model is 90% accurate."
 
 Try:
 
 .big[
-&gt; **Across repeated train/test splits, the full model's average AUC was 0.76, compared to 0.563 for the turnovers-only model — a more complete comparison than a single accuracy number, though neither establishes what causes winning, and any real use would still require choosing a threshold based on the cost of each kind of mistake.**
+&gt; **Across repeated train/test splits, the audio + genre model's average AUC was 0.676, compared to 0.635 for audio features alone — a more complete comparison than a single accuracy number, though neither establishes what makes a song a hit, and any real use would still require choosing a threshold based on the cost of each kind of mistake.**
 ]
 
 ---
@@ -391,9 +511,9 @@ Try:
 
 When you see a classifier's performance reported, ask:
 
-1. Was accuracy reported at one threshold, or across the tradeoff?
-2. What are sensitivity and specificity, separately?
-3. Does the ROC curve bow away from the diagonal?
+1. How common is the outcome, and what does the "always guess the majority" baseline score?
+2. Was accuracy reported at one threshold, or across the tradeoff?
+3. What are sensitivity and specificity, separately?
 4. Was AUC calculated with held-out data, ideally cross-validated?
 5. What threshold would actually get used, and what does that choice cost in each direction?
 
