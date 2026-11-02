@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DS 1000 — Evidence Debate 4</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+:root{--gold:#cfae70;--ink:#222;--muted:#666;--line:#ddd;--bg:#f5f5f5;--panel:#fff}
+*{box-sizing:border-box} body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}
+main{max-width:980px;margin:auto;padding:28px 18px 70px}.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:28px;margin:18px 0}
+h1{margin:0 0 5px} h2{border-bottom:3px solid var(--gold);padding-bottom:8px}.claim{font-size:1.25rem;font-weight:700;background:#f4efe5;border-left:5px solid var(--gold);padding:18px;margin:18px 0}
+textarea,input[type=text]{width:100%;padding:10px;border:1px solid #aaa;border-radius:6px;font:inherit} textarea{min-height:90px}
+label{display:block;font-weight:700;margin:14px 0 6px}.row{display:flex;gap:18px;flex-wrap:wrap}.row>*{flex:1;min-width:240px}
+button{padding:10px 16px;border:0;border-radius:6px;background:#333;color:white;font-weight:700;cursor:pointer}.secondary{background:#777}.hidden{display:none!important}
+.status{padding:10px 12px;border-radius:6px;background:#eee;margin:12px 0}
+.small{font-size:.9rem;color:var(--muted)} .scale{width:100%}
+table.evtable{width:100%;border-collapse:collapse;margin:14px 0}
+table.evtable th,table.evtable td{border:1px solid var(--line);padding:8px 10px;text-align:left}
+table.evtable th{background:#f4efe5}
+.fillin{color:#a33;font-weight:700}
+</style>
+</head>
+<body>
+<main>
+<div class="card">
+<h1>Evidence Debate 4: Congress and Polarization</h1>
+<p>DS 1000 — Models &amp; Prediction</p>
+<div class="claim">Claim: “Political polarization in Congress has become so extreme that a legislator's party can now be predicted almost perfectly just from their voting record — proof that Americans have become deeply divided.”</div>
+<div id="dbStatus" class="status">Connecting to response database...</div>
+<p class="small">Your responses are recorded by student code. Evidence is revealed one stage at a time.</p>
+</div>
+
+<section id="s0" class="card">
+<h2>Stage 0 — Before seeing evidence</h2>
+<label>Student code</label><input id="studentCode" type="text" placeholder="Enter your course student code">
+<label>How confident are you that the claim is true? <span id="c0v">50</span>/100</label>
+<input id="c0" class="scale" type="range" min="0" max="100" value="50">
+<label>What would "a legislator's party predicted almost perfectly" actually mean, in your own words? What would count as evidence for or against it?</label><textarea id="r0"></textarea>
+<button onclick="saveStage(0)">Record Stage 0</button>
+</section>
+
+<section id="s1" class="card hidden">
+<h2>Stage 1 — Evidence A: Can party be predicted from voting record?</h2>
+<div class="claim">Claim: “Political polarization in Congress has become so extreme that a legislator's party can now be predicted almost perfectly just from their voting record — proof that Americans have become deeply divided.”</div>
+<p>Using DW-NOMINATE ideology scores (a measure built from every roll-call vote a member of Congress casts), a classifier was trained to predict a legislator's party from their voting record alone — the same linear-probability-model + train/test workflow from Classification I/II, cross-validated across 100 random splits.</p>
+<table class="evtable">
+<tr><th>Congress</th><th>Held-out accuracy</th><th>Held-out AUC</th></tr>
+<tr><td>97th Congress (1981–1983)</td><td class="fillin">[FILL IN: accuracy_97]</td><td class="fillin">[FILL IN: auc_97]</td></tr>
+<tr><td>117th Congress (2021–2023)</td><td class="fillin">[FILL IN: accuracy_117]</td><td class="fillin">[FILL IN: auc_117]</td></tr>
+</table>
+<p class="small">Source: <code>congress_prep.R</code>, run on <code>H097_members.csv</code> and <code>H117_members.csv</code>.</p>
+<label>What does a rising accuracy/AUC from the 97th to the 117th Congress suggest about the relationship between ideology and party?</label><textarea id="r1a"></textarea>
+<label>Updated confidence in the original claim: <span id="c1v">50</span>/100</label><input id="c1" class="scale" type="range" min="0" max="100" value="50">
+<label>Does a classifier's predictive accuracy, by itself, tell you anything about *why* this changed? Why or why not (Lecture 13)?</label><textarea id="r1b"></textarea>
+<button onclick="saveStage(1)">Record Stage 1</button>
+</section>
+
+<section id="s2" class="card hidden">
+<h2>Stage 2 — Evidence B: Whose polarization is this measuring?</h2>
+<div class="claim">Claim: “Political polarization in Congress has become so extreme that a legislator's party can now be predicted almost perfectly just from their voting record — proof that Americans have become deeply divided.”</div>
+<p>Political scientists distinguish between two related but different phenomena: <strong>elite/party sorting</strong> (politicians and party coalitions becoming more internally consistent — moderates losing primaries, parties realigning around clearer ideological lines) and <strong>mass polarization</strong> (ordinary voters' own opinions moving further apart). Rising predictability of party from a member of Congress's voting record is direct evidence of the first. Some researchers argue it is much weaker evidence of the second — voters can sort into more ideologically consistent parties without individual voters' opinions on issues changing very much at all.</p>
+<label>Does this distinction change how you'd interpret Evidence A? How?</label><textarea id="r2a"></textarea>
+<label>Updated confidence: <span id="c2v">50</span>/100</label><input id="c2" class="scale" type="range" min="0" max="100" value="50">
+<label>What evidence (beyond Congress's voting record) would you want to see before concluding that ordinary Americans have become more divided?</label><textarea id="r2b"></textarea>
+<button onclick="saveStage(2)">Record Stage 2</button>
+</section>
+
+<section id="s3" class="card hidden">
+<h2>Stage 3 — Evidence C: Does the pattern hold in both chambers?</h2>
+<div class="claim">Claim: “Political polarization in Congress has become so extreme that a legislator's party can now be predicted almost perfectly just from their voting record — proof that Americans have become deeply divided.”</div>
+<p>The same classifier, run separately for the House and the Senate:</p>
+<table class="evtable">
+<tr><th>Congress / chamber</th><th>Held-out accuracy</th><th>Held-out AUC</th></tr>
+<tr><td>97th Congress — House</td><td class="fillin">[FILL IN: accuracy_97_house]</td><td class="fillin">[FILL IN: auc_97_house]</td></tr>
+<tr><td>97th Congress — Senate</td><td class="fillin">[FILL IN: accuracy_97_senate]</td><td class="fillin">[FILL IN: auc_97_senate]</td></tr>
+<tr><td>117th Congress — House</td><td class="fillin">[FILL IN: accuracy_117_house]</td><td class="fillin">[FILL IN: auc_117_house]</td></tr>
+<tr><td>117th Congress — Senate</td><td class="fillin">[FILL IN: accuracy_117_senate]</td><td class="fillin">[FILL IN: auc_117_senate]</td></tr>
+</table>
+<label>Is the increase in predictability similar across both chambers, or concentrated in one? Why might that matter (recall Lecture 10's "resampled from what?" habit)?</label><textarea id="r3a"></textarea>
+<label>Updated confidence: <span id="c3v">50</span>/100</label><input id="c3" class="scale" type="range" min="0" max="100" value="50">
+<label>If the pattern were concentrated in only one chamber, would that strengthen or weaken the original claim? Explain.</label><textarea id="r3b"></textarea>
+<button onclick="saveStage(3)">Record Stage 3</button>
+</section>
+
+<section id="s4" class="card hidden">
+<h2>Stage 4 — Evidence D: What does DW-NOMINATE actually measure?</h2>
+<div class="claim">Claim: “Political polarization in Congress has become so extreme that a legislator's party can now be predicted almost perfectly just from their voting record — proof that Americans have become deeply divided.”</div>
+<p>DW-NOMINATE is built entirely from <strong>roll-call votes</strong> — how members voted, not what voters believe, how members talk about each other, or how divided the public feels. Its first dimension is generally understood to capture economic left-right positioning; its second dimension's meaning has shifted across eras, sometimes tracking salient social issues, sometimes not. It says nothing about <strong>affective polarization</strong> — how much ordinary people dislike or distrust the other side — which is measured completely differently, typically through surveys.</p>
+<label>Given what DW-NOMINATE is built from, what does "predicted almost perfectly from voting record" establish, and what does it not establish, about "Americans have become deeply divided"?</label><textarea id="r4a"></textarea>
+<label>Confidence that party can be predicted from voting record with increasing accuracy over this period: <span id="c4v">50</span>/100</label><input id="c4" class="scale" type="range" min="0" max="100" value="50">
+<label>Confidence that this proves ordinary Americans have become more divided: <span id="b4v">50</span>/100</label><input id="b4" class="scale" type="range" min="0" max="100" value="50">
+<button onclick="saveStage(4)">Record Stage 4</button>
+</section>
+
+<section id="s5" class="card hidden">
+<h2>Stage 5 — Team argument</h2>
+<div class="claim">Claim: “Political polarization in Congress has become so extreme that a legislator's party can now be predicted almost perfectly just from their voting record — proof that Americans have become deeply divided.”</div>
+<p id="side"></p>
+<label>Your team's strongest evidence</label><textarea id="r5a"></textarea>
+<label>The strongest evidence against your assigned position</label><textarea id="r5b"></textarea>
+<label>Your response to that challenge</label><textarea id="r5c"></textarea>
+<button onclick="saveStage(5)">Record team argument</button>
+</section>
+
+<section id="s6" class="card hidden">
+<h2>Stage 6 — Individual adjudication</h2>
+<div class="claim">Claim: “Political polarization in Congress has become so extreme that a legislator's party can now be predicted almost perfectly just from their voting record — proof that Americans have become deeply divided.”</div>
+<p>Advocacy is over. Give your own judgment.</p>
+<label>Final confidence that party can be predicted from voting record with increasing accuracy: <span id="c6v">50</span>/100</label><input id="c6" class="scale" type="range" min="0" max="100" value="50">
+<label>Final confidence that this proves ordinary Americans have become more divided: <span id="b6v">50</span>/100</label><input id="b6" class="scale" type="range" min="0" max="100" value="50">
+<label>What is the strongest evidence for treating rising predictability as real polarization?</label><textarea id="r6a"></textarea>
+<label>What is the strongest reason for caution before extending this to "Americans"?</label><textarea id="r6b"></textarea>
+<label>In 2–3 sentences, state the conclusion the full body of evidence warrants.</label><textarea id="r6c"></textarea>
+<button onclick="saveStage(6)">Submit final adjudication</button>
+</section>
+</main>
+
+<script>
+const SUPABASE_URL = "https://syjgkatbxjiyjiosacdr.supabase.co";
+const SUPABASE_KEY = "sb_publishable_dpOWSyvPGnRtpef9UYMvgg_I2x-hSnG";
+const EXPERIMENT_ID = "evidence-debate-4-congress-polarization";
+const STAGE_KEY = "ds1000_evidence_debate4_congress_stage";
+let db = null;
+
+function initDB(){
+  const el=document.getElementById("dbStatus");
+  if(!window.supabase || !window.supabase.createClient){el.textContent="Supabase library did not load. (CLIENT_NOT_READY)";return;}
+  if(SUPABASE_URL.startsWith("PASTE_") || SUPABASE_KEY.startsWith("PASTE_")){el.textContent="Add the Supabase URL and publishable key to index.html.";return;}
+  try{db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);el.textContent="Connected to response database."}
+  catch(e){el.textContent="Database initialization error: "+e.message}
+}
+function code(){return document.getElementById("studentCode").value.trim()}
+function showThrough(n){for(let i=1;i<=6;i++)document.getElementById("s"+i).classList.toggle("hidden",i>n)}
+function restore(){const n=Number(localStorage.getItem(STAGE_KEY)||0);showThrough(n);const saved=localStorage.getItem("ds1000_course_student_code");if(saved)document.getElementById("studentCode").value=saved}
+function val(id){const e=document.getElementById(id);return e?e.value:null}
+async function saveStage(stage){
+  if(!code()){alert("Enter your student code first.");return}
+  if(!db){alert("Supabase client is not available. (CLIENT_NOT_READY)");return}
+  localStorage.setItem("ds1000_course_student_code",code());
+  let payload={};
+  if(stage===0)payload={confidence:+val("c0"),operationalization:val("r0")};
+  if(stage===1)payload={interpretation:val("r1a"),confidence:+val("c1"),causal_caveat:val("r1b")};
+  if(stage===2)payload={sorting_vs_mass:val("r2a"),confidence:+val("c2"),wanted_evidence:val("r2b")};
+  if(stage===3)payload={chamber_comparison:val("r3a"),confidence:+val("c3"),robustness_reasoning:val("r3b")};
+  if(stage===4)payload={construct_validity:val("r4a"),predictability_confidence:+val("c4"),mass_divide_confidence:+val("b4")};
+  if(stage===5)payload={side:assignedSide(),strongest:val("r5a"),counterevidence:val("r5b"),response:val("r5c")};
+  if(stage===6)payload={predictability_confidence:+val("c6"),mass_divide_confidence:+val("b6"),support:val("r6a"),caution:val("r6b"),conclusion:val("r6c")};
+  const {error}=await db.from("debate_responses").upsert({debate_id:EXPERIMENT_ID,student_code:code(),stage:String(stage),confidence:payload.confidence ?? payload.predictability_confidence ?? null,response_json:payload},{onConflict:'debate_id,student_code,stage'});
+  if(error){alert(`${error.message} (${error.code||"DB_ERROR"})`);return}
+  const next=Math.min(stage+1,6);localStorage.setItem(STAGE_KEY,String(next));showThrough(next);
+  if(stage===4)document.getElementById("side").textContent="Assigned position: "+assignedSide();
+}
+function assignedSide(){let s=0;for(const ch of code())s+=ch.charCodeAt(0);return s%2===0?"AFFIRMATIVE — The evidence supports the claim, including the broader claim about Americans.":"SKEPTIC — The evidence supports rising predictability of party, but not the broader claim about ordinary Americans.";}
+["c0","c1","c2","c3","c4","b4","c6","b6"].forEach(id=>{const e=document.getElementById(id);const o=document.getElementById(id+"v");if(e&&o)e.addEventListener("input",()=>o.textContent=e.value)});
+initDB();restore();
+</script>
+</body>
+</html>

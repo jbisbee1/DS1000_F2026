@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DS 1000 — Evidence Debate 4</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="assets/edb4_menu.js"></script>
+<style>
+:root{--gold:#cfae70;--ink:#1d1c1d;--muted:#616061;--line:#e0dede;--side:#1f2a44;--sidetx:#cfd6e6;--bg:#fff}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:var(--bg);display:flex;line-height:1.45}
+#side{width:270px;background:var(--side);color:var(--sidetx);padding:16px 14px;flex-shrink:0;overflow-y:auto}
+#side h3{margin:0 0 2px;color:#fff;font-size:1.05rem}
+#side .ws{font-size:.8rem;opacity:.8;margin-bottom:16px}
+#side .lbl{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;opacity:.7;margin:16px 0 6px}
+#side .ch{padding:3px 8px;border-radius:5px;font-size:.92rem}
+#side .ch.on{background:#cfae70;color:#1d1c1d;font-weight:700}
+#side .tip{font-size:.8rem;margin:7px 0;line-height:1.35}#side .tip b{color:#fff}
+#side ol{font-size:.8rem;padding-left:18px;margin:4px 0}#side li{margin:3px 0}#side li.on{color:#fff;font-weight:700}#side li.done{opacity:.55}
+#clock{font-variant-numeric:tabular-nums;font-size:1.3rem;color:#fff;margin-top:4px}
+#dbStatus{font-size:.75rem;opacity:.75;margin-top:18px}
+#chan{flex:1;display:flex;flex-direction:column;min-width:0;height:100vh}
+#head{padding:12px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+#head b{font-size:1.1rem}#head span{font-size:.85rem;color:var(--muted)}
+#feed{flex:1;overflow-y:auto;padding:14px 20px 8px}
+.msg{display:flex;gap:10px;margin:14px 0;animation:in .25s ease-out}
+@keyframes in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.av{width:38px;height:38px;border-radius:7px;color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.8rem}
+.body{min-width:0;flex:1}
+.who{font-weight:700;font-size:.95rem}.who .meta{font-weight:400;color:var(--muted);font-size:.78rem;margin-left:6px}
+.txt{font-size:.97rem}.txt p{margin:4px 0}.txt ul,.txt ol{margin:6px 0;padding-left:22px}
+.txt q{quotes:none;font-style:normal;background:#f4efe5;padding:1px 4px;border-radius:3px}
+.quote{border-left:4px solid var(--gold);padding:4px 10px;margin:6px 0;color:#333;background:#faf6ee}
+.warn{border-left:4px solid #c0562b;padding:4px 10px;margin:6px 0;background:#fbf1ec}
+.typing{color:var(--muted);font-size:.85rem;margin:8px 0 8px 48px;font-style:italic}
+.pill{display:inline-block;background:#f4efe5;border:1px solid var(--gold);border-radius:12px;padding:1px 9px;font-size:.82rem;margin:2px 4px 2px 0}
+#composer{border-top:1px solid var(--line);padding:12px 20px 16px;background:#fafafa;max-height:55vh;overflow-y:auto}
+#composer.hidden{display:none}
+#composer h4{margin:0 0 6px;font-size:.9rem}
+#composer h5{margin:14px 0 2px;font-size:.88rem;border-bottom:2px solid var(--gold);padding-bottom:3px}
+#composer label{display:block;font-weight:700;font-size:.88rem;margin:10px 0 4px}
+#composer .opt{font-weight:400;margin:3px 0;display:block}#composer .opt input{margin-right:7px}
+#composer input[type=text],#composer input[type=number],#composer textarea,#composer select{width:100%;padding:8px;border:1px solid #aaa;border-radius:6px;font:inherit;background:#fff}
+#composer input[type=number]{max-width:130px}#composer textarea{min-height:64px}
+#composer .row{display:flex;gap:14px;flex-wrap:wrap}#composer .row>div{flex:1;min-width:160px}
+#composer .hint{font-size:.8rem;color:var(--muted);font-weight:400}
+#composer .scale{width:100%}
+#err{color:#b3261e;font-size:.85rem;margin-top:8px;min-height:1em}
+button{padding:9px 18px;border:0;border-radius:6px;background:#2a7a4b;color:#fff;font-weight:700;cursor:pointer;margin-top:10px}
+button:disabled{background:#999;cursor:default}
+button.sec{background:#6b7280}
+a{color:#1264a3}
+#mtoggle{margin:0;padding:4px 10px;font-size:.78rem;background:#6b7280}
+#mpanel{width:430px;flex-shrink:0;border-left:1px solid var(--line);background:#f7f7f8;display:none;flex-direction:column;height:100vh}
+#mpanel.open{display:flex}
+#mpanel .mh{padding:10px 12px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+#mpanel .mh button{margin:0;padding:4px 10px;font-size:.78rem}
+#mbody{overflow-y:auto;padding:4px 12px 16px;flex:1}
+.area{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:14px 0 4px}
+details.ds{background:#fff;border:1px solid var(--line);border-radius:8px;margin:6px 0;padding:6px 10px}
+details.ds summary{cursor:pointer;font-weight:700;font-size:.9rem}
+details.ds summary span{font-weight:400;color:var(--muted);font-size:.8rem}
+details.ds p{font-size:.84rem;margin:6px 0}
+details.ds table{border-collapse:collapse;font-size:.78rem;width:100%;margin:6px 0}
+details.ds td{border-top:1px solid var(--line);padding:3px 5px;vertical-align:top}
+details.ds td:first-child{font-family:Consolas,Menlo,monospace;font-size:.74rem;width:42%;word-break:break-word}
+details.ds .cau{font-size:.8rem;background:#fbf1ec;border-left:3px solid #c0562b;padding:3px 8px;margin:4px 0}
+.card{border:2px solid var(--gold);border-radius:10px;padding:12px 16px;margin:8px 0;background:#fffdf8;max-width:720px}
+.card h3{margin:0 0 6px;font-size:1rem}
+.card .cl{font-size:1.05rem;font-weight:700;margin:8px 0 2px}
+.card .op{font-size:.86rem;color:#333;margin:2px 0}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;z-index:9999;padding:30px}
+#modal.open{display:flex}
+#modalBody{background:#fff;border-radius:12px;padding:24px 30px;max-width:min(1000px,94vw);max-height:90vh;overflow:auto}
+#modalBody .card{max-width:none;font-size:1.25rem;border-width:3px}#modalBody .card .cl{font-size:1.45rem}#modalBody .card .op{font-size:1.1rem}
+#modalClose{position:fixed;right:22px;top:14px;font-size:38px;color:#fff;cursor:pointer}
+#dry{display:none;background:#fff3d6;color:#7a5a00;font-size:.78rem;padding:4px 20px;border-bottom:1px solid var(--line)}
+@media(max-width:1100px){#mpanel{position:fixed;right:0;top:0;bottom:0;width:min(94vw,440px);z-index:50;box-shadow:-4px 0 14px rgba(0,0,0,.25);display:none}#mpanel.open{display:flex}}
+@media(max-width:760px){#side{display:none}#feed{padding:10px 12px}#composer{padding:10px 12px 14px}}
+</style>
+</head>
+<body>
+<aside id="side">
+  <h3>DS 1000 Project Studio</h3><div class="ws">Evidence Debate 4</div>
+  <div class="lbl">Channels</div>
+  <div class="ch"># general</div><div class="ch on"># project-pitch</div><div class="ch"># data-desk</div>
+  <div class="lbl">Time left</div><div id="clock">36:00</div>
+  <div class="lbl">Steps</div>
+  <ol id="steps"></ol>
+  <div class="lbl">This step</div>
+  <div id="tips"></div>
+  <div id="dbStatus">Connecting to response database...</div>
+</aside>
+<section id="chan">
+  <div id="head"><div><b># project-pitch</b> <span>What will your pair spend the next five weeks finding out?</span></div><span><span id="whoPair"></span> <button id="mtoggle" type="button">Data menu</button></span></div>
+  <div id="dry">Dry run: responses are logged to the browser console, not saved.</div>
+  <div id="feed"></div>
+  <div id="composer" class="hidden"></div>
+</section>
+<aside id="mpanel">
+  <div class="mh"><b>Data menu</b><button id="mclose" type="button" class="sec">Close</button></div>
+  <div id="mbody"></div>
+</aside>
+<div id="modal"><span id="modalClose">&times;</span><div id="modalBody"></div></div>
+
+<script>
+const SUPABASE_URL = "https://syjgkatbxjiyjiosacdr.supabase.co";
+const SUPABASE_KEY = "sb_publishable_dpOWSyvPGnRtpef9UYMvgg_I2x-hSnG";
+const EXPERIMENT_ID = "evidence-debate-4-project-pitch";
+const STATE_KEY = "ds1000_edb4_pitch_v1";
+const DEADLINE_MIN = 36;
+const DATA_URL = "../../data/";
+const DRY = location.search.includes("dry=1");
+let db = null;
+
+// ---------------------------------------------------------------- people
+const P = {
+  lena:{name:"Lena Ortiz",role:"Project editor",color:"#6b4f9e",init:"LO"},
+  sam:{name:"Sam Okafor",role:"Data desk",color:"#2f7d6d",init:"SO"},
+  pair:{name:"",color:"#cfae70",init:"YOU",dark:true}
+};
+
+// ---------------------------------------------------------------- state
+let S = {step:0, pair:null, members:[], startedAt:null, answers:{}};
+function load(){try{const s=JSON.parse(localStorage.getItem(STATE_KEY)||"null");if(s)S=s}catch(e){}}
+function persist(){try{localStorage.setItem(STATE_KEY,JSON.stringify(S))}catch(e){}}
+if(location.search.includes("reset=1")){try{localStorage.removeItem(STATE_KEY)}catch(e){}}
+load();
+
+// ---------------------------------------------------------------- helpers
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+let clockMin=8*60+42;
+function stamp(){const t=clockMin;clockMin+=1+Math.floor(Math.random()*2);const h=Math.floor(t/60),m=t%60;return `${h}:${String(m).padStart(2,"0")} AM`}
+const ds=id=>id==="outside"?OUTSIDE:MENU.find(d=>d.id===id);
+const dsName=c=>c.ds==="outside"?`outside data: ${c.oname}`:ds(c.ds).name;
+const partnerPair=n=>n%2===1?n+1:n-1;
+const A=i=>S.answers[i]||{};
+const TYPES={desc:"Descriptive (what is the pattern?)",rel:"Relational (are X and Y associated?)",causal:"Causal (does X change Y?)",pred:"Predictive (can X predict Y on new cases?)"};
+const TYPE_SHORT={desc:"descriptive",rel:"relational",causal:"causal",pred:"predictive"};
+const NOVEL={outcome:"a different outcome",explan:"a different explanatory variable",subgroup:"a different subgroup",time:"a different time period",unused:"this dataset was not analyzed in class"};
+
+// ---------------------------------------------------------------- rendering
+function addMsg(who,html,opts={}){
+  const p=who==="pair"?{...P.pair,name:S.pair?("Pair "+S.pair):"Your pair"}:P[who];
+  const el=document.createElement("div");el.className="msg";
+  el.innerHTML=`<div class="av" style="background:${p.color};${p.dark?"color:#1d1c1d;":""}">${p.init}</div><div class="body"><div class="who">${esc(p.name)}${p.role?`<span class="meta">${p.role}</span>`:""}<span class="meta">${stamp()}</span></div><div class="txt">${html}</div></div>`;
+  $("feed").appendChild(el);
+  if(opts.node)el.querySelector(".txt").appendChild(opts.node);
+  scroll();return el;
+}
+function scroll(){const f=$("feed");f.scrollTop=f.scrollHeight}
+async function play(list,instant){
+  for(const m of list){
+    if(!instant){const t=document.createElement("div");t.className="typing";t.textContent=P[m.who].name+" is typing…";$("feed").appendChild(t);scroll();await wait(600+Math.min(900,(m.text||"").length*3));t.remove()}
+    addMsg(m.who,m.text,{node:m.node&&m.node()});
+  }
+}
+function menuHTML(){
+  let h="",area="";
+  for(const d of MENU){
+    if(d.area!==area){area=d.area;h+=`<div class="area">${esc(area)}</div>`}
+    h+=`<details class="ds"><summary>${esc(d.name)} <span>· ${esc(d.unit)}, n = ${esc(d.n)}</span></summary>
+      <p>${esc(d.about)}</p><p><b>Seen in:</b> ${esc(d.seen)}. <b>File:</b> ${d.files.map(f=>`<a href="${DATA_URL+f}" download>${esc(f)}</a>`).join(", ")}</p>
+      <table>${d.vars.map(([k,v])=>`<tr><td>${esc(k)}</td><td>${esc(v)}</td></tr>`).join("")}</table>
+      ${d.cautions.map(c=>`<div class="cau">${esc(c)}</div>`).join("")}
+      <p><b>An example question</b> (illustrative; do not just take it): <i>${esc(d.example)}</i></p></details>`;
+  }
+  h+=`<div class="area">Outside data</div><details class="ds"><summary>Your own source</summary>${OUTSIDE.cautions.map(c=>`<div class="cau">${esc(c)}</div>`).join("")}</details>`;
+  return h;
+}
+function cardNode(big){
+  const w=document.createElement("div");
+  const cl=[1,2].map(k=>{const c=A(1)["c"+k]||{},o=A(k+1);return `<div class="cl">Claim ${k}: ${esc(c.claim)}</div>
+    <div class="op"><b>Data:</b> ${esc(dsName(c))} · <b>Unit:</b> ${esc(o.unit)} · <b>Type:</b> ${esc(TYPE_SHORT[o.type]||"")}</div>
+    <div class="op"><b>Measured by:</b> ${esc(o.vars)}</div><div class="op"><b>Compared:</b> ${esc(o.comp)}</div>
+    ${o.type==="pred"?`<div class="op"><b>Judged by:</b> ${esc(o.metric)} on ${esc(o.holdout)}</div>`:""}
+    <div class="op"><b>What would count against it:</b> ${esc(o.against)}</div>`}).join("");
+  w.innerHTML=`<div class="card"><h3>Pitch card · Pair ${esc(S.pair)}</h3>${cl}</div>`;
+  if(!big){const b=document.createElement("button");b.className="sec";b.type="button";b.textContent="Show full screen for the other pair";b.onclick=()=>{$("modalBody").innerHTML="";$("modalBody").appendChild(cardNode(true));$("modal").classList.add("open")};w.appendChild(b)}
+  return w;
+}
+function nextStepsNode(){
+  const w=document.createElement("div");
+  w.innerHTML=`<table style="border-collapse:collapse;font-size:.86rem;margin:8px 0;max-width:620px">
+  ${[["HW 13 (due 11/09)","Know your data: load it, report the unit, n and the distribution of your key variables, and flag missing data. Outside-data pairs: this is your feasibility check."],
+     ["HW 14 (due 11/11)","Analysis plan: the comparison or model, what result would support the claim, what would undercut it, and the main alternative explanation."],
+     ["HW 15 (due 11/16)","First result: use AI to produce one first-pass figure or estimate, and check it yourselves. Submit the prompt, the output and your check."],
+     ["EDB 5 (11/18)","Red-team audit: another pair audits your first result and the AI's part in it."],
+     ["11/30 and 12/02","Build the final analysis, then a mock defense."],
+     ["12/07 and 12/09","Poster defenses. Each of you will be questioned individually."]]
+    .map(([a,b])=>`<tr><td style="border-top:1px solid #e0dede;padding:5px 8px;font-weight:700;white-space:nowrap;vertical-align:top">${a}</td><td style="border-top:1px solid #e0dede;padding:5px 8px">${b}</td></tr>`).join("")}</table>`;
+  return w;
+}
+
+// ---------------------------------------------------------------- composer widgets
+const radio=(name,opts,checked)=>opts.map(([v,t])=>`<label class="opt"><input type="radio" name="${name}" value="${v}" ${v===checked?"checked":""}>${t}</label>`).join("");
+const checks=(name,opts)=>opts.map(([v,t])=>`<label class="opt"><input type="checkbox" name="${name}" value="${v}">${t}</label>`).join("");
+const slider=(id,label)=>`<label>${label} <span id="${id}v">50</span>/100</label><input id="${id}" class="scale" type="range" min="0" max="100" value="50" oninput="document.getElementById('${id}v').textContent=this.value">`;
+const tv=id=>$(id)?$(id).value.trim():"";
+const gr=name=>{const r=document.querySelector(`input[name=${name}]:checked`);return r?r.value:null};
+const gc=name=>[...document.querySelectorAll(`input[name=${name}]:checked`)].map(c=>c.value);
+const dsSelect=id=>`<select id="${id}"><option value="">Choose a dataset…</option>${[...new Set(MENU.map(d=>d.area))].map(a=>`<optgroup label="${esc(a)}">${MENU.filter(d=>d.area===a).map(d=>`<option value="${d.id}">${esc(d.name)}</option>`).join("")}</optgroup>`).join("")}<option value="outside">Outside data (our own source)</option></select>`;
+
+const STEPS=["Who you are","Two candidate claims","Make claim 1 measurable","Make claim 2 measurable","Cross-examination","Commit","Individual statements"];
+const TIPS=[
+ "Pairs are on the board. Each of you writes your own question <b>before</b> you talk to your partner.",
+ "Open the <b>Data menu</b> (top right). Skim the areas, then open two or three datasets that fit your questions.",
+ "Name actual columns. A concept such as \"success\" is not a variable until you say which column measures it.",
+ "Same as claim 1. If both claims are the same type, ask whether a different type would answer a better question.",
+ "Push hard on the other pair's claims. A weak claim found today costs nothing; found on 12/07 it costs points.",
+ "Commit to the claim you can best defend, not the one that sounds most impressive.",
+ "Write your own answer. Your partner should not read over your shoulder."
+];
+function renderSide(i){
+  $("steps").innerHTML=STEPS.map((s,k)=>`<li class="${k<i?"done":k===i?"on":""}">${s}</li>`).join("");
+  $("tips").innerHTML=i<TIPS.length?`<div class="tip">${TIPS[i]}</div>`:`<div class="tip">Done. Your pitch is saved; see the next steps in the channel.</div>`;
+}
+
+// claim-specific operationalization form (beats 2 and 3)
+function opForm(k){
+  const c=A(1)["c"+k];const d=ds(c.ds);
+  return `<h4>Reply to Lena: claim ${k}</h4><div class="quote">${esc(c.claim)} <span class="hint">(${esc(dsName(c))})</span></div>
+  <label>Which columns measure the key concepts? <span class="hint">(name the variables; open the Data menu for the codebook)</span></label><textarea id="f_vars"></textarea>
+  <div class="row"><div><label>Unit of analysis <span class="hint">(one row is a…)</span></label><input id="f_unit" type="text" value="${esc(d.unit)}"></div>
+  <div><label>Compared with what, or among whom?</label><input id="f_comp" type="text" placeholder="e.g. public vs. private colleges; counties in 2020 vs. 2024"></div></div>
+  <label>What type of claim is this?</label>${radio("f_type",Object.entries(TYPES))}
+  <label>Predictive claims only: how will you judge the predictions, and on what data?</label>
+  <div class="row"><div><select id="f_metric"><option value="">Metric…</option><option>accuracy</option><option>AUC</option><option>sensitivity / specificity</option><option>average prediction error (e.g. RMSE)</option><option>other</option></select></div>
+  <div><input id="f_hold" type="text" placeholder="e.g. a random 20% of rows held out; train on 2017–18, test on 2019"></div></div>
+  <label>What result would count <i>against</i> your claim?</label><textarea id="f_against"></textarea>
+  <label>How does this differ from what we did in class with these data? <span class="hint">(select all that apply)</span></label>${checks("f_novel",Object.entries(NOVEL))}`;
+}
+function opRead(){
+  const v={vars:tv("f_vars"),unit:tv("f_unit"),comp:tv("f_comp"),type:gr("f_type"),metric:tv("f_metric"),holdout:tv("f_hold"),against:tv("f_against"),novel:gc("f_novel")};
+  if(!v.vars||!v.unit||!v.comp||!v.type||!v.against)return{err:"Fill in the variables, unit, comparison, claim type and what would count against it."};
+  if(v.type==="pred"&&(!v.metric||!v.holdout))return{err:"A predictive claim needs a metric and a plan for testing on data the model has not seen."};
+  if(!v.novel.length)return{err:"Say how your claim differs from what we did in class (the novelty rule)."};
+  return v;
+}
+function opPost(k,v){return `<b>Claim ${k}</b>, made measurable: <b>${TYPE_SHORT[v.type]}</b>, one row per ${esc(v.unit)}.<div class="quote"><b>Measured by:</b> ${esc(v.vars)}<br><b>Compared:</b> ${esc(v.comp)}${v.type==="pred"?`<br><b>Judged by:</b> ${esc(v.metric)} on ${esc(v.holdout)}`:""}<br><b>Would count against it:</b> ${esc(v.against)}</div>`}
+function opReplies(k,v){
+  const c=A(1)["c"+k],d=ds(c.ds),out=[];
+  out.push({who:"sam",text:`<p>Data desk notes on <b>${esc(dsName(c))}</b>, before you go further:</p>${d.cautions.map(x=>`<div class="warn">${esc(x)}</div>`).join("")}`});
+  out.push({who:"lena",text:{
+    desc:`<p>A descriptive claim is fine if the pattern itself matters. Be ready to say on 12/07 why anyone should care what it looks like, and what comparison makes it informative.</p>`,
+    rel:`<p>A relational claim is a good fit for this kind of data. Expect the first question in your defense to be: what else could produce that association?</p>`,
+    causal:`<p>A causal claim needs a comparison in which the groups are alike apart from the cause. With data that were observed rather than assigned, that is hard. Keep the wording if you have a plan for confounders; otherwise consider a relational claim with the alternative explanations taken seriously.</p>`,
+    pred:`<p>A predictive claim stands or falls on ${esc(v.metric)} on ${esc(v.holdout)}. Decide now what level counts as good, and compare it with a baseline that uses no predictors at all.</p>`}[v.type]});
+  if(v.novel.length===1&&v.novel[0]==="unused"&&d.seen&&!/not yet/.test(d.seen))
+    out.push({who:"sam",text:`<p>One check: you ticked "not analyzed in class," but we used this dataset in ${esc(d.seen)}. Make sure your claim changes the outcome, the explanatory variable, the subgroup or the period.</p>`});
+  return out;
+}
+
+// ---------------------------------------------------------------- the script
+const BEATS=[
+// 0 — who you are; individual questions
+{pre:()=>[
+  {who:"lena",text:`<p>Morning. Today your pair leaves with a <b>project claim</b>: a question you will answer with data and defend, each of you individually, at the poster session on 12/07 and 12/09.</p><p>Find your pair number on the board. Then, <b>before you talk to each other</b>, each of you writes one question about the world you would genuinely like answered. It does not need to fit any dataset yet.</p>`}],
+ form:()=>`<h4>Reply to Lena</h4>
+  <label>Pair number</label><input id="f_pair" type="number" min="1" step="1" value="${S.pair??""}">
+  <div class="row"><div><label>Student code, partner A</label><input id="f_c1" type="text"></div><div><label>Student code, partner B</label><input id="f_c2" type="text"></div><div><label>Partner C <span class="hint">(trios only)</span></label><input id="f_c3" type="text"></div></div>
+  <label>Partner A: a question you would like answered</label><textarea id="f_q1"></textarea>
+  <label>Partner B: a question you would like answered</label><textarea id="f_q2"></textarea>
+  <label>Partner C <span class="hint">(trios only)</span></label><textarea id="f_q3"></textarea>`,
+ read(){const pair=+tv("f_pair"),c=[tv("f_c1"),tv("f_c2"),tv("f_c3")],q=[tv("f_q1"),tv("f_q2"),tv("f_q3")];
+  if(!Number.isInteger(pair)||pair<1)return{err:"Enter your pair number."};
+  if(!c[0]||!c[1])return{err:"Enter both student codes."};
+  if(!q[0]||!q[1]||(c[2]&&!q[2]))return{err:"Each partner writes a question."};
+  const m=c.map((code,i)=>({code,question:q[i]})).filter(x=>x.code);
+  return{pair,members:m}},
+ post:v=>v.members.map((m,i)=>`<p><b>Partner ${"ABC"[i]}</b> wants to know:</p><div class="quote">${esc(m.question)}</div>`).join(""),
+ replies:v=>[
+  {who:"lena",text:`<p>Good. Keep those in view: the best projects start from a question someone actually cares about, then find data that can answer it.</p>`},
+  {who:"sam",text:`<p>That is where I come in. Here is the <b>data menu</b>: fourteen datasets you can use, plus a text option. It stays open under the <b>Data menu</b> button at the top right. Each entry has its codebook, its known problems and where you have seen it before.</p><p>You may also use <b>outside data</b>, on one condition: your <b>backup</b> claim must come from this menu, and by HW 13 (due 11/09) you must show the outside data loaded in R, or you switch to the backup.</p>`,node:()=>{const w=document.createElement("div");w.innerHTML=menuHTML();return w}}],
+ payload:v=>({members:v.members.map(m=>m.code)}),
+ indiv:v=>v.members.map(m=>({code:m.code,data:{pair:v.pair,question:m.question}}))},
+
+// 1 — two candidate claims
+{pre:()=>[
+  {who:"lena",text:`<p>Now write <b>two candidate claims</b>, each tied to a dataset. Write them the way the claims in our debates were written: a statement someone could be right or wrong about.</p><p>For example: <q>Among NBA players, international players take a larger share of their shots from three.</q> Not: <q>NBA shooting.</q></p><p>At least one of the two must use a menu dataset.</p>`}],
+ form:()=>`<h4>Reply to Lena</h4>
+  ${[1,2].map(k=>`<h5>Claim ${k}</h5><label>Dataset</label>${dsSelect("f_ds"+k)}
+  <div class="row"><div><label>Outside data only: what is it?</label><input id="f_on${k}" type="text" placeholder="name of the dataset"></div><div><label>Where is it from?</label><input id="f_os${k}" type="text" placeholder="source or URL"></div></div>
+  <label>The claim</label><textarea id="f_cl${k}"></textarea>`).join("")}`,
+ read(){const c={};
+  for(const k of [1,2]){const d=tv("f_ds"+k),cl=tv("f_cl"+k),on=tv("f_on"+k),os=tv("f_os"+k);
+   if(!d||!cl)return{err:`Choose a dataset and write claim ${k}.`};
+   if(d==="outside"&&(!on||!os))return{err:`Claim ${k} uses outside data: say what it is and where it comes from.`};
+   c["c"+k]={ds:d,claim:cl,oname:d==="outside"?on:"",osrc:d==="outside"?os:""}}
+  if(c.c1.ds==="outside"&&c.c2.ds==="outside")return{err:"At least one claim must use a menu dataset, so that you have a backup."};
+  return c},
+ post:v=>[1,2].map(k=>`<p><b>Claim ${k}</b> <span class="pill">${esc(dsName(v["c"+k]))}</span></p><div class="quote">${esc(v["c"+k].claim)}</div>`).join(""),
+ replies:v=>[{who:"lena",text:`<p>Two claims on the table. Next, make each one measurable. A claim you cannot measure is a topic, not a project.</p>`}],
+ payload:v=>({claim1:v.c1,claim2:v.c2})},
+
+// 2, 3 — operationalize each claim
+...[1,2].map(k=>({
+ pre:()=>[{who:"lena",text:k===1?`<p>Start with <b>claim ${k}</b>. Which columns measure your concepts, what is one row, what are you comparing, and what kind of claim is it? If it is predictive, tell me how you will judge the predictions on data the model has not seen, the way we did in Unit 4.</p><p>And the most important line: <b>what result would count against you?</b></p>`:`<p>Now <b>claim ${k}</b>, the same way.</p>`}],
+ form:()=>opForm(k), read:opRead, post:v=>opPost(k,v), replies:v=>opReplies(k,v),
+ payload:v=>({claim:k,...v})})),
+
+// 4 — cross-examination with the partner pair
+{pre:()=>{const pp=partnerPair(S.pair);return[
+  {who:"lena",text:`<p>Time to be cross-examined. Your partner pair is <b>Pair ${pp}</b>. (If there is no Pair ${pp}, join the nearest pair and tell me.) Pull your chairs together.</p><p>Each pair shows its pitch card full screen. The other pair has about four minutes to attack both claims, then you switch. Skeptics, ask:</p><ol><li>Does that column actually measure the concept in the claim?</li><li>What else could produce the pattern you expect?</li><li>Can this be done in three weeks with these data?</li><li>What result would embarrass the claim, and how likely is it?</li></ol><p>Here is your card:</p>`,node:()=>cardNode(false)}]},
+ form:()=>`<h4>Reply to Lena</h4>
+  <label>Partner pair number</label><input id="f_pp" type="number" min="1" step="1" value="${partnerPair(S.pair)}">
+  <label>The strongest objection to claim 1</label><textarea id="f_o1"></textarea>
+  <label>The strongest objection to claim 2</label><textarea id="f_o2"></textarea>
+  <label>What will you change, or how will you answer it?</label><textarea id="f_fix"></textarea>
+  <label>The best objection <i>you</i> raised against the other pair's claims</label><textarea id="f_gave"></textarea>`,
+ read(){const pp=+tv("f_pp"),o1=tv("f_o1"),o2=tv("f_o2"),fix=tv("f_fix"),gave=tv("f_gave");
+  if(!pp||!o1||!o2||!fix||!gave)return{err:"Answer all five."};return{pp,o1,o2,fix,gave}},
+ post:v=>`<p>Cross-examined by <b>Pair ${v.pp}</b>.</p><div class="quote"><b>Against claim 1:</b> ${esc(v.o1)}<br><b>Against claim 2:</b> ${esc(v.o2)}<br><b>Our response:</b> ${esc(v.fix)}</div><p>Our best objection to theirs: <q>${esc(v.gave)}</q></p>`,
+ replies:v=>[{who:"lena",text:`<p>Good. An objection you can name now is one you can answer on 12/07. Keep that list: it is the start of your limitations section.</p>`}],
+ payload:v=>({partner_pair:v.pp,objection_claim1:v.o1,objection_claim2:v.o2,response:v.fix,objection_given:v.gave})},
+
+// 5 — commit
+{pre:()=>[{who:"lena",text:`<p>Decide. Which claim is your <b>primary</b> project? The other becomes your backup, and the backup must use a menu dataset. Revise the wording if the cross-examination changed your mind.</p><p>Then tell me what you expect to find, and how confident you are the claim will hold up. We will look at that number again after your defense.</p>`}],
+ form:()=>{const c1=A(1).c1,c2=A(1).c2;return `<h4>Reply to Lena</h4>
+  <label>Primary claim</label>${radio("f_prim",[["1","Claim 1: "+esc(c1.claim)],["2","Claim 2: "+esc(c2.claim)]])}
+  <label>Final wording of the primary claim <span class="hint">(edit freely)</span></label><textarea id="f_final"></textarea>
+  <div id="f_bkwrap"><label>Your backup uses outside data, so write a new backup on a menu dataset</label>${dsSelect("f_bkds").replace('<option value="outside">Outside data (our own source)</option>',"")}<textarea id="f_bk" style="margin-top:6px" placeholder="backup claim"></textarea></div>
+  <label>What do you expect to find? <span class="hint">(one sentence, with a direction and rough size if you can)</span></label><textarea id="f_exp"></textarea>
+  ${slider("f_conf","How confident are you that the primary claim will hold up?")}`},
+ read(){const p=gr("f_prim");if(!p)return{err:"Choose your primary claim."};
+  const other=A(1)["c"+(p==="1"?2:1)],fin=tv("f_final"),exp=tv("f_exp");
+  if(!fin||!exp)return{err:"Write the final claim and what you expect to find."};
+  let backup={from:"other",claim:other.claim,ds:other.ds};
+  if(other.ds==="outside"){const d=tv("f_bkds"),b=tv("f_bk");if(!d||!b)return{err:"Your other claim uses outside data. Write a backup claim on a menu dataset."};backup={from:"new",claim:b,ds:d}}
+  return{primary:+p,final:fin,backup,expect:exp,conf:+$("f_conf").value}},
+ post:v=>`<p><b>Our project:</b></p><div class="quote">${esc(v.final)}</div><p>Backup: <q>${esc(v.backup.claim)}</q> <span class="pill">${esc(ds(v.backup.ds).name)}</span></p><p>We expect: ${esc(v.expect)} Confidence the claim holds up: <b>${v.conf}/100</b>.</p>`,
+ replies:v=>{const d=A(1)["c"+v.primary];return[
+  {who:"sam",text:d.ds==="outside"?`<p>Outside data, noted. Your first job for HW 13 is to get <b>${esc(d.oname)}</b> loaded in R. If that fails by 11/09, you switch to the backup; no penalty.</p>`:`<p>Noted. Download <b>${ds(d.ds).files.map(f=>`<a href="${DATA_URL+f}" download>${esc(f)}</a>`).join(", ")}</b> before HW 13; that is your first task.</p>`},
+  {who:"lena",text:`<p>Last step: each of you, separately.</p>`}]},
+ payload:v=>({primary_claim:v.primary,final_claim:v.final,backup:v.backup,expected:v.expect,confidence:v.conf})},
+
+// 6 — individual statements
+{pre:()=>[{who:"lena",text:`<p>This part is <b>individual</b>, and it previews the individual part of your defense. Take turns at the keyboard; do not read each other's answers.</p><div class="quote">${esc(A(5).final)}</div>`}],
+ form:()=>`<h4>Reply to Lena</h4>${S.members.map((m,i)=>`<h5>Partner ${"ABC"[i]} (${esc(m.code)})</h5>
+  <label>Why is this claim worth five weeks of work?</label><textarea id="f_why${i}"></textarea>
+  <label>The single biggest threat to it, and what you would check first</label><textarea id="f_thr${i}"></textarea>`).join("")}`,
+ read(){const r=[];for(let i=0;i<S.members.length;i++){const w=tv("f_why"+i),t=tv("f_thr"+i);if(!w||!t)return{err:`Partner ${"ABC"[i]}: answer both questions.`};r.push({why:w,threat:t})}return{ind:r}},
+ post:v=>`<p>Individual statements submitted (${v.ind.length}).</p>`,
+ replies:v=>[
+  {who:"lena",text:`<p>That is it for today. Here is what comes next. Each homework from now on has a short project section for your pair.</p>`,node:()=>nextStepsNode()},
+  {who:"lena",text:`<p>Copy your pitch card into your notes before you leave; HW 13 starts from it.</p>`,node:()=>cardNode(false)}],
+ payload:v=>({n_statements:v.ind.length}),
+ indiv:v=>S.members.map((m,i)=>({code:m.code,data:{pair:S.pair,why:v.ind[i].why,threat:v.ind[i].threat}}))}
+];
+
+// ---------------------------------------------------------------- engine
+function showComposer(i){
+  const c=$("composer"),b=BEATS[i];
+  c.innerHTML=b.form()+`<div id="err"></div><button id="send">Send</button>`;
+  c.classList.remove("hidden");$("send").onclick=()=>submit(i);
+  if(i===5){const sync=()=>{const p=gr("f_prim");const other=p?A(1)["c"+(p==="1"?2:1)]:null;$("f_bkwrap").style.display=other&&other.ds==="outside"?"":"none";if(p&&!$("f_final").dataset.touched)$("f_final").value=A(1)["c"+p].claim};
+   document.querySelectorAll("input[name=f_prim]").forEach(r=>r.addEventListener("change",sync));$("f_final").addEventListener("input",()=>{$("f_final").dataset.touched=1});sync()}
+  c.scrollTop=0;scroll();renderSide(i);
+}
+async function begin(i,instant){
+  renderSide(i);
+  if(i>=BEATS.length){$("composer").classList.add("hidden");return}
+  await play(BEATS[i].pre(),instant);
+  showComposer(i);
+}
+async function save(code,stage,data,conf){
+  const row={debate_id:EXPERIMENT_ID,student_code:code,stage,confidence:conf??null,response_json:data};
+  if(DRY){console.log("[dry run] would save",row);return null}
+  const {error}=await db.from("debate_responses").upsert(row,{onConflict:'debate_id,student_code,stage'});
+  return error;
+}
+async function submit(i){
+  const b=BEATS[i],v=b.read();
+  if(v.err){$("err").textContent=v.err;return}
+  $("err").textContent="";
+  const pair=i===0?v.pair:S.pair;
+  const btn=$("send");btn.disabled=true;btn.textContent="Sending…";
+  const fail=m=>{$("err").textContent=m;btn.disabled=false;btn.textContent="Send"};
+  if(!db&&!DRY){fail("Database not connected. Check the connection and try again. (CLIENT_NOT_READY)");return}
+  const payload={...b.payload(v),pair,raw:v};
+  // pair rows are keyed "pair-N"; individual rows use the student's own code at the same stage
+  let error=await save("pair-"+pair,i,payload,payload.confidence);
+  if(!error&&b.indiv){for(const r of b.indiv(v)){error=await save(r.code,i,{...r.data,individual:true});if(error)break}}
+  if(error){fail(`${error.message} (${error.code||"DB_ERROR"})`);return}
+  if(i===0){S.pair=pair;S.members=v.members}
+  if(!S.startedAt)S.startedAt=Date.now();
+  S.answers[i]=v;S.step=i+1;persist();
+  $("composer").classList.add("hidden");
+  $("whoPair").textContent="Pair "+S.pair;
+  addMsg("pair",b.post(v));
+  await play(b.replies(v),false);
+  await begin(S.step,false);
+}
+async function replayAll(){
+  $("feed").innerHTML="";clockMin=8*60+42;
+  for(let i=0;i<S.step;i++){
+    const b=BEATS[i],v=S.answers[i];
+    await play(b.pre(),true);
+    addMsg("pair",b.post(v));await play(b.replies(v),true);
+  }
+  await begin(S.step,true);
+}
+
+// ---------------------------------------------------------------- clock, menu panel and db
+function tick(){
+  if(!S.startedAt){$("clock").textContent=DEADLINE_MIN+":00";return}
+  const left=Math.max(0,DEADLINE_MIN*60-Math.floor((Date.now()-S.startedAt)/1000));
+  $("clock").textContent=Math.floor(left/60)+":"+String(left%60).padStart(2,"0");
+}
+setInterval(tick,1000);tick();
+function initDB(){
+  const el=$("dbStatus");
+  if(DRY){el.textContent="Dry run: nothing is saved.";$("dry").style.display="block";return}
+  if(!window.supabase||!window.supabase.createClient){el.textContent="Supabase library did not load. (CLIENT_NOT_READY)";return}
+  try{db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);el.textContent="Connected."}catch(e){el.textContent="Database error: "+e.message}
+}
+$("mbody").innerHTML=menuHTML();
+$("mtoggle").addEventListener("click",()=>$("mpanel").classList.toggle("open"));
+$("mclose").addEventListener("click",()=>$("mpanel").classList.remove("open"));
+$("modal").addEventListener("click",e=>{if(e.target.id==="modal"||e.target.id==="modalClose")$("modal").classList.remove("open")});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")$("modal").classList.remove("open")});
+initDB();
+if(S.pair)$("whoPair").textContent="Pair "+S.pair;
+replayAll();
+</script>
+</body>
+</html>
