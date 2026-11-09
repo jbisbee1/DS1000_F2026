@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "course-site",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8765", "--directory", "C:/Users/Jimbo/Dropbox/2026_fall/DS1000_F2026"],
+      "port": 8765
+    },
+    {
+      "name": "course-site-pwsh",
+      "runtimeExecutable": "pwsh",
+      "runtimeArgs": ["-NoProfile", "-File", ".claude/serve.ps1", "8766"],
+      "port": 8766
+    }
+  ]
+}

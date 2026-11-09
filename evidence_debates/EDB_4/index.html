@@ -315,9 +315,9 @@ function vDone(){
  return `<h1>Done. Here is your project.</h1>${pitchCard()}
  <div class="actions"><button type="button" class="sec" data-copy>Copy the card as text</button>${c.ds!=="outside"?`<span class="hint">Data: ${ds(c.ds).files.map(f=>`<a href="${DATA_URL+f}" download>${esc(f)}</a>`).join(", ")} · <a href="codebook.html#${c.ds}" target="_blank" rel="noopener">codebook (keep this open for HW 13)</a></span>`:`<span class="hint">HW 13 first task: get ${esc(c.oname)} loaded in R. If that fails by 11/09, switch to your backup (no penalty).</span>`}</div>
  <div class="panel"><h2>What comes next</h2><table class="rate">
- ${[["HW 13 (due 11/09)","Know your data: load it, report the unit, n and the distribution of your key variables, and flag missing data. Outside-data pairs: this is your feasibility check."],
-    ["HW 14 (due 11/11)","Analysis plan: the comparison or model, what result would support the claim, what would undercut it, and the main alternative explanation."],
-    ["HW 15 (due 11/16)","First result: use AI to produce one first-pass figure or estimate, and check it yourselves. Submit the prompt, the output and your check."],
+ ${[["HW 13 (due 11/11)","Know your data: load it, report the unit, n and the distribution of your key variables, and flag missing data. Outside-data pairs: this is your feasibility check."],
+    ["HW 14 (due 11/16)","Analysis plan: the comparison or model, what result would support the claim, what would undercut it, and the main alternative explanation."],
+    ["HW 15 (due 11/18)","First result: use AI to produce one first-pass figure or estimate, and check it yourselves. Submit the prompt, the output and your check."],
     ["EDB 5 (11/18)","Red-team audit: another pair audits your first result and the AI's part in it."],
     ["11/30, 12/02","Build the final analysis; mock defense."],
     ["12/07, 12/09","Poster defenses. Each of you is questioned individually."]].map(([a,b])=>`<tr><td style="white-space:nowrap"><b>${a}</b></td><td>${b}</td></tr>`).join("")}</table></div>`}

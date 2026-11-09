@@ -2,7 +2,7 @@
 title: "How Can Data and AI Systems Produce Misleading Claims?"
 subtitle: "Homework 15"
 author: "DS-1000: How Data Shape Our World"
-date: "Due before Lecture 20"
+date: "Due before the Unit 5 Assessment Day (11/18)"
 output: html_document
 ---
 
@@ -133,7 +133,7 @@ Write two or three sentences summarizing what you learned from Parts I and II ab
 
 
 
-# Before Lecture 20
+# Before the Unit 5 Assessment Day
 
 Complete these statements:
 

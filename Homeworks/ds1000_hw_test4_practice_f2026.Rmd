@@ -1,0 +1,671 @@
+---
+title: "Prediction, Classification, and Clustering"
+subtitle: "Test 4 Practice (ungraded)"
+author: "Prof. Bisbee"
+institute: "Vanderbilt University"
+date: "Due before Test 4"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, error = TRUE, warning = FALSE, message = FALSE)
+```
+
+## Purpose
+
+This homework is a rehearsal for **Unit Test 4**.
+
+You may use your notes, classmates, the internet, and AI tools. The point is not to memorize R syntax. The point is to practice the reasoning process that you will need to perform independently on the test:
+
+> **Ask: explain, predict, or learn? → Evaluate predictions on held-out data → Look inside the confusion matrix → Treat the threshold as a choice → Compare models with cross-validated AUC → Find structure without labels, and don't overclaim what it means**
+
+For this homework, you will actually use R and AI to help implement your decisions. On Test 4, you will instead be given analytical artifacts (confusion matrices, sensitivity/specificity numbers, ROC curves, AUCs, clustering results, elbow plots) and asked to evaluate them.
+
+## The Data
+
+You may remember these data from the Test 2 practice. Each row is a student who was **admitted** to a selective college. The outcome we care about is `yield`: whether the admitted student actually enrolled.
+
+```{r}
+library(tidyverse)
+
+ad <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/main/data/admit_data.rds")
+```
+
+Some variables that may be useful are:
+
+| Variable | Definition |
+|---|---|
+| `yield` | 1 if the admitted student enrolled, 0 if not |
+| `sat` | SAT score |
+| `gpa` | High school GPA |
+| `income` | Family income (dollars) |
+| `visit` | 1 if the student visited campus |
+| `legacy` | 1 if a parent attended the college |
+| `registered` | 1 if the student registered for an admitted-students event |
+| `sent_scores` | 1 if the student sent test scores to the college before applying |
+| `distance` | Distance from home to campus (miles) |
+| `need_aid` | Need-based financial aid offered (dollars) |
+| `merit_aid` | Merit-based financial aid offered (dollars) |
+| `net_price` | Tuition minus aid: what the family is asked to pay (dollars) |
+
+Start by inspecting the data.
+
+```{r}
+glimpse(ad)
+```
+
+The two functions below are the same ones from Lecture 15 and Homework 12. Run this chunk; you do not need to change it.
+
+```{r}
+sweep_thresholds <- function(probs, truth, thresholds = seq(0, 1, by = 0.02)) {
+  out <- NULL
+  for (t in thresholds) {
+    pred_t <- ifelse(probs >= t, TRUE, FALSE)
+    tp_t <- sum(pred_t == TRUE & truth == TRUE)
+    fn_t <- sum(pred_t == FALSE & truth == TRUE)
+    tn_t <- sum(pred_t == FALSE & truth == FALSE)
+    fp_t <- sum(pred_t == TRUE & truth == FALSE)
+    out <- bind_rows(out, tibble(
+      threshold = t,
+      sensitivity = tp_t / (tp_t + fn_t),
+      specificity = tn_t / (tn_t + fp_t)
+    ))
+  }
+  out
+}
+
+compute_auc <- function(roc_dat) {
+  roc_sorted <- roc_dat %>%
+    mutate(fpr = 1 - specificity) %>%
+    drop_na(sensitivity, fpr) %>%
+    arrange(fpr)
+  sum(diff(roc_sorted$fpr) * (head(roc_sorted$sensitivity, -1) +
+                                 tail(roc_sorted$sensitivity, -1)) / 2)
+}
+```
+
+## The Request
+
+The dean of admissions writes:
+
+> **"Every spring we have to guess how many admitted students will actually show up, so we can plan housing, class sizes, and the aid budget. Can you build something that tells us, before May 1, which admitted students will enroll? And while you're at it, can you tell us what kinds of aid packages we're handing out?"**
+
+Throughout this homework, treat **enrolling** (`yield == 1`) as the "positive" class.
+
+# Part I: Explain, Predict, or Learn?
+
+## 1. Name the Job
+
+In the Test 2 practice, we asked:
+
+> **Version A:** "Does getting admitted students to visit campus *cause* them to enroll?"
+
+The dean is now asking:
+
+> **Version B:** "Which of this year's admitted students will enroll?"
+
+Which version is an explanation question and which is a prediction question?
+
+**Your answer:**
+
+
+
+For each version, what makes a variable "earn its place" in the model?
+
+**Your answer:**
+
+
+
+The dean's second request ("what kinds of aid packages are we handing out?") has no outcome variable at all. Which of the three jobs (explain, predict, learn) is it?
+
+**Your answer:**
+
+
+
+# Part II: Try the Familiar Tool
+
+## 2. Fit a Line to a 0/1 Outcome
+
+Fit a regression with `yield` as the outcome and `sat`, `gpa`, `income`, `visit`, `legacy`, `registered`, `sent_scores`, `distance`, and `net_price` as predictors, using **all** of the data. Then check the range of the predicted values.
+
+```{r}
+# Fit the model with lm() and check range(predict(...)).
+
+```
+
+What are the smallest and largest predicted values? Why is that a problem when the outcome can only be 0 or 1?
+
+**Your answer:**
+
+
+
+Even with this problem, why can we still use these predicted values to *rank* students from least to most likely to enroll, and to classify them with a threshold?
+
+**Your answer:**
+
+
+
+# Part III: Classify and Evaluate
+
+## 3. Split, Fit, and Predict
+
+Split the data in half: a random 50% for **train** and the remaining 50% for **test**. Fit a **simple** model on `train` that uses only `sat` and `gpa`. Predict on `test`, and classify each student as "will enroll" if the predicted value is at least 0.5.
+
+```{r}
+set.seed(123)
+
+# inds <- sample(1:nrow(ad), size = round(nrow(ad) / 2), replace = FALSE)
+# train <- ad %>% slice(inds)
+# test <- ad %>% slice(-inds)
+#
+# Fit the simple model on train, predict on test, then classify at 0.5.
+
+```
+
+Why do we evaluate on `test` instead of on the same students we used to fit the model?
+
+**Your answer:**
+
+
+
+## 4. The Confusion Matrix
+
+Build the confusion matrix (actual `yield` by predicted class).
+
+```{r}
+# Use count() to build the confusion matrix.
+
+```
+
+Fill in the four cells, treating "enrolled" as the positive class.
+
+**True positives (predicted enroll, did enroll):**
+
+
+
+**False positives (predicted enroll, did not enroll):**
+
+
+
+**True negatives (predicted not enroll, did not enroll):**
+
+
+
+**False negatives (predicted not enroll, did enroll):**
+
+
+
+## 5. Accuracy and the Baseline
+
+Calculate the overall accuracy of the simple model on `test`.
+
+```{r}
+# Calculate accuracy here.
+
+```
+
+Now calculate the accuracy of the simplest possible rule: predict the most common outcome for **every** student.
+
+```{r}
+# Calculate the baseline accuracy here.
+
+```
+
+**Model accuracy:**
+
+
+
+**Baseline accuracy:**
+
+
+
+How impressed should the dean be by the simple model's accuracy? Explain.
+
+**Your answer:**
+
+
+
+## 6. Sensitivity and Specificity
+
+Calculate the simple model's **sensitivity** (the share of students who actually enrolled that the model correctly predicted would enroll) and **specificity** (the share of students who did not enroll that the model correctly predicted would not enroll).
+
+```{r}
+# Calculate sensitivity and specificity here.
+
+```
+
+**Sensitivity:**
+
+
+
+**Specificity:**
+
+
+
+The accuracy number in Question 5 averaged over both groups. What does looking at sensitivity and specificity separately reveal that accuracy hid?
+
+**Your answer:**
+
+
+
+## 7. The Threshold Is a Choice
+
+Reclassify the `test` students using a threshold of **0.7** instead of 0.5, and recalculate sensitivity, specificity, and accuracy.
+
+```{r}
+# Reclassify at 0.7 and recalculate the three numbers.
+
+```
+
+What happened to sensitivity and specificity when you raised the threshold? Why does it move in that direction?
+
+**Your answer:**
+
+
+
+The two possible mistakes have different consequences for the college:
+
+- a **false positive** (predicting a student will enroll who doesn't) means the college expects more students than show up, leaving empty seats and a hole in the tuition budget;
+- a **false negative** (predicting a student won't enroll who does) means more students show up than planned, overcrowding dorms and classes.
+
+Suppose the dean says that running out of dorm beds is the worst outcome. Should you choose a higher or lower threshold? Explain.
+
+**Your answer:**
+
+
+
+# Part IV: ROC, AUC, and Comparing Models
+
+## 8. Sweep the Threshold
+
+Use `sweep_thresholds()` on the simple model's `test` predictions. Plot sensitivity and specificity against the threshold, then plot the ROC curve (1 - specificity on the x-axis, sensitivity on the y-axis) with a 45-degree reference line.
+
+```{r}
+# Sweep the thresholds, then make both plots.
+
+```
+
+What does the 45-degree line on the ROC plot represent?
+
+**Your answer:**
+
+
+
+## 9. A Second Model
+
+Fit a **full** model on `train` using all nine predictors from Question 2. Calculate the AUC of both the simple and the full model on `test`.
+
+```{r}
+# Fit the full model on train, predict on test, and compute AUC for both models.
+
+```
+
+**Simple model AUC:**
+
+
+
+**Full model AUC:**
+
+
+
+In plain language, what does it mean that one model has a higher AUC than the other?
+
+**Your answer:**
+
+
+
+## 10. Does the Comparison Hold Up?
+
+Your AUCs come from one random split. Write a loop that repeats the following at least 50 times:
+
+1. randomly split `ad` in half into train and test;
+2. fit the simple and full models on train;
+3. compute each model's AUC on test;
+4. save both AUCs.
+
+```{r}
+set.seed(123)
+
+# cv_auc <- NULL
+# for (i in 1:50) {
+#   ...
+# }
+
+```
+
+Report each model's average cross-validated AUC, and the share of splits in which the full model had the higher AUC.
+
+```{r}
+# Summarize the cross-validated AUCs here.
+
+```
+
+**Your answer:**
+
+
+
+Why is this more convincing than the single comparison in Question 9?
+
+**Your answer:**
+
+
+
+# Part V: Prediction Is Not Explanation
+
+## 11. Read a Coefficient Carefully
+
+Look again at your Question 2 model. What is the sign of the coefficient on `net_price`?
+
+**Your answer:**
+
+
+
+Taken literally, the coefficient says that admitted students who are asked to pay *more* are *more* likely to enroll. Does that mean the college could raise its yield by cutting financial aid? Give a plausible alternative explanation for why `net_price` could predict enrollment this way.
+
+**Your answer:**
+
+
+
+Why is it fine to keep `net_price` in a model whose only job is prediction, even though its coefficient should not be read as a causal effect?
+
+**Your answer:**
+
+
+
+## 12. Audit an AI Explanation
+
+Suppose an AI assistant is shown your Question 10 results and says:
+
+> **"The full model has a cross-validated AUC well above the simple model's, which proves that visiting campus, registering for events, and a lower distance cause students to enroll. The college should also be confident that the model will be right about every student it flags."**
+
+Identify two problems with this statement.
+
+**Problem 1:**
+
+
+
+**Problem 2:**
+
+
+
+# Part VI: Learning Without Labels
+
+The dean's second request was about aid packages. Here there is no outcome to predict: we just want to see whether admitted students' aid offers fall into natural groups.
+
+## 13. Look First
+
+Make a scatterplot with `need_aid` on the x-axis and `merit_aid` on the y-axis.
+
+```{r}
+# Scatterplot of need_aid and merit_aid.
+
+```
+
+Before running any algorithm, how many groups do you think you see? Describe them.
+
+**Your answer:**
+
+
+
+## 14. Run k-means
+
+Run k-means with `centers = 3` and `nstart = 25` on `need_aid` and `merit_aid`. Add the cluster assignments to `ad` and recreate your scatterplot, coloring the points by cluster. Then print the cluster centers.
+
+```{r}
+set.seed(123)
+
+# km3 <- kmeans(ad %>% select(need_aid, merit_aid), centers = 3, nstart = 25)
+
+```
+
+In your own words, explain the two steps k-means repeats until the cluster assignments stop changing.
+
+**Your answer:**
+
+
+
+Use the cluster centers to give each cluster a short descriptive name.
+
+**Your answer:**
+
+
+
+## 15. How Many Clusters?
+
+Write a loop that runs k-means for every value of `k` from 1 to 8 (with `nstart = 25`), saves `tot.withinss` for each, and plots WSS against `k`.
+
+```{r}
+set.seed(123)
+
+# wss <- NULL
+# for (k in 1:8) {
+#   ...
+# }
+
+```
+
+Why can't we simply pick the `k` with the lowest WSS?
+
+**Your answer:**
+
+
+
+Where do you see an "elbow"? Would a reasonable classmate pick a different `k` from the same plot?
+
+**Your answer:**
+
+
+
+## 16. Labels Are Arbitrary
+
+Rerun Question 14 with `set.seed(1)` instead of `set.seed(123)` and look at the cluster numbers and centers.
+
+```{r}
+set.seed(1)
+
+# Rerun k-means with centers = 3 and nstart = 25, and print the centers.
+
+```
+
+Did the same students end up grouped together? Did the cluster *numbers* stay the same? What does this tell you about how to interpret "cluster 1" vs. "cluster 2"?
+
+**Your answer:**
+
+
+
+## 17. Describe, Don't Explain
+
+The k-means algorithm never saw `yield`. Now calculate the enrollment rate (and number of students) within each of your three clusters from Question 14.
+
+```{r}
+# Calculate the mean of yield and the count of students by cluster.
+
+```
+
+**Your answer:**
+
+
+
+One cluster has a much lower enrollment rate than the others. Does this show that the kind of aid package in that cluster *causes* students not to enroll? What else could explain the difference?
+
+**Your answer:**
+
+
+
+## 18. Audit an AI Explanation
+
+Suppose an AI assistant is shown your Question 14 plot and says:
+
+> **"k-means proves that there are exactly three types of admitted students at this college."**
+
+Identify two problems with this statement.
+
+**Problem 1:**
+
+
+
+**Problem 2:**
+
+
+
+# Part VII: Calibrated Communication
+
+## 19. Write the Conclusion
+
+Write three or four sentences for the dean. Your conclusion should:
+
+- say how well the full model predicts enrollment on held-out students, compared to the simple model and to the baseline;
+- mention that using the model requires choosing a threshold, and how that choice should depend on which mistake is worse;
+- describe the aid-package clusters as one reasonable description of the data, not the only one;
+- avoid claiming that any variable in either analysis *causes* students to enroll.
+
+**Your answer:**
+
+
+
+# Part VIII: Read the Code
+
+On Test 4, you will be shown short pieces of R code and asked what they do, or what is wrong with them. Each snippet below has at most one mistake. Run it, read it line by line, and answer the questions **before** asking AI to explain it.
+
+## 20. A Held-Out Evaluation?
+
+A classmate writes:
+
+```{r}
+set.seed(123)
+inds <- sample(1:nrow(ad), size = round(nrow(ad) / 2), replace = FALSE)
+train_chk <- ad %>% slice(inds)
+test_chk <- ad %>% slice(-inds)
+
+model_check <- lm(yield ~ sat + gpa + income + visit + legacy + registered +
+                    sent_scores + distance + net_price, data = ad)
+test_chk$pred_check <- predict(model_check, newdata = test_chk)
+mean(ifelse(test_chk$pred_check >= 0.5, 1, 0) == test_chk$yield)
+```
+
+The classmate calls this number the model's "held-out accuracy." What is wrong, and which one word would you change to fix it? Make the fix and compare the two accuracies.
+
+```{r}
+# Fix the code and compare.
+
+```
+
+**Your answer:**
+
+
+
+Would changing `replace = FALSE` to `replace = TRUE` in the second line be a good idea? Why or why not?
+
+**Your answer:**
+
+
+
+## 21. Is This Sensitivity?
+
+Using your simple model's `pred_class` from Question 3, a classmate calculates "sensitivity" like this:
+
+```{r, eval = exists("test")}
+mean(test$pred_class == test$yield)
+```
+
+Compare this number to your answers to Questions 5 and 6. Which quantity did the code actually calculate? Rewrite it so that it calculates sensitivity, and then specificity.
+
+```{r}
+# Rewrite the code to calculate sensitivity and specificity.
+
+```
+
+**Your answer:**
+
+
+
+## 22. Change Only the Threshold
+
+Suppose you change `0.5` to `0.3` in the line of Question 3 that creates `pred_class`, and rerun only that line. Answer **before** running it, then check yourself.
+
+- Do the predicted values in `test$pred_simple` change?
+- Which of sensitivity and specificity *can only* go up or stay the same, and which *can only* go down or stay the same? Why?
+- Is overall accuracy guaranteed to go up?
+
+```{r}
+# Check your answers with a threshold of 0.3.
+
+```
+
+**Your answer:**
+
+
+
+## 23. 50 Splits or 1?
+
+A classmate tries to cross-validate the comparison from Question 10:
+
+```{r}
+set.seed(123)
+inds <- sample(1:nrow(ad), size = round(nrow(ad) / 2), replace = FALSE)
+train_chk <- ad %>% slice(inds)
+test_chk <- ad %>% slice(-inds)
+
+cv_bad <- NULL
+for (i in 1:50) {
+  m_simple_i <- lm(yield ~ sat + gpa, data = train_chk)
+  m_full_i <- lm(yield ~ sat + gpa + income + visit + legacy + registered +
+                   sent_scores + distance + net_price, data = train_chk)
+  cv_bad <- bind_rows(cv_bad, tibble(
+    sim = i,
+    auc_simple = compute_auc(sweep_thresholds(predict(m_simple_i, newdata = test_chk), test_chk$yield)),
+    auc_full = compute_auc(sweep_thresholds(predict(m_full_i, newdata = test_chk), test_chk$yield))
+  ))
+}
+
+cv_bad %>% summarise(sd_simple = sd(auc_simple), sd_full = sd(auc_full),
+                     share_full_better = mean(auc_full > auc_simple))
+```
+
+Why are the standard deviations zero? The classmate reports "the full model won in 100% of 50 random splits." What is wrong with that claim, and how would you fix the loop?
+
+**Your answer:**
+
+
+
+## 24. What Does k-means See?
+
+```{r}
+set.seed(123)
+km_check <- kmeans(ad %>% select(need_aid, merit_aid), centers = 3, nstart = 25)
+ad %>%
+  mutate(cluster_check = km_check$cluster) %>%
+  group_by(cluster_check) %>%
+  summarise(enroll_rate = mean(yield))
+```
+
+In one sentence each:
+
+- What does `centers = 3` control?
+- What does `nstart = 25` control?
+- Did `yield` play any role in forming the clusters? How can you tell from the code?
+
+**Your answer:**
+
+
+
+## Before Test 4
+
+You should now be able to do the following without AI:
+
+- tell whether a question is about explanation, prediction, or learning structure, and say how that changes what makes a model "good";
+- explain why `lm()` on a 0/1 outcome can produce predictions below 0 or above 1, and why those predictions can still be used to classify;
+- explain why prediction must be evaluated on held-out data;
+- read a confusion matrix, name its four cells, and calculate accuracy, sensitivity, and specificity from it;
+- compare a classifier's accuracy to the "always guess the most common outcome" baseline;
+- predict what happens to sensitivity and specificity when the threshold is raised or lowered, and connect the threshold to which mistake is costlier;
+- read an ROC curve, including the 45-degree line, and interpret AUC;
+- explain why a cross-validated AUC comparison is more convincing than one split, and why a higher AUC does not establish causation;
+- explain what makes clustering *unsupervised*, and describe the two steps of k-means;
+- read an elbow plot, and explain why WSS alone cannot choose `k`;
+- explain why cluster numbers are arbitrary and why a different `k` or different variables could reveal a different structure;
+- read short R code for splitting data, classifying with a threshold, calculating sensitivity, cross-validating, and running k-means, and spot common mistakes (fitting on the test data, calculating accuracy instead of sensitivity, splitting once outside a cross-validation loop);
+- audit an AI-generated claim for overconfidence, unsupported causal language, or treating a clustering result as proof;
+- write a calibrated conclusion about a classifier and a clustering result.
+
+The specific admissions context will **not** be on Test 4. The test will ask you to transfer this reasoning to a new empirical problem.

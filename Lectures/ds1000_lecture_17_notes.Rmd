@@ -50,6 +50,10 @@ reports %>%
   filter(document %in% c(1, 3, 10)) %>%
   mutate(start_of_report = str_trunc(observed, 250)) %>%
   select(document, state, classification, start_of_report)
+
+cat(reports %>%
+  filter(document %in% c(1)) %>%
+  pull(observed))
 ```
 
 Reports with coordinates can be put on a map. Hover over a dot to read the start of the report.

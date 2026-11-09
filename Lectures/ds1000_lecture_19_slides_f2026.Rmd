@@ -1,5 +1,5 @@
 ---
-title: "How Can Data and AI Systems Produce Misleading Claims?"
+title: "How Do Misleading Claims Get Produced, and What Stays Human?"
 subtitle: "DS 1000"
 author: "Prof. Bisbee"
 output:
@@ -18,10 +18,11 @@ options(width=60)
 knitr::opts_chunk$set(fig.align='center',fig.width=9,fig.height=5,message=F,warning=F)
 
 library(tidyverse)
+library(plotly)
 
+# Part 1, Mechanism 1: fit only on home games, evaluate on both ----------------
 gms <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/main/data/game_summary.Rds")
 
-# Biased-training-data demo: fit only on home games, evaluate on both.
 train_home <- gms %>% filter(locationGame == "H")
 test_home <- gms %>% filter(locationGame == "H")
 test_away <- gms %>% filter(locationGame == "A")
@@ -37,18 +38,7 @@ acc_on <- function(model, newdata) {
 acc_home <- acc_on(model_home_only, test_home)
 acc_away <- acc_on(model_home_only, test_away)
 
-# A tiny spurious-correlation demo, generated live rather than borrowed.
-set.seed(42)
-spurious_dat <- tibble(
-  year = 2001:2020,
-  series_a = cumsum(rnorm(20)),
-  series_b = cumsum(rnorm(20))
-)
-spurious_cor <- cor(spurious_dat$series_a, spurious_dat$series_b)
-
-# Penguins and wine sections (interactive plotly plots) -----------------------
-library(plotly)
-
+# Part 1, Mechanism 1: penguins ------------------------------------------------
 pg <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/penguins.rds") %>%
   drop_na() %>%
   mutate(male = sex == "male")
@@ -64,6 +54,16 @@ eval_pg <- bind_rows(test_adelie, pg %>% filter(species != "Adelie")) %>%
   mutate(score = predict(m_mass, newdata = .),
          predicted_male = score >= 0.5)
 
+# Part 1, Mechanism 2: a spurious correlation, generated live ------------------
+set.seed(42)
+spurious_dat <- tibble(
+  year = 2001:2020,
+  series_a = cumsum(rnorm(20)),
+  series_b = cumsum(rnorm(20))
+)
+spurious_cor <- cor(spurious_dat$series_a, spurious_dat$series_b)
+
+# Part 1, Mechanism 3: wine ----------------------------------------------------
 wine <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/wine_reviews.rds")
 
 by_country <- wine %>%
@@ -76,6 +76,62 @@ by_country <- wine %>%
   filter(n_reviews >= 100) %>%
   arrange(desc(mean_points)) %>%
   mutate(rank = row_number())
+
+# Part 2: Himalayan audit ------------------------------------------------------
+hm <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/himalaya_members.rds")
+e8 <- hm %>%
+  filter(peak_height_m >= 8000) %>%
+  mutate(decade = floor(year / 10) * 10)
+
+# Sentence 1: within-peak comparison
+ox_peak <- e8 %>%
+  group_by(peak_name, peak_height_m, oxygen_used) %>%
+  summarise(n_climbers = n(), rate = mean(success), .groups = "drop") %>%
+  group_by(peak_name) %>%
+  filter(n() == 2, all(n_climbers >= 100)) %>%
+  ungroup() %>%
+  mutate(peak_name = reorder(peak_name, peak_height_m),
+         group = if_else(oxygen_used, "Used oxygen", "No oxygen"))
+
+segments <- ox_peak %>%
+  select(peak_name, oxygen_used, rate) %>%
+  pivot_wider(names_from = oxygen_used, values_from = rate, names_prefix = "rate_")
+
+# Sentence 2: bootstrap interval and out-of-sample accuracy
+set.seed(123)
+boot_diff <- map_dbl(1:300, function(i) {
+  s <- e8 %>% slice_sample(prop = 1, replace = TRUE)
+  mean(s$success[s$oxygen_used]) - mean(s$success[!s$oxygen_used])
+})
+observed_diff <- mean(e8$success[e8$oxygen_used]) - mean(e8$success[!e8$oxygen_used])
+
+d_model <- hm %>% drop_na(age)
+set.seed(123)
+inds_hm <- sample(1:nrow(d_model), size = round(nrow(d_model) / 2), replace = FALSE)
+train_hm <- d_model %>% slice(inds_hm)
+test_hm <- d_model %>% slice(-inds_hm)
+m_full <- lm(success ~ oxygen_used + peak_height_m + hired + age, data = train_hm)
+acc_hm <- function(model, data) mean((predict(model, newdata = data) >= 0.5) == data$success)
+
+# Timing and era
+by_height <- e8 %>%
+  filter(!is.na(highpoint_metres)) %>%
+  mutate(highpoint_band = cut(highpoint_metres,
+                              breaks = c(0, 6000, 7000, 7500, 8000, 8500, 9000),
+                              labels = c("Under 6,000", "6,000-7,000", "7,000-7,500",
+                                         "7,500-8,000", "8,000-8,500", "8,500+"),
+                              include.lowest = TRUE)) %>%
+  group_by(highpoint_band) %>%
+  summarise(n_climbers = n(), oxygen_use = mean(oxygen_used))
+
+by_decade <- e8 %>%
+  filter(decade >= 1980) %>%
+  group_by(decade) %>%
+  summarise(n_climbers = n(),
+            `Used oxygen` = mean(oxygen_used),
+            `Reached summit` = mean(success),
+            `Hired` = mean(hired)) %>%
+  pivot_longer(c(`Used oxygen`, `Reached summit`, `Hired`), names_to = "measure", values_to = "share")
 ```
 
 <style>
@@ -93,31 +149,30 @@ LO4: Conduct and evaluate data analyses.
 LO5: Critically use AI as an analytical tool.
 LO6: Communicate evidence responsibly.
 
-Lecture 19 makes explicit and systematic a habit the course has practiced
-implicitly all semester: auditing how misleading claims get produced. Four
-mechanisms, each demonstrated concretely rather than via case-study images
-(keeping this lecture consistent with the course's text/code style):
-(1) unrepresentative training data, demonstrated by retraining the
-Classification unit's win-predictor on home games only; (2) confounded/
-spurious relationships, via a live-generated spurious correlation plus a
-callback to HW6's Simpson's paradox; (3) false precision from a measure
-that sounds exact but isn't (callback to Lecture 18's sentiment score);
-(4) AI hallucination -- fluency without verification.
+Lecture 19 merges the former Lecture 19 (Bias & Misinformation) and Lecture 20
+(AI, Judgment & Responsibility) into one session, after the 11/09 cancellation.
+It closes Unit 5's instructional content.
 
-The penguin and wine sections (data/penguins.rds, data/wine_reviews.rds) give each
-mechanism a second, interactive example with new data (a sex-prediction rule trained
-on one species; Simpson's paradox in bill measurements; a wine ranking confounded by
-reviewer; claims to verify). The matching live-coding file is
+Part 1: four mechanisms that produce misleading claims with no one intending to
+deceive (unrepresentative data, confounded/spurious relationships, false
+precision, AI fluency without verification). Part 2: "human specifies, AI
+implements, human verifies," worked through an AI-style report audited sentence
+by sentence with the Himalayan data.
+
+Cut in the merge: the College Scorecard paragraph audit (the Himalayan audit
+does the same job with real data) and the separate stage-by-stage workflow
+slides (now one table). Plot code is hidden; every plot's code is in
 ds1000_lecture_19_notes.Rmd. Requires plotly.
+
+The report in Part 2 is written for the exercise; it is not output from a real model.
 
 INSTRUCTOR NOTE:
 Avoid citing specific real-world statistics/studies that can't be verified
-in this environment; keep real-world framing general and qualitative
-(the mechanisms themselves are well-documented in algorithmic-bias and
-misinformation research, without needing a specific unverified figure).
+in this environment; keep real-world framing general and qualitative.
+There is no HW16. The next session is the Unit 5 Assessment Day.
 -->
 
-# How Can Data and AI Systems Produce Misleading Claims?
+# Misleading Claims and What Stays Human
 
 .big[
 All semester:
@@ -126,7 +181,9 @@ All semester:
 
 Today:
 
-> **Zoom out — how do misleading claims get produced in the first place?**
+> **How do misleading claims get produced in the first place?**
+
+> **And given everything AI can now do, what is left that only a human can do?**
 ]
 
 ---
@@ -134,12 +191,15 @@ Today:
 # Where We Are
 
 .big[
-**Question → ... → measure meaning, not just topic → recognize how misleading claims get produced**
+**Question → ... → measure meaning, not just topic → recognize how misleading claims get produced → decide what stays human**
 ]
 
-Today:
+Today has two parts:
 
-**Recognize how misleading claims get produced**
+1. **Four mechanisms** that produce misleading claims
+2. **One audit** of an AI-style report, sentence by sentence
+
+The code for every plot today is in the notes.
 
 ---
 
@@ -149,21 +209,15 @@ Today:
 Misinformation does not require a villain.
 ]
 
-Every mechanism today can happen with **no one intending to deceive anyone** — just by skipping a step this course has spent 18 lectures teaching you not to skip.
+Every mechanism today can happen with **no one intending to deceive anyone**, just by skipping a step this course has spent the whole semester teaching you not to skip.
 
 ---
 
 # Mechanism 1: Unrepresentative Data
 
-.huge[
-> **A model trained on one slice of the world, applied to the whole world.**
+.big[
+**A model trained on one slice of the world, applied to the whole world.**
 ]
-
-Let's demonstrate this directly, with a classifier we already built.
-
----
-
-# Retraining on a Biased Slice
 
 Recall Classification I's win-predictor. This time, train it **only on home games**.
 
@@ -172,7 +226,7 @@ train_home <- gms %>% filter(locationGame == "H")
 model_home_only <- lm(isWin ~ tov + pts + treb + pctFG, data = train_home)
 ```
 
-Nothing about this looks malicious. It's just a modeling choice — maybe made for convenience, or without thinking about it.
+Nothing about this looks malicious. It's just a modeling choice.
 
 ---
 
@@ -184,30 +238,12 @@ round(acc_away, 3)
 ```
 
 .big[
-Trained only on home games, does the model perform the same on away games as it does on the games like the ones it was trained on?
+Does the model perform the same on away games as on the games it was trained on?
 ]
 
----
-
-# Why This Matters Beyond Basketball
-
-.big[
-The mechanism here — a model trained on one group performs differently for a group it rarely saw — is the same mechanism behind well-documented problems in hiring tools, lending models, and facial recognition systems trained on unrepresentative data.
-]
-
-No one has to intend harm. The training data just has to be unrepresentative of who the model will be used on.
+The same mechanism sits behind well-documented problems in hiring tools, lending models, and facial recognition: a model trained on one group performs differently for a group it rarely saw.
 
 <!-- Deliberately general/qualitative framing -- no specific unverified statistic cited. -->
-
----
-
-# The Output Still Looks Neutral
-
-.big[
-This is what makes the mechanism dangerous: the model's predictions don't come with a warning label.
-]
-
-A number is a number. Nothing about `predict()`'s output announces "this estimate is less trustworthy for this group."
 
 ---
 
@@ -230,164 +266,149 @@ eval_pg %>%
 
 # Why It Fails (Hover Over the Points)
 
-```{r, out.width="100%"}
+.pull-left[
+"Heavy means male" is true for Adelie.
+
+A heavy Gentoo is just a typical Gentoo.
+
+The model predicts "male" for every Gentoo, and **gives no warning**.
+
+Nothing about `predict()`'s output announces "this estimate is less trustworthy for this group."
+]
+
+.pull-right[
+```{r, echo=FALSE, out.width="100%"}
 p_pred <- eval_pg %>%
   ggplot(aes(x = body_mass_g, y = score, color = species,
              text = paste0(species, ", actually ", sex, "<br>", body_mass_g, " g"))) +
   geom_point(alpha = .6) +
-  geom_hline(yintercept = .5, linetype = "dashed")
+  geom_hline(yintercept = .5, linetype = "dashed") +
+  labs(x = "Body mass (g)", y = "Predicted score", color = NULL)
 
-ggplotly(p_pred, tooltip = "text", height = 340)
+ggplotly(p_pred, tooltip = "text", height = 350)
 ```
-
-.big[
-"Heavy means male" is true for Adelie. A heavy Gentoo is just a typical Gentoo. The model predicts "male" for every Gentoo, and gives no warning.
 ]
 
 ---
 
-# Mechanism 2: Confounded and Spurious Relationships
+# Mechanism 2: Confounded and Spurious
 
-.big[
 Recall HW6: ice-cream sales and drownings were associated in the pooled data, purely because both were driven by temperature.
-]
 
-Reported without the Unit 2 audit habit, that pooled relationship is a ready-made piece of misinformation.
-
----
-
-# A Relationship That's Pure Coincidence
-
-```{r}
+.pull-left[
+```{r, echo=FALSE, fig.width=4.5, fig.height=3.1, out.width="100%"}
 spurious_dat %>%
   ggplot(aes(x = series_a, y = series_b)) +
   geom_point() +
   geom_smooth(method = "lm", se = FALSE)
 ```
-
----
-
-# The Correlation Is Real
-
-```{r}
-round(spurious_cor, 2)
-```
-
-.big[
-`series_a` and `series_b` are two **independently generated random sequences**. They share no cause. The correlation is not a coding error — with enough random series, some pairs will look related by chance.
 ]
 
----
+.pull-right[
+Correlation: **`r round(spurious_cor, 2)`**
 
-# The Lesson
+`series_a` and `series_b` are two **independently generated random sequences**. They share no cause.
 
-.big[
-A relationship being statistically real in the data is not the same as it being meaningful.
+With enough random series, some pairs will look related by chance.
 ]
-
-Misinformation frequently isn't a fabricated number — it's a real number, reported without the "what else could explain this?" step from Unit 2.
 
 ---
 
 # A Real Relationship That Reverses
 
-```{r}
-pg %>%
-  summarise(pooled_correlation = round(cor(bill_length_mm, bill_depth_mm), 2))
+.pull-left[
+Pooled correlation of bill length and depth: **`r round(cor(pg$bill_length_mm, pg$bill_depth_mm), 2)`**
 
+Within each species:
+
+```{r, echo=FALSE}
 pg %>%
   group_by(species) %>%
-  summarise(correlation_within_species = round(cor(bill_length_mm, bill_depth_mm), 2))
+  summarise(within = round(cor(bill_length_mm, bill_depth_mm), 2))
 ```
 
-.big[
-Pooled across penguins, longer bills go with **shallower** bills. Within every species, longer bills go with **deeper** ones.
+Species is the third variable: ignore it and the sign flips. Hover, or click the legend to hide a species.
 ]
 
----
-
-# Simpson's Paradox, Interactively
-
-```{r, out.width="100%"}
+.pull-right[
+```{r, echo=FALSE, out.width="100%"}
 p_simpson <- pg %>%
   ggplot(aes(x = bill_length_mm, y = bill_depth_mm)) +
   geom_point(aes(color = species,
                  text = paste0(species, "<br>", bill_length_mm, " mm long, ", bill_depth_mm, " mm deep")),
              alpha = .6) +
   geom_smooth(method = "lm", se = FALSE, color = "black", linetype = "dashed") +
-  geom_smooth(aes(color = species), method = "lm", se = FALSE)
+  geom_smooth(aes(color = species), method = "lm", se = FALSE) +
+  labs(x = "Bill length (mm)", y = "Bill depth (mm)", color = NULL)
 
-ggplotly(p_simpson, tooltip = "text", height = 340)
+ggplotly(p_simpson, tooltip = "text", height = 350)
 ```
+]
 
-Click a species in the legend to hide it. Species is the third variable: ignore it and the sign flips.
+---
+
+# The Lesson So Far
+
+.big[
+A relationship being statistically real in the data is not the same as it being meaningful.
+]
+
+Misinformation frequently isn't a fabricated number. It's a real number, reported without the "what else could explain this?" step from Unit 2.
 
 ---
 
 # Mechanism 3: False Precision
 
 .big[
-Recall Lecture 18: a "net sentiment score" sounds like a precise measurement of feeling. It is actually a count of dictionary-matched words.
-]
-
-A single clean number invites more trust than the underlying measurement deserves.
-
----
-
-# Numbers That Sound More Certain Than They Are
-
-.big[
 "Toxicity score: 87%." "Risk score: 6.2." "Approval likelihood: 73%."
 ]
 
-Each of these is a specific-sounding number built from an imperfect proxy, exactly like the sentiment score. The precision of the number does not imply precision in what it measures.
+Recall Lecture 18: a "net sentiment score" sounds like a precise measurement of feeling. It is actually a count of dictionary-matched words.
+
+Each of these is a specific-sounding number built from an imperfect proxy. The precision of the number does not imply precision in what it measures.
 
 <!-- LO1: Reinforce construct validity from Unit 1 in a new register. -->
 
 ---
 
-# A Ranking With Two Decimals
+# Which Country Makes the Best Wine?
 
-10,000 wine reviews, scored 80 to 100. **Which country makes the best wine?**
-
-```{r}
+.pull-left[
+```{r, echo=FALSE}
 by_country %>%
-  transmute(rank, country, n_reviews, mean_points = round(mean_points, 2)) %>%
+  transmute(rank, country, n = n_reviews,
+            mean = round(mean_points, 2)) %>%
   head(8)
 ```
 
-.big[
-It looks exact. How precise is it?
+Two decimals looks exact. Hover for the intervals. Neighboring countries in the middle overlap, so the **order** is more precise on the page than in the data.
 ]
 
----
-
-# Add the 95% Intervals (Hover for Details)
-
-```{r, out.width="100%"}
+.pull-right[
+```{r, echo=FALSE, out.width="100%"}
 p_rank <- by_country %>%
   mutate(country = reorder(country, mean_points),
          label = paste0("Rank ", rank, ": ", country, "<br>Mean: ", round(mean_points, 2),
                         "<br>95% interval: ", round(lower, 2), " to ", round(upper, 2))) %>%
   ggplot(aes(x = mean_points, y = country, text = label)) +
-  geom_pointrange(aes(xmin = lower, xmax = upper))
+  geom_pointrange(aes(xmin = lower, xmax = upper)) +
+  labs(x = "Average points", y = NULL)
 
-ggplotly(p_rank, tooltip = "text", height = 340)
+ggplotly(p_rank, tooltip = "text", height = 350)
 ```
-
-Neighboring countries in the middle overlap. The **order** is more precise on the page than in the data.
+]
 
 ---
 
 # Who Did the Scoring?
 
-```{r}
+```{r, echo=FALSE}
 wine %>%
   filter(country %in% c("Argentina", "Austria", "Chile", "France", "Spain")) %>%
   group_by(country) %>%
   summarise(n_reviews = n(),
-            most_common_reviewer = names(sort(table(taster_name), decreasing = TRUE))[1],
-            share_by_that_reviewer = round(max(table(taster_name)) / sum(!is.na(taster_name)), 2))
+            top_reviewer = names(sort(table(taster_name), decreasing = TRUE))[1],
+            their_share = round(max(table(taster_name)) / sum(!is.na(taster_name)), 2))
 ```
 
 .big[
@@ -399,46 +420,28 @@ Each country is mostly scored by one reviewer. If reviewers differ in generosity
 # Mechanism 4: AI Fluency Without Verification
 
 .big[
-A language model is trained to produce **plausible-sounding** text — not verified-true text.
+A language model is trained to produce **plausible-sounding** text, not verified-true text.
 ]
 
 It can generate a specific statistic, a citation, or a quote that **sounds exactly like the real thing** and is entirely fabricated. This is often called **hallucination**.
 
----
-
-# Why This Happens
-
 .big[
-The model is optimizing for "what would a fluent answer look like," not "is this claim actually true."
+Confidence in the writing and accuracy of the claim are two completely different things.
 ]
 
-Confidence in the writing and accuracy of the claim are two completely different things — and a fluent, confident tone provides no evidence about which one you're getting.
-
 ---
 
-# Putting It Together: Audit a Real-Looking Claim
+# Audit a Real-Looking Claim
 
 An AI-generated summary states:
 
 > "A recent study found that 73% of remote workers report higher productivity, based on a nationally representative survey."
 
 .big[
-**Mechanism check — could this involve:**
-
 Unrepresentative data? False precision? A confound the summary skipped? Simple fabrication?
 ]
 
-You may not be able to tell which, from the sentence alone — which is itself the point.
-
----
-
-# The Only Real Defense
-
-.big[
-Not "trust it" or "distrust it" — **verify it.**
-]
-
-Find the actual study. Check the sample. Check what "productivity" was operationalized as. Check whether the number even appears in the source.
+You may not be able to tell from the sentence alone, which is itself the point. The only real defense is to **verify it**: find the actual study, check the sample, check what "productivity" meant, and check whether the number even appears in the source.
 
 ---
 
@@ -456,39 +459,11 @@ sum(is.na(wine$price))
 round(mean(wine$points >= 90), 3)
 ```
 
-.big[
 Which are true? Each sounds equally confident. Only the data can tell you.
-]
 
 ---
 
-# A Calibrated Habit
-
-Instead of:
-
-> "The AI said it, so it must be true (or must be fake)."
-
-Try:
-
-.big[
-> **This claim has a specific, checkable structure — a source, a sample, and a measurement. Before repeating it, I should verify each piece rather than reacting to how confidently it's stated.**
-]
-
----
-
-# Before You Leave
-
-When you see a data-driven or AI-generated claim, ask:
-
-1. What data was the underlying model or statistic trained or calculated on — and who might be missing from it?
-2. Could this relationship be confounded or coincidental?
-3. Does a precise-looking number come from a proxy that isn't actually precise?
-4. Could this specific claim be a fabrication dressed up as fluent, confident text?
-5. Have I verified this, or just found it plausible?
-
----
-
-# The Rule to Remember
+# The First Rule to Remember
 
 .huge[
 **Misinformation is rarely a single lie.**
@@ -496,19 +471,287 @@ When you see a data-driven or AI-generated claim, ask:
 **It is usually a skipped step.**
 ]
 
+So who is responsible for not skipping the step?
+
+---
+
+# A Principle You've Already Been Using
+
+.big[
+Every homework this semester has quietly run on the same rule:
+]
+
+.huge[
+**Human specifies → AI generates or implements → Human verifies and judges.**
+]
+
+AI can draft code, propose analyses, and write fluent summaries. None of that changes who is accountable for the claim that goes out the door.
+
+---
+
+# Walking the Whole Workflow
+
+| Stage | AI can | A human must |
+|:--|:--|:--|
+| **Concepts → Variables** | Propose variables, write the code | Judge whether a variable is a *valid* operationalization of the concept |
+| **Understand / Prepare** | Summarize, flag missing data, draft wrangling | Decide whether the missingness matters and who the conclusion is now about |
+| **Analyze / Evaluate** | Fit models, calculate RMSE or AUC, bootstrap | Decide whether the comparison is fair and whether "better" is the right goal |
+| **Communicate** | Draft and tighten a summary sentence | Decide whether that sentence claims more than the evidence supports |
+
+At every stage AI can produce an artifact. A human has to decide whether it is **appropriate for this specific question**.
+
+---
+
+# An Audit, With Real Data
+
+Himalayan climbing records: one row per climber per expedition. A report written in the style of an AI summary:
+
+> "Climbers who use supplemental oxygen are far more likely to reach the summit. A regression model finds this relationship is highly confident, and the model predicts summit success accurately. This confirms that oxygen is the key driver of summit success."
+
+.big[
+Check each sentence, and decide what the evidence supports.
+]
+
+---
+
+# Sentence 1: "Far More Likely"
+
+.pull-left[
+```{r, echo=FALSE}
+e8 %>%
+  group_by(oxygen_used) %>%
+  summarise(n = n(), summit_rate = round(mean(success), 3))
+```
+
+Oxygen is used mostly on the highest, hardest peaks. So compare **within** a peak.
+
+The gap is large on every peak. **Sentence 1 holds up**: checking a confounder does not always overturn a result.
+]
+
+.pull-right[
+```{r, echo=FALSE, out.width="100%"}
+p_ox <- ggplot() +
+  geom_segment(data = segments,
+               aes(x = rate_FALSE, xend = rate_TRUE, y = peak_name, yend = peak_name),
+               color = "grey60") +
+  geom_point(data = ox_peak,
+             aes(x = rate, y = peak_name, color = group,
+                 text = paste0(peak_name, ", ", group, "<br>Reached summit: ",
+                               round(100 * rate), "%<br>Climbers: ", n_climbers)),
+             size = 2.5) +
+  labs(x = "Share reaching the summit", y = NULL, color = NULL)
+
+ggplotly(p_ox, tooltip = "text", height = 350)
+```
+]
+
+---
+
+# Sentence 2: "Highly Confident"
+
+.pull-left[
+300 bootstrap resamples of the gap in summit rates between climbers with and without oxygen.
+
+Narrow interval: the **size of the gap** is measured very precisely.
+
+Nothing here says oxygen **causes** the gap.
+]
+
+.pull-right[
+```{r, echo=FALSE, out.width="100%"}
+p_boot <- tibble(boot_diff) %>%
+  ggplot(aes(x = boot_diff)) +
+  geom_histogram(bins = 30) +
+  geom_vline(xintercept = observed_diff, linetype = "dashed") +
+  labs(x = "Gap in summit rate", y = "Resamples")
+
+ggplotly(p_boot, height = 350)
+```
+]
+
+---
+
+# Sentence 2: "Predicts Accurately"
+
+```{r, echo=FALSE}
+tibble(measure = c("Training half", "Test half", "Baseline (guess common outcome)"),
+       accuracy = round(c(acc_hm(m_full, train_hm), acc_hm(m_full, test_hm),
+                          max(mean(test_hm$success), 1 - mean(test_hm$success))), 3))
+
+test_hm %>%
+  mutate(predicted_summit = predict(m_full, newdata = test_hm) >= 0.5) %>%
+  group_by(success) %>%
+  summarise(share_predicted_summit = round(mean(predicted_summit), 3))
+```
+
+Not overfit, and better than guessing. It also misses more than 4 in 10 climbers who did reach the summit.
+
+---
+
+# Is the Predictor Available in Advance?
+
+.pull-left[
+Climbers who turned back low rarely used oxygen.
+
+`oxygen_used` is partly a **result** of how the climb went.
+
+Recall Lecture 14's "predictor that is too good."
+]
+
+.pull-right[
+```{r, echo=FALSE, out.width="100%"}
+p_timing <- by_height %>%
+  mutate(label = paste0("Highest point: ", highpoint_band, " m<br>Used oxygen: ",
+                        round(100 * oxygen_use), "%<br>Climbers: ", n_climbers)) %>%
+  ggplot(aes(x = highpoint_band, y = oxygen_use, group = 1, text = label)) +
+  geom_line() + geom_point() +
+  labs(x = "Highest point reached (m)", y = "Share using oxygen") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggplotly(p_timing, tooltip = "text", height = 350)
+```
+]
+
+---
+
+# Sentence 3: "Confirms the Key Driver"
+
+.pull-left[
+Oxygen use, hiring, and summit success all rose together.
+
+Adjusting for peak, hiring, age, and decade leaves the oxygen coefficient at about 0.6: a **robust association**.
+
+No calculation here can support **"confirms."** Climbers were not randomly assigned to oxygen.
+]
+
+.pull-right[
+```{r, echo=FALSE, out.width="100%"}
+p_decade <- by_decade %>%
+  mutate(label = paste0(measure, ", ", decade, "s: ", round(100 * share), "%")) %>%
+  ggplot(aes(x = decade, y = share, color = measure, group = measure, text = label)) +
+  geom_line() + geom_point() +
+  labs(x = "Decade", y = "Share of climbers", color = NULL)
+
+ggplotly(p_decade, tooltip = "text", height = 350)
+```
+]
+
+---
+
+# What the Human Decided
+
+.big[
+**Computer:** summit rates, a bootstrap, a model, an accuracy number.
+
+**Person:** whether the comparison was fair, what the interval is about, which baseline to use, whether the predictor exists in advance, and whether "confirms" and "key driver" are earned.
+]
+
+The person who signs the report owns that wording.
+
+---
+
+# Can AI Verify Itself?
+
+.big[
+A second AI system checking the first can genuinely help.
+]
+
+But someone still has to decide whether **that** check is trustworthy, and someone still signs their name to the final claim. The responsibility lands on a person.
+
+.big[
+When the prediction decides a loan, a diagnosis, or a hire, "the AI said it was accurate" is not an acceptable final answer.
+]
+
+---
+
+# What a Principled Skeptic Looks Like
+
+.big[
+Not someone who refuses to use AI.
+
+Not someone who accepts AI output uncritically.
+]
+
+.huge[
+Someone who uses AI to move faster, and remains personally responsible for what the evidence does and does not support.
+]
+
+---
+
+# Before You Leave
+
+Before repeating a data-driven claim or accepting AI-assisted output, ask:
+
+1. What data was this trained or calculated on, and who might be missing from it?
+2. Could this relationship be confounded or coincidental?
+3. Does a precise-looking number come from a proxy that isn't actually precise?
+4. Did I specify the analytical decision, or did the AI make it for me by default?
+5. Have I verified this, or just found it plausible?
+6. Does the language match what the evidence supports, and can I defend it in my own words?
+
+---
+
+# The Rule to Remember
+
+.huge[
+**AI can generate the analysis.**
+
+**Only you can be responsible for it.**
+]
+
+---
+
+# The Unit 5 Workflow, Complete
+
+.big[
+**Treat text as evidence**
+
+↓
+
+**Measure meaning, not just topic**
+
+↓
+
+**Recognize how misleading claims get produced**
+
+↓
+
+**Decide what stays human**
+]
+
+This is the reasoning the Evidence Debate and Unit Test will ask you to transfer, and the habit your Project will depend on.
+
 ---
 
 # Homework 15
 
-You will practice:
+Due before the **Unit 5 Assessment Day (11/18)**. You will practice:
 
 - identifying unrepresentative training data in a real scenario;
 - distinguishing a real-but-spurious relationship from a meaningful one;
 - spotting false precision in a reported measure;
 - auditing an AI-generated claim for fabrication, and explaining how you would verify it.
 
-Next:
+Your HW 15 first result is what another pair will audit at Evidence Debate 5, so bring it finished.
+
+---
+
+# Daily Quiz 19
+
+.huge[
+
+Now test yourself independently.
+
+]
 
 .big[
-**AI, Judgment & Responsibility**
+
+Open **Daily Quiz 19** in Brightspace.
+
+]
+
+.small[
+
+No AI or internet access during the quiz.
+
 ]

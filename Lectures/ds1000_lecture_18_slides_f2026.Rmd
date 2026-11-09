@@ -486,5 +486,5 @@ You will practice:
 Next:
 
 .big[
-**Bias & Misinformation**
+**Misleading Claims & What Stays Human**
 ]

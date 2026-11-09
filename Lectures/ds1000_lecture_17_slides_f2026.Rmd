@@ -40,6 +40,11 @@ odds <- tweet_words %>%
 
 n_tweets <- tweet_words %>% distinct(document, PostPresident) %>% count(PostPresident)
 
+# Full tweet text, for the interactive "read the tweets" slide
+tweets <- read_csv("https://github.com/jbisbee1/DS1000_F2026/raw/main/data/trump_tweets.csv") %>%
+  mutate(date = as.Date(datetime),
+         PostPresident = date > as.Date("2016-11-06"))
+
 # Bigfoot section (interactive plotly plots) ----------------------------------
 library(plotly)
 
@@ -136,6 +141,35 @@ Same structure as every claim this semester: a comparison, across a specific gro
 
 ---
 
+# Before Counting Anything: Read Some Tweets
+
+.pull-left[
+```{r tweets_hover, eval=FALSE}
+gg <- tweets %>%
+  filter(!is_retweet) %>%
+  filter(retweets > quantile(retweets, .9)) %>%
+  ggplot(aes(x = date, y = retweets,
+             color = PostPresident,
+             text = str_wrap(text, 50))) +
+  geom_point(alpha = .4) +
+  scale_y_continuous(labels = scales::comma) +
+  labs(x = NULL, y = "Retweets") +
+  theme(legend.position = "none")
+
+ggplotly(gg, tooltip = "text",
+         height = 350)
+```
+
+His most-retweeted 10% of tweets. Hover to read one. Color = before / after November 6, 2016.
+]
+
+.pull-right[
+```{r, ref.label="tweets_hover", echo=FALSE, out.width="100%"}
+```
+]
+
+---
+
 # The Data: Before and After
 
 ```{r}
@@ -144,7 +178,7 @@ tweet_words %>%
   head(6)
 ```
 
-Every row is one **word**, from one **tweet**, tagged with whether it was posted before or after January 20, 2017.
+Every row is one **word**, from one **tweet**, tagged with whether it was posted after November 6, 2016, just before the 2016 election.
 
 ---
 
@@ -218,7 +252,9 @@ Instead of "how many times," ask: **"what share of all words in this period was 
 tweet_words %>%
   count(word, PostPresident) %>%
   group_by(PostPresident) %>%
-  mutate(prop = n / sum(n))
+  mutate(prop = n / sum(n)) %>%
+  filter(word %in% c('fake','border','sad'))
+  
 ```
 
 This is the same fix as turning a raw count into a rate.
@@ -269,17 +305,26 @@ Now doubling ($\log \approx 0.69$) and halving ($\log \approx -0.69$) are symmet
 
 # Which Words Distinguish the Two Periods?
 
-```{r}
+.pull-left[
+```{r top_words_tweets, eval=FALSE}
 odds %>%
   group_by(log_odds > 0) %>%
   slice_max(abs(log_odds), n = 10) %>%
   ungroup() %>%
   mutate(word = reorder(word, log_odds)) %>%
-  ggplot(aes(x = log_odds, y = word, fill = log_odds < 0)) +
+  ggplot(aes(x = log_odds, y = word,
+             fill = log_odds < 0)) +
   geom_col() +
-  labs(x = "Post- / pre-presidency log-odds", y = NULL) +
+  labs(x = "Post- / pre-presidency log-odds",
+       y = NULL) +
   theme(legend.position = "none")
 ```
+]
+
+.pull-right[
+```{r, ref.label="top_words_tweets", echo=FALSE, fig.width=4, fig.height=3.8, out.width="100%"}
+```
+]
 
 ---
 
@@ -317,9 +362,9 @@ Thousands of eyewitnesses have filed Bigfoot reports with a public database.
 Each report is a paragraph in the witness's own words.
 ]
 
-Hover over a dot to read the start of a report.
+Hover over a dot to read the start of a report. (The code for this map is in today's notes.)
 
-```{r, out.width="100%"}
+```{r, echo=FALSE, out.width="100%"}
 bf_reports %>%
   filter(!is.na(latitude)) %>%
   plot_geo(lat = ~latitude, lon = ~longitude) %>%
@@ -368,39 +413,63 @@ Once we account for how much text there is, "road" is used at about the same rat
 
 # Which Words Distinguish the Two States?
 
-```{r, out.width="100%"}
+.pull-left[
+```{r bf_state, eval=FALSE}
 p_state <- odds_state %>%
   group_by(log_odds > 0) %>%
   slice_max(abs(log_odds), n = 8) %>%
   ungroup() %>%
   mutate(word = reorder(word, log_odds),
-         label = paste0(word, "<br>Washington: ", n_g1, "<br>Florida: ", n_g2)) %>%
-  ggplot(aes(x = log_odds, y = word, fill = log_odds > 0, text = label)) +
+         label = paste0(word,
+           "<br>Washington: ", n_g1,
+           "<br>Florida: ", n_g2)) %>%
+  ggplot(aes(x = log_odds, y = word,
+             fill = log_odds > 0,
+             text = label)) +
   geom_col() +
-  labs(x = "Log odds (positive = more Washington)", y = NULL) +
+  labs(y = NULL,
+       x = "Log odds (+ = more Washington)") +
   theme(legend.position = "none")
 
-ggplotly(p_state, tooltip = "text", height = 340)
+ggplotly(p_state, tooltip = "text",
+         height = 350)
 ```
+]
+
+.pull-right[
+```{r, ref.label="bf_state", echo=FALSE, out.width="100%"}
+```
+]
 
 ---
 
 # A Map of Every Word
 
-```{r, out.width="100%"}
+.pull-left[
+```{r bf_words_map, eval=FALSE}
 p_words <- odds_state %>%
-  mutate(label = paste0(word, "<br>Washington: ", n_g1, "<br>Florida: ", n_g2)) %>%
-  ggplot(aes(x = total, y = log_odds, text = label)) +
-  geom_hline(yintercept = 0, linetype = "dashed") +
+  mutate(label = paste0(word,
+           "<br>Washington: ", n_g1,
+           "<br>Florida: ", n_g2)) %>%
+  ggplot(aes(x = total, y = log_odds,
+             text = label)) +
+  geom_hline(yintercept = 0,
+             linetype = "dashed") +
   geom_point(alpha = .5) +
   scale_x_log10() +
-  labs(x = "Total uses (log scale)", y = "Log odds (positive = more Washington)")
+  labs(x = "Total uses (log scale)",
+       y = "Log odds (+ = more Washington)")
 
-ggplotly(p_words, tooltip = "text", height = 330)
+ggplotly(p_words, tooltip = "text",
+         height = 350)
 ```
 
-.big[
 Rare words swing to extreme values. Common words stay near zero. That is why we require a minimum count.
+]
+
+.pull-right[
+```{r, ref.label="bf_words_map", echo=FALSE, out.width="100%"}
+```
 ]
 
 ---
@@ -423,22 +492,33 @@ Many are first names and surnames: people who appear in many reports. The number
 
 # A Higher Minimum, a Different Picture
 
-```{r, out.width="100%"}
+.pull-left[
+```{r bf_class, eval=FALSE}
 p_class <- odds_class %>%
   group_by(log_odds > 0) %>%
   slice_max(abs(log_odds), n = 8) %>%
   ungroup() %>%
   mutate(word = reorder(word, log_odds),
-         label = paste0(word, "<br>Class A: ", n_g1, "<br>Class B: ", n_g2)) %>%
-  ggplot(aes(x = log_odds, y = word, fill = log_odds > 0, text = label)) +
+         label = paste0(word,
+           "<br>Class A: ", n_g1,
+           "<br>Class B: ", n_g2)) %>%
+  ggplot(aes(x = log_odds, y = word,
+             fill = log_odds > 0,
+             text = label)) +
   geom_col() +
-  labs(x = "Log odds (positive = more Class A)", y = NULL) +
+  labs(y = NULL,
+       x = "Log odds (+ = more Class A)") +
   theme(legend.position = "none")
 
-ggplotly(p_class, tooltip = "text", height = 340)
+ggplotly(p_class, tooltip = "text",
+         height = 280)
+```
+]
+
+.pull-right[
+```{r, ref.label="bf_class", echo=FALSE, out.width="100%"}
 ```
 
-.big[
 Class A: **appearance** (forehead, nose, muscles). Class B: **sounds and recordings**. Our choices (like the minimum count) shape what we see, so we report them.
 ]
 

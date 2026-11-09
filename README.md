@@ -259,15 +259,15 @@ Most instructional meetings end with a short Daily Quiz on that day's lecture an
 | 10/28 | 19 | [Clustering / Unsupervised Learning](https://www.jamesbisbee.com/DS1000_F2026/Lectures/ds1000_lecture_16_slides_f2026.html#1) | What can we learn when groups are not supplied in advance? | [HW 12](https://github.com/jbisbee1/DS1000_F2026/blob/main/Homeworks/ds1000_hw_12_f2026.Rmd) due | **Daily Quiz 16** |
 | 11/02 | 20 | **Unit 4 Assessment Day** | How should we choose and evaluate predictive approaches? | | **Evidence Debate 4 + Unit Test 4** |
 | 11/04 | 21 | **Unit 5: Text, AI & Judgment** — [Text as Data](https://www.jamesbisbee.com/DS1000_F2026/Lectures/ds1000_lecture_17_slides_f2026.html#1) | How can unstructured text become evidence? | | **Daily Quiz 17** |
-| 11/09 | 22 | [NLP / Sentiment](https://www.jamesbisbee.com/DS1000_F2026/Lectures/ds1000_lecture_18_slides_f2026.html#1) | What do text measures capture, and what do they miss? | [HW 13](https://github.com/jbisbee1/DS1000_F2026/blob/main/Homeworks/ds1000_hw_13_f2026.Rmd) due | **Daily Quiz 18** |
-| 11/11 | 23 | [Bias & Misinformation](https://www.jamesbisbee.com/DS1000_F2026/Lectures/ds1000_lecture_19_slides_f2026.html#1) | How can data and AI systems produce misleading claims? | [HW 14](https://github.com/jbisbee1/DS1000_F2026/blob/main/Homeworks/ds1000_hw_14_f2026.Rmd) due | **Daily Quiz 19** |
-| 11/16 | 24 | [AI, Judgment & Responsibility](https://www.jamesbisbee.com/DS1000_F2026/Lectures/ds1000_lecture_20_slides_f2026.html#1) | What should humans remain responsible for when AI can perform the analysis? | [HW 15](https://github.com/jbisbee1/DS1000_F2026/blob/main/Homeworks/ds1000_hw_15_f2026.Rmd) due | **Daily Quiz 20** |
-| 11/18 | 25 | **Unit 5 Assessment Day** | What should we believe when evidence itself is produced or interpreted by AI? | | **Evidence Debate 5 + Unit Test 5** |
+| *11/09* | | *Class cancelled (instructor illness)* | | | |
+| 11/11 | 22 | [NLP / Sentiment](https://www.jamesbisbee.com/DS1000_F2026/Lectures/ds1000_lecture_18_slides_f2026.html#1) | What do text measures capture, and what do they miss? | [HW 13](https://github.com/jbisbee1/DS1000_F2026/blob/main/Homeworks/ds1000_hw_13_f2026.Rmd) due | **Daily Quiz 18** |
+| 11/16 | 23 | [Misleading Claims & What Stays Human](https://www.jamesbisbee.com/DS1000_F2026/Lectures/ds1000_lecture_19_slides_f2026.html#1) | How do data and AI systems produce misleading claims, and what should humans remain responsible for? | [HW 14](https://github.com/jbisbee1/DS1000_F2026/blob/main/Homeworks/ds1000_hw_14_f2026.Rmd) due | **Daily Quiz 19** |
+| 11/18 | 24 | **Unit 5 Assessment Day** | What should we believe when evidence itself is produced or interpreted by AI? | [HW 15](https://github.com/jbisbee1/DS1000_F2026/blob/main/Homeworks/ds1000_hw_15_f2026.Rmd) due | **Evidence Debate 5 + Unit Test 5** |
 | *11/23, 11/25* | | *Thanksgiving Break* | | | |
-| 11/30 | 26 | Project Development | Can your team build a defensible empirical argument from question to conclusion? | | |
-| 12/02 | 27 | Project Workshop | Can your team defend every step from question to conclusion? | | |
-| 12/07 | 28 | Project Defenses | Formulate, analyze, evaluate, and communicate your own empirical claim | | **Project Defense** |
-| 12/09 | 29 | Project Defenses | Formulate, analyze, evaluate, and communicate your own empirical claim | | **Project Defense** |
+| 11/30 | 25 | Project Development | Can your team build a defensible empirical argument from question to conclusion? | | |
+| 12/02 | 26 | Project Workshop | Can your team defend every step from question to conclusion? | | |
+| 12/07 | 27 | Project Defenses | Formulate, analyze, evaluate, and communicate your own empirical claim | | **Project Defense** |
+| 12/09 | 28 | Project Defenses | Formulate, analyze, evaluate, and communicate your own empirical claim | | **Project Defense** |
 
 ### Recurring analytical workflow
 
