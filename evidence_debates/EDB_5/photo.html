@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DS 1000 — EDB 5 Photo</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="upload.js"></script>
+<style>
+:root{--gold:#cfae70;--goldbg:#faf6ee;--ink:#1d1c1d;--muted:#616061;--line:#e0dede;--navy:#1f2a44;--ok:#2a7a4b;--bg:#f5f5f4}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:var(--bg);line-height:1.45}
+header{background:var(--navy);color:#fff;padding:10px 16px;font-weight:700}
+header span{font-weight:400;opacity:.75;font-size:.85rem;margin-left:6px}
+#dry{display:none;background:#fff3d6;color:#7a5a00;font-size:.8rem;padding:5px 16px}
+main{max-width:560px;margin:0 auto;padding:16px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:10px;padding:16px;margin:12px 0}
+label{display:block;font-weight:700;font-size:.9rem;margin:12px 0 4px}
+.hint{font-size:.82rem;color:var(--muted);font-weight:400}
+input[type=text],input[type=number]{width:100%;padding:10px;border:1px solid #aaa;border-radius:6px;font:inherit;font-size:1rem}
+.opt{font-weight:400;display:block;margin:4px 0}.opt input{margin-right:7px}
+button{width:100%;padding:12px;border:0;border-radius:6px;background:var(--ok);color:#fff;font-weight:700;font-size:1rem;margin-top:14px}
+button:disabled{background:#999}
+#msg{margin-top:10px;font-size:.92rem;min-height:1em}
+#msg.bad{color:#b3261e}#msg.good{color:var(--ok)}
+ul{padding-left:20px;font-size:.88rem}
+</style>
+</head>
+<body>
+<header>EDB 5 photo<span>DS 1000</span></header>
+<div id="dry">Dry run: nothing is uploaded.</div>
+<main>
+<div class="panel">
+  <p style="margin:0">Take the photo straight on, with the whole sheet in the frame and the writing readable.</p>
+  <label>Pair number</label><input type="number" id="pair" min="1" inputmode="numeric">
+  <label>Your student code</label><input type="text" id="code" autocomplete="off" autocapitalize="characters">
+  <label>Which side?</label>
+  <label class="opt"><input type="radio" name="side" value="front" checked>Front (the poster sketch)</label>
+  <label class="opt"><input type="radio" name="side" value="back">Back (slides or app sketch)</label>
+  <label>Photo</label><input type="file" id="file" accept="image/*">
+  <button id="go" type="button">Upload</button>
+  <div id="msg"></div>
+  <ul id="done"></ul>
+</div>
+</main>
+<script>
+const SUPABASE_URL = "https://syjgkatbxjiyjiosacdr.supabase.co";
+const SUPABASE_KEY = "sb_publishable_dpOWSyvPGnRtpef9UYMvgg_I2x-hSnG";
+const DRY = location.search.includes("dry=1");
+const CODE_ABC = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
+function validCode(c){if(!/^[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{6}$/.test(c))return false;let s=0;for(let i=0;i<5;i++)s+=(i+1)*CODE_ABC.indexOf(c[i]);return CODE_ABC[s%31]===c[5]}
+const $ = id => document.getElementById(id);
+const msg = (t, cls) => { $("msg").textContent = t; $("msg").className = cls || ""; };
+
+let db = null;
+if (DRY) $("dry").style.display = "block";
+else if (window.supabase && window.supabase.createClient) { try { db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } catch (e) {} }
+
+const params = new URLSearchParams(location.search);
+$("pair").value = params.get("pair") || "";
+try { $("code").value = localStorage.getItem("ds1000_course_student_code") || ""; } catch (e) {}
+
+$("go").addEventListener("click", async () => {
+  const pair = +$("pair").value, code = $("code").value.toUpperCase().replace(/[\s-]/g, "");
+  const side = document.querySelector("input[name=side]:checked").value, file = $("file").files[0];
+  if (!Number.isInteger(pair) || pair < 1) return msg("Enter your pair number.", "bad");
+  if (!validCode(code)) return msg("That is not a valid student code. It has 6 characters, with no letter O or I and no digit 0 or 1.", "bad");
+  if (!file) return msg("Choose a photo first.", "bad");
+  try { localStorage.setItem("ds1000_course_student_code", code); } catch (e) {}
+  $("go").disabled = true; msg("Uploading…");
+  const r = await EDB5Photo.upload(db, { pair, code, side, file, dry: DRY });
+  $("go").disabled = false;
+  if (r.error) return msg("The upload didn't work: " + r.error.message + " Please try again, or ask a TA.", "bad");
+  msg("Uploaded. Thank you.", "good");
+  const li = document.createElement("li"); li.textContent = `${side === "front" ? "Front" : "Back"}, ${new Date().toLocaleTimeString()}`; $("done").appendChild(li);
+  $("file").value = "";
+});
+</script>
+</body>
+</html>

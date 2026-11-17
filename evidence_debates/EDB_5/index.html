@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>DS 1000 — Evidence Debate 5</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script src="upload.js"></script>
 <style>
 :root{--gold:#cfae70;--goldbg:#faf6ee;--ink:#1d1c1d;--muted:#616061;--line:#e0dede;--navy:#1f2a44;--ok:#2a7a4b;--warn:#c0562b;--bg:#f5f5f4;--panel:#fff}
 *{box-sizing:border-box}
@@ -82,8 +84,11 @@ table.tl td{border-bottom:1px solid var(--line);padding:7px 8px;vertical-align:t
 .ext{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .ext .opt2{border:2px solid var(--line);border-radius:10px;padding:12px 14px;background:#fff}
 .ext .opt2.did{border-color:var(--ok)}
+.photo{display:grid;grid-template-columns:1fr 170px;gap:16px;align-items:start;margin-top:8px}
+.photo .qr svg{width:160px;height:160px;display:block}
+#pmsg{font-size:.88rem;min-height:1em;margin-top:6px}#pmsg.bad{color:#b3261e}#pmsg.good{color:var(--ok)}
 .ctl{display:grid;grid-template-columns:1fr 1.3fr 1.3fr;gap:6px;margin:4px 0}
-@media(max-width:860px){.board,.ext,.ctl{grid-template-columns:1fr}.qbank{columns:1}main{padding:12px 14px 60px}header{padding:8px 14px}.sheet .g{grid-template-columns:1fr!important;grid-template-rows:none!important}.sheet .g>*{grid-column:auto!important}}
+@media(max-width:860px){.board,.ext,.ctl,.photo{grid-template-columns:1fr}.qbank{columns:1}main{padding:12px 14px 60px}header{padding:8px 14px}.sheet .g{grid-template-columns:1fr!important;grid-template-rows:none!important}.sheet .g>*{grid-column:auto!important}}
 </style>
 </head>
 <body>
@@ -117,8 +122,6 @@ const PANELS=[
  {k:"else",t:"5. What else could explain it",ask:"If you see the pattern you expect, what else besides your explanation could have produced it?",ph:"Even if we see it, it could be because ..."},
  {k:"warrant",t:"6. What the evidence would warrant",ask:"If you find what you expect, what could you claim, and what couldn't you?",ph:"If we find ___, we can say ___, but not ___."}
 ];
-const VISITORS={classmate:"A classmate from another section",grader:"A skeptical grader",journalist:"A journalist on deadline",policy:"Someone who would act on the result (a coach, a voter, an administrator)",family:"A family member with no stats background",other:"Someone else"};
-const FORMATS={A:"Just the poster",B:"Poster + a slide deck",C:"Poster + an interactive explainer",D:"Poster + an interactive app",U:"Not sure yet"};
 const FIGTYPES=["bars comparing groups","scatterplot with a trend","line over time","distribution (histogram or density)","map","table","something else"];
 // ---------------------------------------------------------------- example sketches (fictional, deliberately off the data menu)
 const INK="#23262e",HOT="#c0562b";
@@ -165,9 +168,9 @@ const QBANK=["What are you trying to learn, in one sentence?","What is one row o
 
 // ---------------------------------------------------------------- state
 const fresh=()=>({phase:0,sub:"main",pair:"",codes:["","",""],members:[],
- claim:"",pitch:"",changed:"",visitor:"",visitorOther:"",format:"",
+ claim:"",pitch:"",changed:"",
  title:"",fig:{type:"",x:"",y:"",shape:""},conf:50,panels:Object.fromEntries(PANELS.map(p=>[p.k,""])),
- hype:"",sober:"",diff:"",vp:"",visit:{said:"",missed:"",hard:"",asked:""},change:"",ind:[],ii:0,startedAt:null,
+ photos:[],hype:"",sober:"",diff:"",vp:"",visit:{said:"",missed:"",hard:"",asked:""},change:"",ind:[],ii:0,startedAt:null,
  ext:"",extDone:{slides:false,app:false},slides:{heads:Array(8).fill(""),open:"",appendix:""},
  app:{home:"",controls:[0,1,2].map(()=>({c:"",q:"",s:""}))}});
 let S=fresh();
@@ -188,7 +191,31 @@ const IND_PANELS=["data","did","else","warrant"];
 const indPanel=i=>PANELS.find(p=>p.k===IND_PANELS[(+S.pair+[0,2,1][i])%4]);
 const getP=p=>p.split(".").reduce((o,k)=>o==null?o:o[k],S);
 function setP(p,v){const ks=p.split("."),last=ks.pop();const o=ks.reduce((o,k)=>o[k],S);o[last]=v}
-const visitorText=()=>S.visitor==="other"?(S.visitorOther||"someone else"):VISITORS[S.visitor]||"";
+// EDB 4 pitch cards: pitch_cards.json holds one encrypted entry per student, stored under sha256("edb5-id:"+code)
+// and readable only with that code (built by NFGH/EDB/make_edb5_pitch_cards.R)
+let CARDS=null;
+const b64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+async function sha(s){return new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s)))}
+async function pitchFor(code){
+ try{
+  if(!CARDS)CARDS=await fetch("pitch_cards.json",{cache:"no-store"}).then(r=>r.ok?r.json():{});
+  const id=[...await sha("edb5-id:"+code)].map(b=>b.toString(16).padStart(2,"0")).join(""),e=CARDS[id];if(!e)return null;
+  const key=await crypto.subtle.importKey("raw",await sha("edb5-key:"+code),"AES-CBC",false,["decrypt"]);
+  return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({name:"AES-CBC",iv:b64(e.iv)},key,b64(e.ct))));
+ }catch(x){return null}
+}
+async function loadPitch(){
+ const note=$("pitchNote");
+ const codes=S.codes.map(normCode).filter(validCode);if(!codes.length)return;
+ const found=(await Promise.all(codes.map(pitchFor))).filter(Boolean);
+ if(S.phase!==0)return;
+ if(!found.length){if(note)note.textContent="We couldn't find an EDB 4 pitch card for these codes. You can paste yours below instead.";return}
+ const cards=[...new Set(found.map(f=>f.card))];
+ const fill=(p,v)=>{if(!String(S[p]).trim()&&v){S[p]=String(v);const el=document.querySelector(`[data-p="${p}"]`);if(el)el.value=S[p]}};
+ fill("pitch",cards.join("\n\n"));fill("claim",found[0].claim);fill("pair",found[0].pair);
+ persist();header();
+ if(note)note.textContent="Loaded from your EDB 4 submission. Please check it, and edit anything that has changed.";
+}
 const figDone=()=>!!(S.fig.type&&S.fig.x.trim()&&S.fig.y.trim()&&S.fig.shape.trim());
 
 // ---------------------------------------------------------------- saving
@@ -216,18 +243,16 @@ function header(){
 const goBtn=(label)=>`<div class="actions"><button data-go data-label="${esc(label)}" type="button">${esc(label)}</button><div id="err"></div></div>`;
 const radios=(name,path,obj)=>Object.entries(obj).map(([v,t])=>`<label class="opt"><input type="radio" name="${name}" data-p="${path}" value="${v}" ${getP(path)===v?"checked":""}>${esc(t)}</label>`).join("");
 
-function vSetup(){return `<h1>Today you design the thing you'll defend</h1>
+function vSetup(){return `<h1>Set up</h1>
  <p class="lead">By hand, on paper, before any software. You'll sketch your poster or app, draw the figure you <i>expect</i> to find, storyboard your argument, and test it on another pair. You leave with the first draft of your Content Spec, ready to give to the Project Builder on 11/30.</p>
  <div class="panel"><h2>Who you are</h2>
  <label>Pair number <span class="hint">(the same as at EDB 4)</span></label><input type="number" min="1" step="1" data-p="pair" value="${esc(S.pair)}">
  <div class="row">${[0,1,2].map(i=>`<div><label>Student code, partner ${L(i)} ${i===2?'<span class="hint">(trios only)</span>':""}</label><input type="text" data-p="codes.${i}" value="${esc(S.codes[i])}"></div>`).join("")}</div></div>
  <div class="panel"><h2>Your project today</h2>
- <label>Your claim, as of today <span class="hint">(start from your EDB 4 pitch card; reword it if it has changed)</span></label><textarea data-p="claim">${esc(S.claim)}</textarea>
- <label>Paste your EDB 4 pitch card <span class="hint">(optional)</span></label><textarea data-p="pitch">${esc(S.pitch)}</textarea>
+ <p class="hint" id="pitchNote" style="margin:0 0 6px">Once you enter your student codes, your EDB 4 pitch card will be filled in below.</p>
+ <label>Your EDB 4 pitch card</label><textarea data-p="pitch" style="min-height:150px">${esc(S.pitch)}</textarea>
+ <label>Your claim, as of today <span class="hint">(start from the pitch card; reword it if it has changed)</span></label><textarea data-p="claim">${esc(S.claim)}</textarea>
  <label>What has changed since 11/02? <span class="hint">(optional: data checked, claim reworded, switched to the backup...)</span></label><textarea data-p="changed">${esc(S.changed)}</textarea>
- <label>Who is your imagined visitor? <span class="hint">Design for this person.</span></label>${radios("vis","visitor",VISITORS)}
- ${S.visitor==="other"?`<input type="text" data-p="visitorOther" value="${esc(S.visitorOther)}" placeholder="who?">`:""}
- <label>Everyone builds a poster. Are you thinking about an extension too?</label>${radios("fmt","format",FORMATS)}
  ${goBtn("Start the clock")}</div>`}
 
 function vMake(){return `<h1>Make: the paper prototype</h1>
@@ -235,7 +260,7 @@ function vMake(){return `<h1>Make: the paper prototype</h1>
  <ul><li><b>Title and claim</b> across the top.</li>
  <li><b>The figure you expect</b>, drawn by hand: labeled axes, the pattern you predict, and the word <span class="stamp">EXPECTED</span> written on it.</li>
  <li><b>Six storyboard panels</b>, one per step below, each with a sentence and a quick doodle. Arrange them the way your poster would.</li>
- <li><b>An arrow or note</b> showing what ${esc(visitorText().toLowerCase()||"your visitor")} should look at first.</li></ul>
+ <li><b>An arrow or note</b> showing what a visitor should look at first.</li></ul>
  <p class="hint" style="margin:8px 0 0">Roles: one partner draws, the other types the sentences below. Switch halfway. Everything is unaided: no AI, no internet except this page and the codebook.</p>
  <div class="actions"><button type="button" class="sec" data-gallery>Stuck on a layout? See 4 example sketches</button></div></div>
  <div class="panel"><h2>Title</h2><input type="text" data-p="title" value="${esc(S.title)}" placeholder="What your project is about, not just the topic"></div>
@@ -324,8 +349,6 @@ ${P("else")}
 ${P("warrant")}
 
 ## Notes for the build
-- Imagined visitor: ${visitorText()}
-- Plan: ${FORMATS[S.format]||""}
 - Headline we'd defend: ${S.sober.trim()}
 - Overhyped headline (do NOT use): ${S.hype.trim()}
 - At the EDB 5 visit, visitors thought our claim was: ${S.visit.said.trim()}
@@ -362,9 +385,33 @@ function vExt(){
  <div class="actions"><button data-go data-label="Save the app sketch" type="button">Save the app sketch</button><button type="button" class="sec" data-back>Back</button><div id="err"></div></div></div>`;
 }
 
+function photoBox(){
+ const url=new URL("photo.html?pair="+encodeURIComponent(S.pair)+(DRY?"&dry=1":""),location.href).href;
+ let qr="";try{const q=qrcode(0,"M");q.addData(url);q.make();qr=q.createSvgTag({cellSize:4,margin:2,scalable:true})}catch(e){}
+ const done=S.photos.length?`<div class="hint" style="margin-top:6px">Uploaded from this laptop: ${S.photos.map(p=>esc(p.side==="front"?"front":"back")).join(", ")}</div>`:"";
+ return `<div class="photo"><div>
+  <label style="margin-top:4px">Which side?</label>
+  <select id="photoSide"><option value="front">Front (the poster sketch)</option><option value="back">Back (slides or app sketch)</option></select>
+  <label>Photo from this laptop</label><input type="file" id="photoFile" accept="image/*">
+  <div class="actions" style="margin-top:8px"><button type="button" data-upload>Upload photo</button></div>
+  <div id="pmsg"></div>${done}</div>
+  <div class="qr">${qr}<div class="hint">Or scan this with your phone to upload from there.</div></div></div>`;
+}
+async function uploadPhoto(btn){
+ const m=$("pmsg"),f=$("photoFile").files[0],side=$("photoSide").value;
+ const say=(t,c)=>{m.textContent=t;m.className=c||""};
+ if(!f)return say("Choose a photo first.","bad");
+ btn.disabled=true;say("Uploading…");
+ const r=await EDB5Photo.upload(db,{pair:S.pair,code:S.members[0]?.code||"pair",side,file:f,dry:DRY});
+ btn.disabled=false;
+ if(r.error)return say("The upload didn't work: "+r.error.message+" You can try again, or use your phone.","bad");
+ S.photos.push({side,path:r.path});persist();
+ const y=window.scrollY;render();window.scrollTo(0,y);
+ const m2=$("pmsg");if(m2){m2.textContent="Uploaded. Thank you.";m2.className="good"}
+}
 function vDone(){return `<h1>Done. Here is the first draft of your Content Spec.</h1>
  <div class="panel paper"><h2>Before you leave</h2><ol class="steps">
- <li><b>Photograph your sheet</b> (whole sheet, straight on, readable) and upload it to the <b>EDB 5 photo</b> assignment on Brightspace.</li>
+ <li><b>Photograph your sheet</b> (whole sheet, straight on, readable) and upload it below.${photoBox()}</li>
  <li><b>Download this spec</b> and put it in your pair's shared folder. Copy it into your shared doc.</li>
  <li><b>On 11/30</b>, give the Project Builder this spec and your photo, then replace Section 4's expected result with your real one.</li></ol>
  <div class="actions"><button type="button" data-dl>Download spec (.md)</button><button type="button" class="sec" data-copy>Copy as text</button></div></div>
@@ -397,11 +444,13 @@ $("app").addEventListener("input",e=>{
 $("app").addEventListener("change",e=>{
  const t=e.target;
  if(t.dataset.p&&(t.tagName==="SELECT"||t.type==="radio")){setP(t.dataset.p,t.value);persist();const y=window.scrollY;render();window.scrollTo(0,y)}
+ if(t.dataset.p&&t.dataset.p.startsWith("codes."))loadPitch();
 });
 $("app").addEventListener("click",async e=>{
  const t=e.target.closest("button");if(!t)return;
  if(t.dataset.copy!==undefined){try{await navigator.clipboard.writeText(specMd());t.textContent="Copied"}catch(x){t.textContent="Copy failed: use Download"}return}
  if(t.dataset.dl!==undefined){const b=new Blob([specMd()],{type:"text/markdown"});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=`content_spec_pair_${S.pair}.md`;document.body.appendChild(a);a.click();a.remove();return}
+ if(t.dataset.upload!==undefined){await uploadPhoto(t);return}
  if(t.dataset.gallery!==undefined){openGallery(0);return}
  if(t.dataset.ext){S.ext=t.dataset.ext;S.phase=6;persist();render();return}
  if(t.dataset.back!==undefined){S.phase=5;persist();render();return}
@@ -419,11 +468,9 @@ async function advance(){
   if(bad.length)return err(`Partner ${bad.join(" and ")}: that is not a valid student code. Check the email with your code (6 characters; there is no letter O or I and no digit 0 or 1).`);
   if(new Set(codes.filter(Boolean)).size!==codes.filter(Boolean).length)return err("Each partner must enter their own code.");
   if(!S.claim.trim())return err("Write your claim as of today.");
-  if(!S.visitor||(S.visitor==="other"&&!S.visitorOther.trim()))return err("Choose an imagined visitor.");
-  if(!S.format)return err("Answer the extension question (\"Not sure yet\" is fine).");
   S.codes=codes;try{localStorage.setItem("ds1000_course_student_code",codes[0])}catch(e){}
   S.members=codes.filter(Boolean).map(code=>({code}));
-  if(!await commitStage(0,{members:S.members.map(m=>m.code),claim:S.claim,pitch:S.pitch,changed:S.changed,visitor:visitorText(),format:S.format}))return;
+  if(!await commitStage(0,{members:S.members.map(m=>m.code),claim:S.claim,pitch:S.pitch,changed:S.changed}))return;
   if(!S.startedAt)S.startedAt=Date.now();
   S.phase=1;
  } else if(S.phase===1){
@@ -477,6 +524,7 @@ setInterval(tick,1000);tick();
 if(DRY)$("dry").style.display="block";
 else if(window.supabase&&window.supabase.createClient){try{db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY)}catch(e){}}
 render();
+if(S.phase===0&&!S.pitch.trim())loadPitch();
 </script>
 </body>
 </html>
