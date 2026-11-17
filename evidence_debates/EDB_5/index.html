@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DS 1000 — Evidence Debate 5</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+:root{--gold:#cfae70;--goldbg:#faf6ee;--ink:#1d1c1d;--muted:#616061;--line:#e0dede;--navy:#1f2a44;--ok:#2a7a4b;--warn:#c0562b;--bg:#f5f5f4;--panel:#fff}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:var(--bg);line-height:1.45}
+a{color:#1264a3}
+header{position:sticky;top:0;z-index:20;background:var(--navy);color:#fff;padding:10px 20px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+header .t{font-weight:700}header .t span{font-weight:400;opacity:.75;font-size:.85rem;margin-left:6px}
+header a{color:#fff;font-size:.8rem}
+#prog{display:flex;gap:4px;flex:1;min-width:280px}
+#prog div{flex:1;padding:5px 8px;border-radius:5px;background:#2b3858;font-size:.78rem;color:#cfd6e6}
+#prog div b{display:block;font-size:.85rem;color:#fff}
+#prog div.on{background:var(--gold);color:#1d1c1d}#prog div.on b{color:#1d1c1d}
+#prog div.done{background:#34456b}
+#clock{font-variant-numeric:tabular-nums;font-size:1.15rem}
+#dry{display:none;background:#fff3d6;color:#7a5a00;font-size:.8rem;padding:5px 20px}
+main{max-width:1180px;margin:0 auto;padding:18px 18px 80px}
+h1{font-size:1.35rem;margin:6px 0 4px}h2{font-size:1.05rem;margin:0 0 8px}
+.lead{color:#333;max-width:820px;margin:4px 0 14px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:12px 0}
+.panel.paper{background:var(--goldbg);border-color:#e8dcc2}
+.panel.paper ul{margin:6px 0 0;padding-left:20px}.panel.paper li{margin:3px 0}
+label{display:block;font-weight:700;font-size:.88rem;margin:10px 0 4px}
+.hint{font-size:.8rem;color:var(--muted);font-weight:400}
+input[type=text],input[type=number],textarea,select{width:100%;padding:8px;border:1px solid #aaa;border-radius:6px;font:inherit;background:#fff}
+input[type=number]{max-width:140px}textarea{min-height:60px;resize:vertical}
+.opt{font-weight:400;display:block;margin:3px 0;font-size:.9rem}.opt input{margin-right:7px}
+.row{display:flex;gap:14px;flex-wrap:wrap}.row>div{flex:1;min-width:150px}
+button{padding:9px 18px;border:0;border-radius:6px;background:var(--ok);color:#fff;font-weight:700;cursor:pointer;font-size:.92rem}
+button:disabled{background:#999;cursor:default}
+button.sec{background:#6b7280}
+.actions{display:flex;gap:10px;align-items:center;margin-top:14px;flex-wrap:wrap}
+#err{color:#b3261e;font-size:.88rem;min-height:1em}
+.handoff{max-width:640px;margin:40px auto;text-align:center}
+.handoff .big{font-size:1.5rem;font-weight:700;margin:10px 0}
+.handoff .who{display:inline-block;background:var(--gold);color:#1d1c1d;border-radius:20px;padding:4px 14px;font-weight:700}
+.handoff textarea{min-height:110px;text-align:left}
+.handoff label{text-align:left}
+.board{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.cell{background:#fff;border:1px solid var(--line);border-left:5px solid #ccc;border-radius:8px;padding:8px 10px}
+.cell.ok{border-left-color:var(--ok)}
+.cell .bh{font-size:.75rem;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.cell .ask{font-size:.84rem;margin:2px 0 6px}
+.cell textarea{min-height:80px;font-size:.9rem}
+.ro{background:var(--goldbg);border:1px solid #e8dcc2;border-radius:6px;padding:7px 9px;font-size:.9rem;margin:4px 0}
+.ro .bh{font-size:.7rem;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.stamp{display:inline-block;border:2px solid var(--warn);color:var(--warn);font-weight:700;font-size:.75rem;padding:1px 6px;border-radius:4px;letter-spacing:.05em}
+.qbank{columns:2;font-size:.9rem;margin:6px 0 0;padding-left:20px}.qbank li{margin:3px 0;break-inside:avoid}
+.steps{counter-reset:s;list-style:none;padding:0;margin:6px 0 0}
+.steps li{counter-increment:s;margin:6px 0;padding-left:34px;position:relative}
+.steps li:before{content:counter(s);position:absolute;left:0;top:0;width:24px;height:24px;border-radius:50%;background:var(--navy);color:#fff;text-align:center;line-height:24px;font-size:.8rem;font-weight:700}
+.card{border:2px solid var(--gold);border-radius:10px;padding:14px 18px;background:#fffdf8}
+.card h3{margin:0 0 6px}.card .cl{font-size:1.1rem;font-weight:700;margin:6px 0 8px}.card .op{font-size:.9rem;margin:4px 0}
+table.tl{border-collapse:collapse;width:100%;font-size:.9rem}
+table.tl td{border-bottom:1px solid var(--line);padding:7px 8px;vertical-align:top}
+/* example gallery (modal) */
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:60;padding:18px}
+#modal.open{display:flex}
+#mbox{background:#fff;border-radius:12px;padding:18px 22px;width:min(1100px,96vw);max-height:94vh;overflow:auto}
+#mclose{position:fixed;right:22px;top:10px;font-size:38px;color:#fff;cursor:pointer}
+.extabs{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 12px}
+.extabs button{padding:5px 12px;font-size:.82rem;background:#fff;color:var(--ink);border:1px solid #aaa}
+.extabs button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.sheet{background:#fffef6;border:1px solid #d8d2bd;border-radius:4px;padding:14px;font-family:"Segoe Print","Bradley Hand","Comic Sans MS",cursive;color:#23262e;box-shadow:3px 4px 0 rgba(0,0,0,.08);display:flex;flex-direction:column;gap:8px;font-size:.82rem;line-height:1.3}
+.sheet .ttl{font-size:1.25rem;font-weight:700;text-align:center;border-bottom:3px solid #23262e;padding-bottom:4px}
+.sheet .clm{text-align:center;font-size:.9rem}
+.sheet .g{display:grid;gap:8px;flex:1;min-height:0}
+.sheet .p{border:2px solid #23262e;border-radius:6px;padding:5px 7px}
+.sheet .p b{display:block;font-size:.78rem}
+.sheet .p.hot{border-color:#c0562b;border-width:3px}
+.sheet .tag{display:inline-block;border:2px solid #c0562b;color:#c0562b;font-size:.65rem;padding:0 4px;border-radius:3px;font-family:Arial,sans-serif;font-weight:700}
+.sheet svg{width:100%;height:auto;max-height:260px;display:block}
+.sheet .start{color:#c0562b;font-weight:700}
+.exnote{font-size:.92rem;margin:10px 0 0;background:var(--goldbg);border-left:4px solid var(--gold);padding:8px 12px}
+.fict{font-size:.75rem;color:#b00;font-weight:700;letter-spacing:.04em}
+.ext{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ext .opt2{border:2px solid var(--line);border-radius:10px;padding:12px 14px;background:#fff}
+.ext .opt2.did{border-color:var(--ok)}
+.ctl{display:grid;grid-template-columns:1fr 1.3fr 1.3fr;gap:6px;margin:4px 0}
+@media(max-width:860px){.board,.ext,.ctl{grid-template-columns:1fr}.qbank{columns:1}main{padding:12px 14px 60px}header{padding:8px 14px}.sheet .g{grid-template-columns:1fr!important;grid-template-rows:none!important}.sheet .g>*{grid-column:auto!important}}
+</style>
+</head>
+<body>
+<header>
+  <div class="t">Design Session<span>DS 1000 · Evidence Debate 5</span></div>
+  <div id="prog"></div>
+  <div id="pairBadge"></div>
+  <div id="clock">35:00</div>
+  <a href="../EDB_4/codebook.html" target="_blank" rel="noopener">Codebook ↗</a>
+</header>
+<div id="dry">Dry run: responses are logged to the browser console, not saved.</div>
+<main id="app"></main>
+<div id="modal"><span id="mclose">&times;</span><div id="mbox"></div></div>
+
+<script>
+const SUPABASE_URL = "https://syjgkatbxjiyjiosacdr.supabase.co";
+const SUPABASE_KEY = "sb_publishable_dpOWSyvPGnRtpef9UYMvgg_I2x-hSnG";
+const EXPERIMENT_ID = "evidence-debate-5-design-session";
+const STATE_KEY = "ds1000_edb5_design_v1";
+const DEADLINE_MIN = 35;
+const DRY = location.search.includes("dry=1");
+let db = null;
+
+// ---------------------------------------------------------------- content
+const PHASES=[["Set up","~3 min"],["Make","~13 min"],["Headlines","~4 min"],["Visit","~10 min"],["Revise","~5 min"]];
+const PANELS=[
+ {k:"q",t:"1. Question",ask:"What are you trying to learn?",ph:"The question, in plain words."},
+ {k:"data",t:"2. Question → data",ask:"How do you turn the question into data?",ph:"The dataset, what one row is, and which column measures each idea in your question."},
+ {k:"did",t:"3. What we'll do",ask:"Which comparison, figure, or model will answer it, and why that one?",ph:"We will compare / plot / model ... because ..."},
+ {k:"expect",t:"4. What we expect to find",ask:"Your sketched figure, in one sentence. This is a prediction, not a result.",ph:"We expect ..."},
+ {k:"else",t:"5. What else could explain it",ask:"If you see the pattern you expect, what else besides your explanation could have produced it?",ph:"Even if we see it, it could be because ..."},
+ {k:"warrant",t:"6. What the evidence would warrant",ask:"If you find what you expect, what could you claim, and what couldn't you?",ph:"If we find ___, we can say ___, but not ___."}
+];
+const VISITORS={classmate:"A classmate from another section",grader:"A skeptical grader",journalist:"A journalist on deadline",policy:"Someone who would act on the result (a coach, a voter, an administrator)",family:"A family member with no stats background",other:"Someone else"};
+const FORMATS={A:"Just the poster",B:"Poster + a slide deck",C:"Poster + an interactive explainer",D:"Poster + an interactive app",U:"Not sure yet"};
+const FIGTYPES=["bars comparing groups","scatterplot with a trend","line over time","distribution (histogram or density)","map","table","something else"];
+// ---------------------------------------------------------------- example sketches (fictional, deliberately off the data menu)
+const INK="#23262e",HOT="#c0562b";
+function axes(xl,yl){return `<line x1="24" y1="104" x2="192" y2="104" stroke="${INK}" stroke-width="2"/><line x1="24" y1="8" x2="24" y2="104" stroke="${INK}" stroke-width="2"/><text x="108" y="118" font-size="9" text-anchor="middle" fill="${INK}">${xl}</text><text x="10" y="56" font-size="9" text-anchor="middle" fill="${INK}" transform="rotate(-90 10 56)">${yl}</text>`}
+function svgBars(xl,yl,bars){const w=150/bars.length;return `<svg viewBox="0 0 200 122">${axes(xl,yl)}${bars.map(([lab,h,hot],i)=>`<rect x="${34+i*w+w*.15}" y="${104-h}" width="${w*.7}" height="${h}" fill="${hot?"#f3d9c6":"none"}" stroke="${hot?HOT:INK}" stroke-width="2"/><text x="${34+i*w+w/2}" y="${98-h}" font-size="8" text-anchor="middle" fill="${INK}">${lab}</text>`).join("")}<text x="190" y="16" font-size="9" text-anchor="end" fill="${HOT}" font-weight="700">EXPECTED</text></svg>`}
+function svgDots(xl,yl,pts,y0,y1){return `<svg viewBox="0 0 200 122">${axes(xl,yl)}${pts.map(([x,y])=>`<circle cx="${x}" cy="${y}" r="2.6" fill="none" stroke="${INK}" stroke-width="1.4"/>`).join("")}<path d="M30 ${y0} L188 ${y1}" stroke="${HOT}" stroke-width="2.5" fill="none"/><text x="190" y="16" font-size="9" text-anchor="end" fill="${HOT}" font-weight="700">EXPECTED</text></svg>`}
+const P=(n,t,body,cls="")=>`<div class="p ${cls}"><b>${n} ${t}</b>${body}</div>`;
+const col=(...xs)=>`<div style="display:flex;flex-direction:column;gap:8px;min-height:0">${xs.join("")}</div>`;
+const EXAMPLES=[
+ {name:"Three columns",title:"Do Loyalty Apps Bring Coffee Customers Back?",claim:"App members visit more often, but frequent visitors may be the ones who join.",
+  body:()=>`<div class="g" style="grid-template-columns:1fr 1.5fr 1fr">${col(P("1","Question","Do app members come back more often?"),P("2","Data","40 stores, 2024. One row = a customer-month. Visits = purchases per month."),P("3","What we'll do","Compare members vs. non-members, within the same store."))}
+  ${col(`<div class="p hot" style="flex:1"><b>4 What we expect <span class="start">← start here</span></b>${svgBars("membership","visits per month",[["non-members",38],["members",70,1]])}</div>`)}
+  ${col(P("5","What else could explain it","Frequent visitors might be the ones who sign up!"),P("6","What it would warrant","If so: members visit more. NOT: the app causes it."))}</div>`,
+  note:"Reads left to right in the same order as the argument. The expected figure gets the middle column, the widest one, because that's where visitors look first."},
+ {name:"One big figure",title:"Rain Days, Empty Docks?",claim:"We expect bike-share rides to fall as rainfall rises.",
+  body:()=>`<div class="g" style="grid-template-rows:1fr auto">
+  <div class="p hot"><b>4 We expect: the more it rains, the fewer the rides</b>${svgDots("rainfall (mm)","rides that day",[[34,30],[44,26],[52,40],[60,36],[72,48],[84,44],[96,58],[104,52],[118,66],[130,62],[142,74],[156,70],[170,84],[180,80]],28,86)}</div>
+  <div class="g" style="grid-template-columns:repeat(6,1fr)">${P("1","Q","Does rain cut rides?")}${P("2","Data","One row = a city-day")}${P("3","Do","Scatter + trend line")}${P("4","Expect","Down-sloping")}${P("5","Else?","Cold? Weekends?")}${P("6","Warrant","Fewer rides on rainy days; not rain alone")}</div></div>`,
+  note:"Works when one picture carries the argument. The headline above the figure states the takeaway, not just the topic. The six steps run along the bottom so a grader can still follow the whole chain."},
+ {name:"Storyboard path",title:"Better Photo, Faster Home?",claim:"Shelter dogs with clearer photos may be adopted sooner.",
+  body:()=>`<div class="g" style="grid-template-columns:repeat(3,1fr);grid-template-rows:1fr 1fr">
+  ${P("① →","Question","Do dogs with better listing photos get adopted faster?")}${P("② →","Data","One row = a dog. Photo rated clear / blurry by two of us. Days until adoption.")}${P("③ ↓","What we'll do","Compare average days to adoption, clear vs. blurry, within dog size.")}
+  ${P("⑥","What it would warrant","Clear photos go with faster adoptions. NOT proof photos cause it.")}${P("⑤ ←","What else","Staff may photograph the cutest dogs best!")}<div class="p hot"><b>④ ← We expect</b>${svgBars("photo","days to adoption",[["clear",34,1],["blurry",66]])}</div></div>`,
+  note:"Good for walking a grader through the argument step by step: the numbers and arrows show where to look next. The expected figure sits inside its own step instead of floating somewhere else."},
+ {name:"Myth vs. evidence",title:"Front Row, Top Grades?",claim:"Students in front rows may earn higher grades, but they may also be different students.",
+  body:()=>`<div class="g" style="grid-template-columns:1fr 1fr;grid-template-rows:auto 1fr auto">
+  ${P("1","What people assume","\"Sit up front and your grade goes up.\"")}${P("2–3","What we'll check","Final grades by seat row, 12 sections. One row = a student. Compare rows 1–3 with rows 7–10.")}
+  <div class="p hot"><b>4 We expect a small slope</b>${svgDots("seat row (front → back)","final grade",[[36,30],[40,40],[56,36],[62,46],[78,40],[88,52],[100,46],[112,56],[126,50],[140,60],[150,54],[166,62],[178,58]],34,62)}</div>
+  ${P("5","What else could explain it","Students who already work hardest choose the front. Seating may not be random at all.")}
+  <div class="p" style="grid-column:1/3;border-width:3px"><b>6 What we could say, and what we couldn't</b>Front-row students earn somewhat higher grades. We could NOT say that moving to the front would raise your grade.</div></div>`,
+  note:"Starts from something people already believe, which makes the stakes obvious. Section 6 spans the whole width, because the gap between what people assume and what the data can show is the point of the project."}
+];
+function openGallery(i){
+ const x=EXAMPLES[i];
+ $("mbox").innerHTML=`<h2 style="margin-bottom:2px">Example sketches</h2><div class="fict">FICTIONAL EXAMPLES · SKETCHES, NOT DATA · topics deliberately not on the data menu</div>
+ <div class="extabs">${EXAMPLES.map((e,k)=>`<button type="button" class="${k===i?"on":""}" data-ex="${k}">${k+1}. ${esc(e.name)}</button>`).join("")}</div>
+ <div class="sheet"><div class="ttl">${esc(x.title)}</div><div class="clm">${esc(x.claim)}</div>${x.body()}</div>
+ <div class="exnote"><b>What works here:</b> ${esc(x.note)}</div>
+ <p class="hint">Borrow a layout, not a topic. Your sheet can be messier than these. It just has to be readable and in your own words.</p>`;
+ $("modal").classList.add("open");
+}
+
+const QBANK=["What are you trying to learn, in one sentence?","What is one row of your data?","How does that column measure your idea? What does it miss?","Why this comparison rather than another one?","What does your expected figure look like if you're wrong?","What else could produce that pattern?","What would change your conclusion?","What would your evidence not show, even if it comes out as you expect?"];
+
+// ---------------------------------------------------------------- state
+const fresh=()=>({phase:0,sub:"main",pair:"",codes:["","",""],members:[],
+ claim:"",pitch:"",changed:"",visitor:"",visitorOther:"",format:"",
+ title:"",fig:{type:"",x:"",y:"",shape:""},conf:50,panels:Object.fromEntries(PANELS.map(p=>[p.k,""])),
+ hype:"",sober:"",diff:"",vp:"",visit:{said:"",missed:"",hard:"",asked:""},change:"",ind:[],ii:0,startedAt:null,
+ ext:"",extDone:{slides:false,app:false},slides:{heads:Array(8).fill(""),open:"",appendix:""},
+ app:{home:"",controls:[0,1,2].map(()=>({c:"",q:"",s:""}))}});
+let S=fresh();
+try{if(location.search.includes("reset=1"))localStorage.removeItem(STATE_KEY);const s=JSON.parse(localStorage.getItem(STATE_KEY)||"null");if(s)S={...fresh(),...s};else S.codes[0]=localStorage.getItem("ds1000_course_student_code")||""}catch(e){}
+function persist(){try{localStorage.setItem(STATE_KEY,JSON.stringify(S))}catch(e){}}
+
+// ---------------------------------------------------------------- helpers
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const L=i=>"ABC"[i];
+const CODE_ABC="23456789ABCDEFGHJKMNPQRSTUVWXYZ";
+const normCode=s=>String(s||"").toUpperCase().replace(/[\s-]/g,"");
+function validCode(c){if(!/^[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{6}$/.test(c))return false;let s=0;for(let i=0;i<5;i++)s+=(i+1)*CODE_ABC.indexOf(c[i]);return CODE_ABC[s%31]===c[5]}
+// visits run in blocks of four pairs (1<->3, 2<->4, 5<->7, ...), so nobody meets their EDB 4 stress-test pair (1<->2, 3<->4) again
+const visitPair=n=>((n-1)%4<2)?n+2:n-2;
+// each partner is asked about a different panel
+const IND_PANELS=["data","did","else","warrant"];
+const indPanel=i=>PANELS.find(p=>p.k===IND_PANELS[(+S.pair+[0,2,1][i])%4]);
+const getP=p=>p.split(".").reduce((o,k)=>o==null?o:o[k],S);
+function setP(p,v){const ks=p.split("."),last=ks.pop();const o=ks.reduce((o,k)=>o[k],S);o[last]=v}
+const visitorText=()=>S.visitor==="other"?(S.visitorOther||"someone else"):VISITORS[S.visitor]||"";
+const figDone=()=>!!(S.fig.type&&S.fig.x.trim()&&S.fig.y.trim()&&S.fig.shape.trim());
+
+// ---------------------------------------------------------------- saving
+async function save(code,stage,data,conf){
+ const row={debate_id:EXPERIMENT_ID,student_code:code,stage,confidence:conf??null,response_json:data};
+ if(DRY){console.log("[dry run] would save",row);return null}
+ if(!db)return{message:"Database not connected. Check the connection and try again.",code:"CLIENT_NOT_READY"};
+ const {error}=await db.from("debate_responses").upsert(row,{onConflict:'debate_id,student_code,stage'});
+ return error;
+}
+async function commitStage(stage,pairData,indiv,conf){
+ const btn=document.querySelector("[data-go]");if(btn){btn.disabled=true;btn.textContent="Saving…"}
+ let e=await save("pair-"+S.pair,stage,{pair:+S.pair,...pairData},conf);
+ if(!e&&indiv)for(const r of indiv){e=await save(r.code,stage,{pair:+S.pair,individual:true,...r.data});if(e)break}
+ if(e){err(`${e.message} (${e.code||"DB_ERROR"})`);if(btn){btn.disabled=false;btn.textContent=btn.dataset.label}return false}
+ return true;
+}
+function err(m){const el=$("err");if(el)el.textContent=m||""}
+
+// ---------------------------------------------------------------- views
+function header(){
+ $("prog").innerHTML=PHASES.map(([n,t],i)=>`<div class="${i<S.phase?"done":i===S.phase?"on":""}"><b>${i+1}. ${n}</b>${t}</div>`).join("");
+ $("pairBadge").textContent=S.pair?"Pair "+S.pair:"";
+}
+const goBtn=(label)=>`<div class="actions"><button data-go data-label="${esc(label)}" type="button">${esc(label)}</button><div id="err"></div></div>`;
+const radios=(name,path,obj)=>Object.entries(obj).map(([v,t])=>`<label class="opt"><input type="radio" name="${name}" data-p="${path}" value="${v}" ${getP(path)===v?"checked":""}>${esc(t)}</label>`).join("");
+
+function vSetup(){return `<h1>Today you design the thing you'll defend</h1>
+ <p class="lead">By hand, on paper, before any software. You'll sketch your poster or app, draw the figure you <i>expect</i> to find, storyboard your argument, and test it on another pair. You leave with the first draft of your Content Spec, ready to give to the Project Builder on 11/30.</p>
+ <div class="panel"><h2>Who you are</h2>
+ <label>Pair number <span class="hint">(the same as at EDB 4)</span></label><input type="number" min="1" step="1" data-p="pair" value="${esc(S.pair)}">
+ <div class="row">${[0,1,2].map(i=>`<div><label>Student code, partner ${L(i)} ${i===2?'<span class="hint">(trios only)</span>':""}</label><input type="text" data-p="codes.${i}" value="${esc(S.codes[i])}"></div>`).join("")}</div></div>
+ <div class="panel"><h2>Your project today</h2>
+ <label>Your claim, as of today <span class="hint">(start from your EDB 4 pitch card; reword it if it has changed)</span></label><textarea data-p="claim">${esc(S.claim)}</textarea>
+ <label>Paste your EDB 4 pitch card <span class="hint">(optional)</span></label><textarea data-p="pitch">${esc(S.pitch)}</textarea>
+ <label>What has changed since 11/02? <span class="hint">(optional: data checked, claim reworded, switched to the backup...)</span></label><textarea data-p="changed">${esc(S.changed)}</textarea>
+ <label>Who is your imagined visitor? <span class="hint">Design for this person.</span></label>${radios("vis","visitor",VISITORS)}
+ ${S.visitor==="other"?`<input type="text" data-p="visitorOther" value="${esc(S.visitorOther)}" placeholder="who?">`:""}
+ <label>Everyone builds a poster. Are you thinking about an extension too?</label>${radios("fmt","format",FORMATS)}
+ ${goBtn("Start the clock")}</div>`}
+
+function vMake(){return `<h1>Make: the paper prototype</h1>
+ <div class="panel paper"><h2>On your sheet <span class="hint">(landscape, markers, big enough to read from two meters away)</span></h2>
+ <ul><li><b>Title and claim</b> across the top.</li>
+ <li><b>The figure you expect</b>, drawn by hand: labeled axes, the pattern you predict, and the word <span class="stamp">EXPECTED</span> written on it.</li>
+ <li><b>Six storyboard panels</b>, one per step below, each with a sentence and a quick doodle. Arrange them the way your poster would.</li>
+ <li><b>An arrow or note</b> showing what ${esc(visitorText().toLowerCase()||"your visitor")} should look at first.</li></ul>
+ <p class="hint" style="margin:8px 0 0">Roles: one partner draws, the other types the sentences below. Switch halfway. Everything is unaided: no AI, no internet except this page and the codebook.</p>
+ <div class="actions"><button type="button" class="sec" data-gallery>Stuck on a layout? See 4 example sketches</button></div></div>
+ <div class="panel"><h2>Title</h2><input type="text" data-p="title" value="${esc(S.title)}" placeholder="What your project is about, not just the topic"></div>
+ <div class="panel"><h2>The figure you expect <span class="stamp">EXPECTED</span></h2>
+ <div class="row"><div><label>What kind of figure?</label><select data-p="fig.type"><option value="">choose…</option>${FIGTYPES.map(t=>`<option ${S.fig.type===t?"selected":""}>${t}</option>`).join("")}</select></div>
+ <div><label>Horizontal axis (or groups)</label><input type="text" data-p="fig.x" value="${esc(S.fig.x)}"></div>
+ <div><label>Vertical axis (or measure)</label><input type="text" data-p="fig.y" value="${esc(S.fig.y)}"></div></div>
+ <label>What pattern did you draw?</label><input type="text" data-p="fig.shape" value="${esc(S.fig.shape)}" placeholder="e.g. the second group is clearly higher; the line rises then flattens">
+ <label>How confident are you that the real figure will look like this? <span id="confv">${S.conf}</span>/100</label><input type="range" min="0" max="100" style="width:100%" data-p="conf" value="${S.conf}">
+ <p class="hint">You'll compare this with your real result on 11/30.</p></div>
+ <div class="panel"><h2>Storyboard sentences</h2><p class="hint" style="margin:0 0 8px">One sentence per panel, in your own words. These become the first draft of your Content Spec.</p>
+ <div class="board">${PANELS.map(p=>`<div class="cell ${S.panels[p.k].trim()?"ok":""}" data-cell="${p.k}"><div class="bh">${p.t}</div><div class="ask">${esc(p.ask)}</div><textarea data-p="panels.${p.k}" placeholder="${esc(p.ph)}">${esc(S.panels[p.k])}</textarea></div>`).join("")}</div>
+ ${goBtn("Go to headlines")}</div>`}
+
+function vHeadlines(){return `<h1>Headlines: two ways to report your result</h1>
+ <p class="lead">Suppose your figure comes out exactly as you drew it. Write two headlines about it.</p>
+ <div class="panel"><label>The overhyped headline <span class="hint">(what a careless outlet or AI summary would write; have fun with it)</span></label><textarea data-p="hype">${esc(S.hype)}</textarea>
+ <label>The headline you would actually defend</label><textarea data-p="sober">${esc(S.sober)}</textarea>
+ <label>Which words changed between them, and why?</label><textarea data-p="diff" placeholder="e.g. 'causes' became 'is associated with', because ...">${esc(S.diff)}</textarea>
+ <p class="hint">Put the defensible headline on your sheet. Keep the overhyped one off it.</p>
+ ${goBtn("Go to the visit")}</div>`}
+
+function vVisit(){const vp=S.vp||visitPair(+S.pair);return `<h1>Visit: does your sketch explain itself?</h1>
+ <p class="lead">You're paired with <b>Pair ${vp}</b> (no such pair? join the nearest group or a TA). Your pair hosts first, then you switch.</p>
+ <div class="panel paper"><h2>How a visit runs (about 5 minutes each way)</h2><ol class="steps">
+ <li><b>2 minutes, in silence:</b> the visitors study your sheet. No explaining, no pointing.</li>
+ <li><b>Teach-back:</b> the visitors turn away from the sheet and explain your claim back to you in their own words. Don't correct them yet; write down what they say.</li>
+ <li><b>3 minutes of questions:</b> the visitors play the grader, using the list below, and address each host by name.</li></ol>
+ <ul class="qbank">${QBANK.map(q=>`<li>${esc(q)}</li>`).join("")}</ul></div>
+ <div class="panel"><h2>As hosts, record:</h2>
+ <label>What the visitors said our claim was <span class="hint">(as close to their words as you can)</span></label><textarea data-p="visit.said">${esc(S.visit.said)}</textarea>
+ <label>What they missed or got wrong</label><textarea data-p="visit.missed">${esc(S.visit.missed)}</textarea>
+ <label>The question that was hardest to answer</label><textarea data-p="visit.hard">${esc(S.visit.hard)}</textarea>
+ <h2 style="margin-top:16px">As visitors, record:</h2>
+ <label>The best question you asked the other pair</label><textarea data-p="visit.asked">${esc(S.visit.asked)}</textarea>
+ <div class="row"><div><label>Pair you visited</label><input type="number" data-p="vp" value="${esc(vp)}"></div></div>
+ ${goBtn("Go to revise")}</div>`}
+
+function vRevise(){return `<h1>Revise: fix what the visit exposed</h1>
+ <div class="panel paper"><div class="ro"><div class="bh">They thought your claim was</div>${esc(S.visit.said)}</div>
+ <div class="ro"><div class="bh">They missed</div>${esc(S.visit.missed)}</div>
+ <div class="ro"><div class="bh">Hardest question</div>${esc(S.visit.hard)}</div></div>
+ <div class="panel"><label>Claim</label><textarea data-p="claim">${esc(S.claim)}</textarea>
+ <div class="board" style="margin-top:10px">${PANELS.map(p=>`<div class="cell ok"><div class="bh">${p.t}</div><textarea data-p="panels.${p.k}">${esc(S.panels[p.k])}</textarea></div>`).join("")}</div>
+ <label>The one change you'll make to the sheet</label><textarea data-p="change">${esc(S.change)}</textarea>
+ ${goBtn("Save, then individual questions")}</div>`}
+
+function vIndividual(){const i=S.ii,m=S.members[i],p=indPanel(i);return `<div class="handoff"><div class="who">Partner ${L(i)} · ${esc(m.code)}</div>
+ <div class="big">On your own</div><p class="lead">Your partner should not read your answers.</p>
+ <div class="ro" style="text-align:left"><div class="bh">${p.t}</div>${esc(S.panels[p.k])}</div>
+ <label>A grader points at this panel and asks you to explain it and defend the choice behind it. What do you say?</label><textarea id="iexp"></textarea>
+ <label>The one thing the pair you visited should fix before 12/07</label><textarea id="ifix"></textarea>
+ ${goBtn(i<S.members.length-1?`Hide it and hand to partner ${L(i+1)}`:"Submit")}</div>`}
+
+function specMd(){
+ const P=k=>S.panels[k].trim()||"[EMPTY]";
+ return `# Content Spec: Pair ${S.pair} (first draft from EDB 5)
+
+Status: Sections 1-3, 5 and 6 are DRAFT. Section 4 holds an EXPECTED result from our hand-drawn sketch, not a finding.
+
+## 0. Title & team
+- Working title: ${S.title.trim()||"[EMPTY]"}
+- Team members: [add names]
+- One-sentence claim: ${S.claim.trim()||"[EMPTY]"}
+
+## 1. Question: What are you trying to learn?
+${P("q")}
+
+## 2. From question to data
+${P("data")}
+
+## 3. What we did
+${P("did")}
+
+## 4. What we found
+**EXPECTED, NOT A RESULT.** ${P("expect")}
+- Sketched figure: ${S.fig.type}; horizontal: ${S.fig.x}; vertical: ${S.fig.y}; pattern drawn: ${S.fig.shape}
+- Our confidence the real figure will look like this: ${S.conf}/100
+
+Figure inventory: [empty until we have our own R output]
+
+## 5. What else could explain it?
+${P("else")}
+
+## 6. What the evidence warrants
+${P("warrant")}
+
+## Notes for the build
+- Imagined visitor: ${visitorText()}
+- Plan: ${FORMATS[S.format]||""}
+- Headline we'd defend: ${S.sober.trim()}
+- Overhyped headline (do NOT use): ${S.hype.trim()}
+- At the EDB 5 visit, visitors thought our claim was: ${S.visit.said.trim()}
+- They missed: ${S.visit.missed.trim()}
+- Hardest question: ${S.visit.hard.trim()}
+- Change we planned for the sketch: ${S.change.trim()}
+- A photo of our paper prototype is attached separately. Use it as a layout guide only; the hand-drawn figure is not data.
+${S.extDone.slides?`
+## Extension sketch: slide deck
+${S.slides.heads.map((h,i)=>h.trim()?`${i+1}. ${h.trim()}${String(i)===S.slides.open?" (the slide a grader sees on arrival)":""}`:"").filter(Boolean).join("\n")}
+- Appendix slides for hard questions: ${S.slides.appendix.trim()}
+`:""}${S.extDone.app?`
+## Extension sketch: interactive app
+- Home screen: ${S.app.home.trim()}
+- Control sheet:
+${S.app.controls.filter(r=>r.c.trim()).map(r=>`  - ${r.c.trim()}: lets a viewer ask "${r.q.trim()}"; we'll say: ${r.s.trim()}`).join("\n")}
+`:""}`}
+
+function vExt(){
+ if(S.ext==="slides")return `<h1>Extension: the slide-deck version</h1>
+ <div class="panel paper"><h2>On the back of your sheet</h2><ul><li>Draw <b>5 to 8 slide thumbnails</b>, in order, as boxes.</li><li>Each slide gets <b>one idea</b>. Its headline is the takeaway, not a topic label ("Members visit about 2 more times a month", not "Results").</li><li>Mark the slide a grader sees when they walk up mid-presentation. It needs your title, claim and key figure.</li></ul></div>
+ <div class="panel"><h2>Slide headlines</h2><p class="hint" style="margin:0 0 6px">At least five.</p>
+ ${S.slides.heads.map((h,i)=>`<div class="row" style="align-items:center"><div style="flex:0 0 28px;min-width:0"><b>${i+1}</b></div><div><input type="text" data-p="slides.heads.${i}" value="${esc(h)}"></div></div>`).join("")}
+ <label>Which slide does a grader see on arrival?</label><select data-p="slides.open"><option value="">choose…</option>${S.slides.heads.map((h,i)=>`<option value="${i}" ${S.slides.open===String(i)?"selected":""}>Slide ${i+1}</option>`).join("")}</select>
+ <label>Appendix: which hard question would you prepare a backup slide for?</label><textarea data-p="slides.appendix">${esc(S.slides.appendix)}</textarea>
+ <div class="actions"><button data-go data-label="Save the slides sketch" type="button">Save the slides sketch</button><button type="button" class="sec" data-back>Back</button><div id="err"></div></div></div>`;
+ return `<h1>Extension: the interactive-app version</h1>
+ <div class="panel paper"><h2>On the back of your sheet</h2><ul><li>Draw the <b>home screen</b>: title, claim, key figure, and where the controls sit.</li><li>Draw <b>one control</b> (a dropdown, slider, toggle or tab) and what the screen looks like after a viewer uses it.</li><li>Every control needs a reason. A grader will ask: "Why can a viewer change this, and what happens when they do?"</li></ul></div>
+ <div class="panel"><label>The home screen, in one or two sentences</label><textarea data-p="app.home">${esc(S.app.home)}</textarea>
+ <h2 style="margin-top:14px">Control sheet <span class="hint">(at least one complete row)</span></h2>
+ <div class="ctl hint"><b>Control</b><b>What question it lets a viewer ask</b><b>What you'll say about it</b></div>
+ ${S.app.controls.map((r,i)=>`<div class="ctl"><input type="text" data-p="app.controls.${i}.c" value="${esc(r.c)}" placeholder="e.g. a year slider"><input type="text" data-p="app.controls.${i}.q" value="${esc(r.q)}"><input type="text" data-p="app.controls.${i}.s" value="${esc(r.s)}"></div>`).join("")}
+ <p class="hint">If you can't fill in a row, the control probably shouldn't be in the app.</p>
+ <div class="actions"><button data-go data-label="Save the app sketch" type="button">Save the app sketch</button><button type="button" class="sec" data-back>Back</button><div id="err"></div></div></div>`;
+}
+
+function vDone(){return `<h1>Done. Here is the first draft of your Content Spec.</h1>
+ <div class="panel paper"><h2>Before you leave</h2><ol class="steps">
+ <li><b>Photograph your sheet</b> (whole sheet, straight on, readable) and upload it to the <b>EDB 5 photo</b> assignment on Brightspace.</li>
+ <li><b>Download this spec</b> and put it in your pair's shared folder. Copy it into your shared doc.</li>
+ <li><b>On 11/30</b>, give the Project Builder this spec and your photo, then replace Section 4's expected result with your real one.</li></ol>
+ <div class="actions"><button type="button" data-dl>Download spec (.md)</button><button type="button" class="sec" data-copy>Copy as text</button></div></div>
+ <div class="card"><h3>Pair ${esc(S.pair)} · ${S.members.map(m=>esc(m.code)).join(" & ")}</h3>
+ <div class="cl">${esc(S.title)}</div><div class="op"><b>Claim:</b> ${esc(S.claim)}</div>
+ ${PANELS.map(p=>`<div class="op"><b>${p.t}:</b> ${p.k==="expect"?'<span class="stamp">EXPECTED</span> ':""}${esc(S.panels[p.k])}</div>`).join("")}
+ <div class="op"><b>Headline we'd defend:</b> ${esc(S.sober)}</div>
+ <div class="op"><b>Expected figure:</b> ${esc(S.fig.type)}, ${esc(S.fig.y)} by ${esc(S.fig.x)}: ${esc(S.fig.shape)} (confidence ${S.conf}/100)</div></div>
+ <div class="panel"><h2>Finished early? Extend your design</h2><p class="hint" style="margin:0 0 8px">Everyone builds the poster. Once it's done, you can also turn it into slides or an interactive app for the monitors. Sketch either version now and it goes into your spec.</p>
+ <div class="ext">${[["slides","Slide deck","5–8 slides, one idea each, for a step-by-step walkthrough."],["app","Interactive app","A home screen plus controls a viewer can change, each with a reason."]].map(([k,t,d])=>`<div class="opt2 ${S.extDone[k]?"did":""}"><b>${t}</b>${S.extDone[k]?' <span class="hint">✓ sketched, in your spec</span>':""}<p class="hint" style="margin:4px 0 8px">${d}</p><button type="button" class="${S.extDone[k]?"sec":""}" data-ext="${k}">${S.extDone[k]?"Edit":"Sketch it"}</button></div>`).join("")}</div>
+ ${S.extDone.slides||S.extDone.app?'<p class="hint">Download the spec again to include your extension sketches. Photograph the back of your sheet too.</p>':""}</div>
+ <div class="panel"><h2>What comes next</h2><table class="tl">
+ ${[["11/30","Run your real analysis. Compare the real figure with your sketch. Start the Project Builder with this spec and your photo."],
+    ["12/02","Build your poster, plus any extension (slides or an app); mock defense with another pair."],
+    ["12/07, 12/09","Defenses. Each of you is questioned individually, on any part of the project."]].map(([a,b])=>`<tr><td style="white-space:nowrap"><b>${a}</b></td><td>${b}</td></tr>`).join("")}</table></div>`}
+
+// ---------------------------------------------------------------- render and events
+function render(){
+ header();
+ const v={0:vSetup,1:vMake,2:vHeadlines,3:vVisit,4:{main:vRevise,ind:vIndividual}[S.sub],5:vDone,6:vExt}[S.phase];
+ $("app").innerHTML=v();window.scrollTo(0,0);
+}
+$("app").addEventListener("input",e=>{
+ const t=e.target;if(!t.dataset.p)return;
+ setP(t.dataset.p,t.type==="range"?+t.value:t.value);
+ if(t.dataset.p==="conf")$("confv").textContent=t.value;
+ const m=t.dataset.p.match(/^panels\.(\w+)$/);if(m){const c=document.querySelector(`[data-cell="${m[1]}"]`);if(c)c.classList.toggle("ok",!!t.value.trim())}
+ persist();
+});
+$("app").addEventListener("change",e=>{
+ const t=e.target;
+ if(t.dataset.p&&(t.tagName==="SELECT"||t.type==="radio")){setP(t.dataset.p,t.value);persist();const y=window.scrollY;render();window.scrollTo(0,y)}
+});
+$("app").addEventListener("click",async e=>{
+ const t=e.target.closest("button");if(!t)return;
+ if(t.dataset.copy!==undefined){try{await navigator.clipboard.writeText(specMd());t.textContent="Copied"}catch(x){t.textContent="Copy failed: use Download"}return}
+ if(t.dataset.dl!==undefined){const b=new Blob([specMd()],{type:"text/markdown"});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=`content_spec_pair_${S.pair}.md`;document.body.appendChild(a);a.click();a.remove();return}
+ if(t.dataset.gallery!==undefined){openGallery(0);return}
+ if(t.dataset.ext){S.ext=t.dataset.ext;S.phase=6;persist();render();return}
+ if(t.dataset.back!==undefined){S.phase=5;persist();render();return}
+ if(t.dataset.go!==undefined)await advance();
+});
+$("modal").addEventListener("click",e=>{const b=e.target.closest("[data-ex]");if(b){openGallery(+b.dataset.ex);return}if(e.target.id==="modal"||e.target.id==="mclose")$("modal").classList.remove("open")});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")$("modal").classList.remove("open")});
+async function advance(){
+ err("");
+ if(S.phase===0){
+  const n=+S.pair,codes=S.codes.map(normCode);
+  if(!Number.isInteger(n)||n<1)return err("Enter your pair number.");
+  if(!codes[0])return err("Enter your student code as partner A. (Partner B can be left blank only if your partner has withdrawn.)");
+  const bad=codes.map((c,i)=>c&&!validCode(c)?L(i):null).filter(Boolean);
+  if(bad.length)return err(`Partner ${bad.join(" and ")}: that is not a valid student code. Check the email with your code (6 characters; there is no letter O or I and no digit 0 or 1).`);
+  if(new Set(codes.filter(Boolean)).size!==codes.filter(Boolean).length)return err("Each partner must enter their own code.");
+  if(!S.claim.trim())return err("Write your claim as of today.");
+  if(!S.visitor||(S.visitor==="other"&&!S.visitorOther.trim()))return err("Choose an imagined visitor.");
+  if(!S.format)return err("Answer the extension question (\"Not sure yet\" is fine).");
+  S.codes=codes;try{localStorage.setItem("ds1000_course_student_code",codes[0])}catch(e){}
+  S.members=codes.filter(Boolean).map(code=>({code}));
+  if(!await commitStage(0,{members:S.members.map(m=>m.code),claim:S.claim,pitch:S.pitch,changed:S.changed,visitor:visitorText(),format:S.format}))return;
+  if(!S.startedAt)S.startedAt=Date.now();
+  S.phase=1;
+ } else if(S.phase===1){
+  if(!S.title.trim())return err("Give your project a title.");
+  if(!figDone())return err("Describe the figure you expect: its type, both axes, and the pattern you drew.");
+  const miss=PANELS.filter(p=>!S.panels[p.k].trim()).map(p=>p.t);
+  if(miss.length)return err(`Still empty: ${miss.join(", ")}.`);
+  if(!await commitStage(1,{title:S.title,expected_figure:S.fig,panels:S.panels},null,S.conf))return;
+  S.phase=2;
+ } else if(S.phase===2){
+  if(!S.hype.trim()||!S.sober.trim()||!S.diff.trim())return err("Write both headlines and what changed between them.");
+  if(!await commitStage(2,{hype:S.hype,sober:S.sober,diff:S.diff}))return;
+  S.phase=3;
+ } else if(S.phase===3){
+  const v=S.visit;if(!v.said.trim()||!v.missed.trim()||!v.hard.trim()||!v.asked.trim())return err("Fill in all four boxes.");
+  if(!S.vp)S.vp=String(visitPair(+S.pair));
+  if(!await commitStage(3,{visit_pair:+S.vp,...v}))return;
+  S.phase=4;S.sub="main";
+ } else if(S.phase===4&&S.sub==="main"){
+  if(!S.claim.trim()||PANELS.some(p=>!S.panels[p.k].trim()))return err("The claim and all six panels need text.");
+  if(!S.change.trim())return err("Name the one change you'll make to the sheet.");
+  S.sub="ind";S.ii=0;S.ind=[];
+ } else if(S.phase===4&&S.sub==="ind"){
+  const x=$("iexp").value.trim(),f=$("ifix").value.trim();if(!x||!f)return err("Answer both questions.");
+  S.ind[S.ii]={panel:indPanel(S.ii).k,explain:x,fix_for_visited:f};
+  if(S.ii<S.members.length-1){S.ii++;persist();render();return}
+  if(!await commitStage(4,{claim:S.claim,panels:S.panels,change:S.change,spec_md:specMd()},S.members.map((m,i)=>({code:m.code,data:S.ind[i]}))))return;
+  S.phase=5;
+ } else if(S.phase===6&&S.ext==="slides"){
+  if(S.slides.heads.filter(h=>h.trim()).length<5)return err("Write at least five slide headlines.");
+  if(S.slides.open===""||!S.slides.heads[+S.slides.open].trim())return err("Choose the slide a grader sees on arrival.");
+  if(!await commitStage(5,{extension:"slides",...S.slides}))return;
+  S.extDone.slides=true;S.phase=5;
+ } else if(S.phase===6&&S.ext==="app"){
+  if(!S.app.home.trim())return err("Describe the home screen.");
+  const rows=S.app.controls.filter(r=>r.c.trim()||r.q.trim()||r.s.trim());
+  if(!rows.length||rows.some(r=>!r.c.trim()||!r.q.trim()||!r.s.trim()))return err("Every control row you start needs all three boxes, and you need at least one.");
+  if(!await commitStage(6,{extension:"app",...S.app}))return;
+  S.extDone.app=true;S.phase=5;
+ }
+ persist();render();
+}
+
+// ---------------------------------------------------------------- clock and db
+function tick(){
+ if(!S.startedAt){$("clock").textContent=DEADLINE_MIN+":00";return}
+ const left=Math.max(0,DEADLINE_MIN*60-Math.floor((Date.now()-S.startedAt)/1000));
+ $("clock").textContent=Math.floor(left/60)+":"+String(left%60).padStart(2,"0");
+}
+setInterval(tick,1000);tick();
+if(DRY)$("dry").style.display="block";
+else if(window.supabase&&window.supabase.createClient){try{db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY)}catch(e){}}
+render();
+</script>
+</body>
+</html>

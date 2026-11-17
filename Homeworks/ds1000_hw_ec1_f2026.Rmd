@@ -1,0 +1,124 @@
+---
+title: "From Sketch to Result"
+subtitle: "Project Extra Credit 1 (0.5 pts)"
+author: "Prof. Bisbee"
+institute: "Vanderbilt University"
+date: "Due Tuesday 12/01, 11:59 PM (may be submitted any time before)"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, error = TRUE, warning = FALSE, message = FALSE)
+```
+
+## Purpose
+
+At EDB 5 your pair drew the figure you **expected** to find. Now you find out whether you were right.
+
+This is extra credit: it adds up to 0.5 points on top of your Homework grade and is graded for completion and reasonable effort. You may use AI, your notes, your partner, and outside resources, as with any homework. Pairs may work together, but **each student submits their own file**, and Part IV must be written on your own.
+
+**Submit on Brightspace:** this knitted file (.html), your figure (.png), and your updated Content Spec (.md).
+
+## What you need
+
+- Your pair's **Content Spec** from EDB 5 (the .md file you downloaded).
+- The **photo** of your paper prototype.
+- Your dataset.
+
+# Part I: Load and Check
+
+## 1. Load Your Data
+
+Load your data and confirm the unit of analysis and the number of observations match Section 2 of your spec.
+
+```{r}
+library(tidyverse)
+
+# dat <- read_rds("...")
+
+```
+
+**One row of our data is:**
+
+**Number of observations used:**
+
+Did anything differ from what your spec says? If so, what will you change in Section 2?
+
+**Your answer:**
+
+
+
+# Part II: The Real Figure
+
+## 2. Make It
+
+Make the figure your spec's Section 3 describes: the same comparison you sketched.
+
+```{r}
+# Your figure here.
+
+```
+
+## 3. Save It at Poster Quality
+
+```{r}
+# ggsave("pair_XX_fig1.png", width = 8, height = 5, dpi = 300)
+
+```
+
+## 4. The Numbers Behind It
+
+Report the main result as a number with its **size**, **direction**, and **uncertainty** (for example, a difference in means with a bootstrap interval, a regression coefficient with its confidence interval, or a held-out AUC).
+
+```{r}
+# Your estimate and its uncertainty here.
+
+```
+
+**Our main result, in one sentence:**
+
+
+
+# Part III: Sketch vs. Reality
+
+## 5. Compare
+
+Put your sketch and your real figure side by side.
+
+**What matched what we expected:**
+
+
+
+**What didn't:**
+
+
+
+At EDB 5 your pair gave a confidence (0-100) that the real figure would look like the sketch. Looking back, was that number too high, too low, or about right?
+
+**Your answer:**
+
+
+
+# Part IV: On Your Own
+
+## 6. Update Section 4
+
+Rewrite Section 4 of your Content Spec ("What we found") in your own words, replacing the EXPECTED result. Include the figure inventory row for your figure: file name, what it shows, and its one-sentence takeaway.
+
+**Section 4:**
+
+
+
+**Figure inventory row:**
+
+
+
+## 7. Does Section 6 Still Hold?
+
+Your Section 6 was written as "If we find ___, we can say ___, but not ___." Now that you know what you found, which branch are you on? Rewrite Section 6.
+
+**Section 6:**
+
+
+
+Copy your new Sections 4 and 6 into your pair's spec file and submit that file too.

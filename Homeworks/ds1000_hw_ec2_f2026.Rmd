@@ -1,0 +1,97 @@
+---
+title: "Stress-Test Your Result"
+subtitle: "Project Extra Credit 2 (0.5 pts)"
+author: "Prof. Bisbee"
+institute: "Vanderbilt University"
+date: "Due Friday 12/04, 11:59 PM"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, error = TRUE, warning = FALSE, message = FALSE)
+```
+
+## Purpose
+
+At the defense, a grader will ask: **"What else could explain this?"** The strongest answer is one you have already checked.
+
+This is extra credit: it adds up to 0.5 points on top of your Homework grade and is graded for completion and reasonable effort. You may use AI, your notes, your partner, and outside resources. Pairs may work together, but **each student submits their own file**, and Part III must be written on your own.
+
+**Submit on Brightspace:** this knitted file (.html) and your updated Content Spec (.md).
+
+# Part I: Pick the Threat
+
+## 1. The Strongest Alternative
+
+Look at Section 5 of your spec, and at what the other pair said during the EDB 5 visit. Which alternative explanation or limitation would do the most damage to your conclusion if it were true?
+
+**The threat:**
+
+
+
+**If it were true, our result would (strengthen / weaken / disappear / reverse) because:**
+
+
+
+## 2. Choose a Check
+
+Which **one** check can you run with your data to test it? Pick the one that fits:
+
+- **A confounder:** compare within groups of the third variable, or add it to a regression.
+- **A measurement problem:** use a different variable that measures the same concept, and see if the result holds.
+- **A subgroup or time period:** re-run the analysis on the subgroup or period you're worried about.
+- **Chance:** a bootstrap or a confidence interval, if you haven't reported one.
+- **Overfitting (predictive claims):** evaluate on held-out data, or cross-validate.
+
+**Our check, and why it tests the threat:**
+
+
+
+# Part II: Run It
+
+## 3. The Check
+
+```{r}
+library(tidyverse)
+
+# Load your data and run the check.
+
+```
+
+## 4. What Happened
+
+Report the result of the check next to your original result.
+
+**Original result:**
+
+**Result of the check:**
+
+Did your result survive?
+
+**Your answer:**
+
+
+
+# Part III: On Your Own
+
+## 5. Rewrite Section 5
+
+Rewrite Section 5 of your spec ("What else could explain it?") to include what you checked and what you found, and the threats you could **not** check.
+
+**Section 5:**
+
+
+
+## 6. Rewrite Section 6
+
+Does the check change how confident your conclusion should sound? Rewrite Section 6 so the wording matches the evidence, no stronger and no weaker.
+
+**Section 6:**
+
+
+
+## 7. One Sentence for the Grader
+
+A grader asks: "What else could explain this?" Write the answer you will give, in one or two sentences.
+
+**Your answer:**

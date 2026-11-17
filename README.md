@@ -66,7 +66,7 @@ The assessment structure distinguishes **practice**, **component mastery**, **in
 
 The course grade is based on the following components:
 
-- **Homework (5 pts):** Approximately 15 short, low-stakes assignments provide coached practice for the next independent assessment. AI use is expected and often explicitly required. Homework emphasizes specification, verification, and practice rather than unaided code production. Homework is graded primarily for completion and reasonable effort; your **best 10 assignments count, at 0.5 points each**.
+- **Homework (5 pts):** Approximately 14 short, low-stakes assignments provide coached practice for the next independent assessment, alongside an ungraded practice homework before each Unit Test. AI use is expected and often explicitly required. Homework emphasizes specification, verification, and practice rather than unaided code production. Homework is graded primarily for completion and reasonable effort; your **best 10 assignments count, at 0.5 points each**.
 - **Daily Quizzes (15 pts):** Approximately 20 very short, in-class checks occur at the end of instructional meetings. These assess the key reasoning from that day's lecture and activities and are completed without AI or internet access. Your **best 15 quizzes count, at 1 point each**.
 - **Unit Tests (40 pts):** Five in-class, case-based assessments ask you to integrate several skills on an unfamiliar empirical problem. **All five Unit Tests count, at 8 points each.** Unit Tests emphasize reasoning from claims to evidence rather than memorizing R syntax.
 - **Evidence Debates (25 pts):** Five structured evidence-adjudication exercises ask you to evaluate a factual claim as evidence is revealed, update your judgment, contribute to a team argument, and then submit an independent verdict about what the evidence actually supports. **All five Evidence Debates count, at 5 points each.**
@@ -74,7 +74,7 @@ The course grade is based on the following components:
 
 ### Homework: coached practice
 
-Most instructional lectures are paired with a short homework assignment designed to provide coached preparation and practice for the analytical task. Approximately 15 homework assignments will be assigned during the semester; your **best 10 count**, each worth **0.5 points**, for **5 course points total**.
+Most instructional lectures are paired with a short homework assignment designed to provide coached preparation and practice for the analytical task. Approximately 14 graded homework assignments will be assigned during the semester; your **best 10 count**, each worth **0.5 points**, for **5 course points total**. Before each Unit Test there is also an **ungraded practice homework** that rehearses the test's reasoning; it is optional, but it is the best preparation for the test.
 
 Homework is where you should use the resources available to a practicing data scientist. You may use **AI tools, your notes, course materials, classmates, and outside resources** unless an assignment specifically says otherwise. You are encouraged to use AI to generate or debug R code, explain unfamiliar syntax, propose analytical approaches, and critique your reasoning.
 
@@ -147,6 +147,12 @@ If a team member is absent on their defense day, they receive a 5-minute makeup 
 
 There are no individual extra-credit assignments in this course. The grading structure already provides flexibility for occasional missed or unsuccessful low-stakes work: only your best 10 Homework assignments and best 15 Daily Quizzes count toward your final grade. Any extra-credit opportunities offered to the class will be announced to and available to all students.
 
+**Project extra credit.** Three optional homeworks help you make progress on your final project. Each is worth up to **0.5 points**, added on top of your Homework grade (up to 1.5 points in total), and graded for completion and reasonable effort. Each student submits their own.
+
+- [EC 1: From Sketch to Result](https://github.com/jbisbee1/DS1000_F2026/blob/main/Homeworks/ds1000_hw_ec1_f2026.Rmd) (due 12/01): run your analysis, compare it with your EDB 5 sketch, and update your Content Spec.
+- [EC 2: Stress-Test Your Result](https://github.com/jbisbee1/DS1000_F2026/blob/main/Homeworks/ds1000_hw_ec2_f2026.Rmd) (due 12/04): run one check of your strongest alternative explanation.
+- [EC 3: Defense Rehearsal](https://github.com/jbisbee1/DS1000_F2026/blob/main/Homeworks/ds1000_hw_ec3_f2026.Rmd) (due 12/06): answer the grader's questions on your own and drill with the Project Builder.
+
 *[Back to ToC](#table-of-contents)*
 
 ## Course Policies
@@ -155,7 +161,7 @@ There are no individual extra-credit assignments in this course. The grading str
 
 The course distinguishes between low-stakes recurring work, for which flexibility is built into the grading system, and major assessments, all of which count.
 
-**Homework:** Approximately 15 assignments will be offered and only your best 10 count. Missed Homework normally does not require a makeup or extension.
+**Homework:** Approximately 14 graded assignments will be offered and only your best 10 count. Missed Homework normally does not require a makeup or extension.
 
 **Daily Quizzes:** Approximately 20 quizzes will be administered and only your best 15 count. Missed quizzes receive a zero, but your lowest scores—including zeros from ordinary absences—are automatically dropped. Separate Daily Quiz makeups are therefore not normally offered.
 
@@ -262,10 +268,10 @@ Most instructional meetings end with a short Daily Quiz on that day's lecture an
 | *11/09* | | *Class cancelled (instructor illness)* | | | |
 | 11/11 | 22 | [NLP / Sentiment](https://www.jamesbisbee.com/DS1000_F2026/Lectures/ds1000_lecture_18_slides_f2026.html#1) | What do text measures capture, and what do they miss? | [HW 13](https://github.com/jbisbee1/DS1000_F2026/blob/main/Homeworks/ds1000_hw_13_f2026.Rmd) due | **Daily Quiz 18** |
 | 11/16 | 23 | [Misleading Claims & What Stays Human](https://www.jamesbisbee.com/DS1000_F2026/Lectures/ds1000_lecture_19_slides_f2026.html#1) | How do data and AI systems produce misleading claims, and what should humans remain responsible for? | [HW 14](https://github.com/jbisbee1/DS1000_F2026/blob/main/Homeworks/ds1000_hw_14_f2026.Rmd) due | **Daily Quiz 19** |
-| 11/18 | 24 | **Unit 5 Assessment Day** | What should we believe when evidence itself is produced or interpreted by AI? | [HW 15](https://github.com/jbisbee1/DS1000_F2026/blob/main/Homeworks/ds1000_hw_15_f2026.Rmd) due | **Evidence Debate 5 + Unit Test 5** |
+| 11/18 | 24 | **Unit 5 Assessment Day** | What should we believe when evidence itself is produced or interpreted by AI? | [Test 5 practice](https://github.com/jbisbee1/DS1000_F2026/blob/main/Homeworks/ds1000_hw_test5_practice_f2026.Rmd) (ungraded) | **Evidence Debate 5 + Unit Test 5** |
 | *11/23, 11/25* | | *Thanksgiving Break* | | | |
-| 11/30 | 25 | Project Development | Can your team build a defensible empirical argument from question to conclusion? | | |
-| 12/02 | 26 | Project Workshop | Can your team defend every step from question to conclusion? | | |
+| 11/30 | 25 | Project Development | Can your team build a defensible empirical argument from question to conclusion? | [EC 1](https://github.com/jbisbee1/DS1000_F2026/blob/main/Homeworks/ds1000_hw_ec1_f2026.Rmd) due 12/01 *(extra credit)* | |
+| 12/02 | 26 | Project Workshop | Can your team defend every step from question to conclusion? | [EC 2](https://github.com/jbisbee1/DS1000_F2026/blob/main/Homeworks/ds1000_hw_ec2_f2026.Rmd) due 12/04, [EC 3](https://github.com/jbisbee1/DS1000_F2026/blob/main/Homeworks/ds1000_hw_ec3_f2026.Rmd) due 12/06 *(extra credit)* | |
 | 12/07 | 27 | Project Defenses | Formulate, analyze, evaluate, and communicate your own empirical claim | | **Project Defense** |
 | 12/09 | 28 | Project Defenses | Formulate, analyze, evaluate, and communicate your own empirical claim | | **Project Defense** |
 

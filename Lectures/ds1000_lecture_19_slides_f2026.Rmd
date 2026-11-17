@@ -723,16 +723,16 @@ This is the reasoning the Evidence Debate and Unit Test will ask you to transfer
 
 ---
 
-# Homework 15
+# Test 5 Practice (Ungraded)
 
-Due before the **Unit 5 Assessment Day (11/18)**. You will practice:
+Replaces Homework 15. Work through it before the **Unit 5 Assessment Day (11/18)**. You will practice:
 
-- identifying unrepresentative training data in a real scenario;
-- distinguishing a real-but-spurious relationship from a meaningful one;
-- spotting false precision in a reported measure;
-- auditing an AI-generated claim for fabrication, and explaining how you would verify it.
+- comparing word use fairly across groups of different sizes;
+- explaining what a sentiment score is built from, and where word-matching breaks;
+- identifying unrepresentative training data;
+- auditing an AI-generated statistic before repeating it.
 
-Your HW 15 first result is what another pair will audit at Evidence Debate 5, so bring it finished.
+For Evidence Debate 5, bring your **EDB 4 pitch card**: you'll be designing your project poster.
 
 ---
 

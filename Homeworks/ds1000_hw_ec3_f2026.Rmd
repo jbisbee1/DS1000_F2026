@@ -1,0 +1,100 @@
+---
+title: "Defense Rehearsal"
+subtitle: "Project Extra Credit 3 (0.5 pts)"
+author: "Prof. Bisbee"
+institute: "Vanderbilt University"
+date: "Due Sunday 12/06, 11:59 PM"
+output: html_document
+---
+
+## Purpose
+
+At the defense, each of you is questioned **individually**, by name, about **any** part of the project, including the parts your partner built. Individual command is worth 4 of the 15 project points.
+
+This is extra credit: it adds up to 0.5 points on top of your Homework grade and is graded for completion and reasonable effort. **Do this one on your own.** You may use AI for Part II (it's how the Project Builder's defense drill works), but write every answer in Parts I and III yourself, without AI. You won't have AI at the defense.
+
+**Submit on Brightspace:** this knitted file (.html).
+
+# Part I: Answer the Grader's Questions
+
+Answer each question about your own project in two or three sentences, the way you would say it out loud. Focus on the parts your **partner** did most of.
+
+## 1. What are you trying to learn, in one sentence?
+
+**Your answer:**
+
+
+
+## 2. What is one row of your data, and why that unit?
+
+**Your answer:**
+
+
+
+## 3. How does your main variable measure the idea in your question? What does it miss?
+
+**Your answer:**
+
+
+
+## 4. Why this comparison or model, rather than another one?
+
+**Your answer:**
+
+
+
+## 5. Walk me through your main figure: what's on each axis, and what's the takeaway?
+
+**Your answer:**
+
+
+
+## 6. What is the most plausible alternative explanation, and what did you do about it?
+
+**Your answer:**
+
+
+
+## 7. What would change your conclusion?
+
+**Your answer:**
+
+
+
+## 8. What does your evidence **not** show?
+
+**Your answer:**
+
+
+
+# Part II: Drill With the Project Builder
+
+## 9. Run a Defense Drill
+
+Open the Project Builder, give it your pair's current Content Spec, and choose **"Run a defense drill on our project."** Answer at least five of its questions.
+
+Paste the **one exchange you handled worst**: the question, your answer, and what the Builder said was missing.
+
+**Question:**
+
+**My answer:**
+
+**What was missing:**
+
+
+
+# Part III: Fix It
+
+## 10. Your Better Answer
+
+Rewrite your answer to that question, without AI.
+
+**Your answer:**
+
+
+
+## 11. Your Weakest Spot
+
+Which part of the project are you least able to explain right now? What will you do before 12/07 to fix that (for example, ask your partner to walk you through the code, re-run a figure yourself)?
+
+**Your answer:**

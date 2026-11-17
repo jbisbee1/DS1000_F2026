@@ -1,0 +1,357 @@
+---
+title: "Text, Sentiment, and Misleading Claims"
+subtitle: "Test 5 Practice (ungraded)"
+author: "Prof. Bisbee"
+institute: "Vanderbilt University"
+date: "Due before Test 5 (11/18)"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, error = TRUE, warning = FALSE, message = FALSE)
+```
+
+## Purpose
+
+This homework is a rehearsal for **Unit Test 5**. It replaces Homework 15 and is not graded, but students who work through it carefully do much better on the test.
+
+You may use your notes, classmates, the internet, and AI tools. The point is not to memorize R syntax. The point is to practice the reasoning you will need to do independently on the test:
+
+> **Compare text fairly → Know what a sentiment score is built from → Find where word-matching breaks → Ask what the training data represent → Verify before you repeat → Say only what the evidence supports**
+
+For this homework, you will use R and AI to help implement your decisions. On Test 5, you will instead be given word counts, sentiment scores, model results, and AI-written summaries, and asked to evaluate them.
+
+## The Data
+
+You know these data from Lecture 17. Each row of `bf_reports` is one report of a Bigfoot sighting submitted to a research organization. `bf_words` has one row per word per report, with common "stop words" already removed. `nrc` is the sentiment dictionary from Lecture 18.
+
+```{r}
+library(tidyverse)
+
+bf_reports <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/bigfoot_reports.rds")
+bf_words <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/refs/heads/main/data/bigfoot_words.rds")
+nrc <- read_rds("https://github.com/jbisbee1/DS1000_F2026/raw/main/data/nrc.Rds")
+```
+
+| Variable | Definition |
+|---|---|
+| `document` | Report ID (links `bf_reports` and `bf_words`) |
+| `season` | Season of the sighting (Fall, Spring, Summer, Winter, Unknown) |
+| `state` | State of the sighting |
+| `classification` | Class A: a clear sighting where misidentification is unlikely. Class B: something heard or seen at a distance, more open to misidentification |
+| `observed` | The full text of the report (`bf_reports` only) |
+| `word` | One word from the report (`bf_words` only) |
+
+Start by inspecting the data.
+
+```{r}
+glimpse(bf_reports)
+glimpse(bf_words)
+```
+
+The season is only in `bf_reports`, so attach it to the words:
+
+```{r}
+bf_words <- bf_words %>%
+  left_join(bf_reports %>% select(document, season), by = "document")
+```
+
+## The Request
+
+A cable-TV producer writes:
+
+> **"We're planning a 'Winter of the Footprints' special. Our researcher says winter reports talk about footprints more than any other season, and that an AI tool found winter witnesses are the most frightened. Can you back that up? Also, we'd like a model that flags which new reports are credible (Class A) so we only chase the good ones."**
+
+# Part I: Comparing Word Use Fairly
+
+## 1. Raw Counts
+
+Count how many times the word "footprints" appears in each season.
+
+```{r}
+# bf_words %>% filter(word == "footprints") %>% count(season)
+
+```
+
+Which season has the most mentions? Does that support the researcher?
+
+**Your answer:**
+
+
+
+## 2. A Fair Comparison
+
+Seasons have very different numbers of reports. Calculate, for each season, the number of reports and the **share of reports** that mention "footprints" at least once.
+
+```{r}
+# Hint: for each season you need n_distinct(document) and the number of distinct
+# documents where word == "footprints".
+
+```
+
+**Your answer:**
+
+
+
+Does the fair comparison change your conclusion from Question 1? Explain why the raw count misled you.
+
+**Your answer:**
+
+
+
+## 3. Your Own Word
+
+Pick a word you think should differ by season (for example "snow" or "smell"). Repeat Question 2 for it.
+
+```{r}
+# Your word here.
+
+```
+
+What does the comparison show, and is it a comparison of **topics** (what people describe) or **tone** (how they feel)?
+
+**Your answer:**
+
+
+
+# Part II: What a Sentiment Score Is Built From
+
+## 4. Dictionary Coverage
+
+What share of the **distinct** words in `bf_words` appear in the `nrc` dictionary? What share of **all** word occurrences?
+
+```{r}
+# mean(unique(bf_words$word) %in% nrc$word)
+# mean(bf_words$word %in% nrc$word)
+
+```
+
+**Distinct words matched:**
+
+
+
+**All word occurrences matched:**
+
+
+
+What happens to the other words when we calculate a sentiment score?
+
+**Your answer:**
+
+
+
+## 5. Net Sentiment and Fear by Season
+
+Using only the `positive` and `negative` categories in `nrc`, calculate each report's **net sentiment** (positive words minus negative words), then the average by season. Do the same for the share of matched words in the `fear` category.
+
+```{r}
+# Join bf_words to nrc, count sentiments per document, then summarise by season.
+
+```
+
+**Your answer:**
+
+
+
+The researcher's AI tool said winter witnesses are "the most frightened." What exactly would your fear measure have to show to support that, and does it?
+
+**Your answer:**
+
+
+
+# Part III: Where Word-Matching Breaks
+
+## 6. A Word Out of Context
+
+Look up "creature" in `nrc`, and count how many reports use it.
+
+```{r}
+# nrc %>% filter(word == "creature")
+# n_distinct(bf_words$document[bf_words$word == "creature"])
+
+```
+
+In a Bigfoot report, is "creature" usually an expression of fear or disgust, or just a description of what was seen? What does this do to the sentiment scores of these reports?
+
+**Your answer:**
+
+
+
+## 7. Where Did "Not" Go?
+
+Count how many times "not" appears in `bf_words`, then how many full reports in `bf_reports$observed` contain the word "not".
+
+```{r}
+# sum(bf_words$word == "not")
+# sum(str_detect(bf_reports$observed, regex("\\bnot\\b", ignore_case = TRUE)), na.rm = TRUE)
+
+```
+
+**Your answer:**
+
+
+
+A witness writes: "I was not afraid at first." Another writes: "Great. Another sleepless night in that cabin." How would the word-matching method score each one, and why is each score likely wrong?
+
+**Your answer:**
+
+
+
+Would errors like these just add noise to the season comparison, or could they bias it? Explain.
+
+**Your answer:**
+
+
+
+# Part IV: Who Is the Model Trained On?
+
+## 8. Train on One Region
+
+The producer's team only has labeled reports from Washington and Oregon. Build the data, then fit a model that predicts Class A from the number of words, net sentiment, and season, trained **only** on Washington and Oregon.
+
+```{r}
+sent <- bf_words %>%
+  inner_join(nrc %>% filter(sentiment %in% c("positive", "negative")),
+             by = "word", relationship = "many-to-many") %>%
+  count(document, sentiment) %>%
+  pivot_wider(names_from = sentiment, values_from = n, values_fill = 0) %>%
+  mutate(net = positive - negative)
+
+bf_model_dat <- bf_reports %>%
+  select(document, state, season, classification) %>%
+  left_join(sent, by = "document") %>%
+  left_join(bf_words %>% count(document, name = "n_words"), by = "document") %>%
+  mutate(net = replace_na(net, 0),
+         classA = classification == "Class A")
+
+pnw <- c("Washington", "Oregon")
+train_pnw <- bf_model_dat %>% filter(state %in% pnw)
+test_rest <- bf_model_dat %>% filter(!state %in% pnw)
+
+# Fit lm(classA ~ n_words + net + season) on train_pnw.
+
+```
+
+## 9. Evaluate Elsewhere
+
+Calculate the model's accuracy (threshold 0.5) on `train_pnw` and on `test_rest`, and the "always guess the most common class" baseline for each.
+
+```{r}
+# Accuracy and baseline on both sets.
+# One report has no words left after cleaning, so its prediction is NA: use mean(..., na.rm = TRUE).
+
+```
+
+**Your answer:**
+
+
+
+The producer wants to use this model on reports from every state. What would you tell them, and would anything in the model's output warn them about the problem?
+
+**Your answer:**
+
+
+
+# Part V: Verify Before You Repeat
+
+## 10. Audit an AI-Generated Statistic
+
+The producer's researcher pastes in this AI summary:
+
+> **"According to the reports, 87.4% of winter witnesses described being terrified, nearly double the rate in summer, which proves that cold weather makes encounters more frightening."**
+
+Using your work above, identify at least three problems with this statement. For each, say which check you would run (or which result you already have) to verify or refute it.
+
+**Problem 1:**
+
+
+
+**Problem 2:**
+
+
+
+**Problem 3:**
+
+
+
+# Part VI: Calibrated Communication
+
+## 11. Write the Conclusion
+
+Write three or four sentences for the producer. Your conclusion should:
+
+- report the season comparison for "footprints" fairly;
+- describe the sentiment or fear measure as a dictionary-based proxy, with its specific limits in these data;
+- say whether the credibility model can be used nationwide;
+- avoid claiming that winter **causes** anything.
+
+**Your answer:**
+
+
+
+# Part VII: Read the Code
+
+On Test 5 you will be shown short pieces of R code and asked what they do, or what is wrong with them. Each snippet below has at most one mistake. Run it, read it line by line, and answer **before** asking AI to explain it.
+
+## 12. A Fair Comparison?
+
+```{r}
+bf_words %>%
+  filter(word == "tracks") %>%
+  count(season) %>%
+  arrange(desc(n))
+```
+
+A classmate concludes: "Fall reports mention tracks the most." What is missing from this comparison? Fix it.
+
+```{r}
+# Your fix.
+
+```
+
+**Your answer:**
+
+
+
+## 13. Which Words Are Left?
+
+```{r}
+matched <- bf_words %>% inner_join(nrc, by = "word", relationship = "many-to-many")
+nrow(bf_words)
+nrow(matched)
+```
+
+Why is `nrow(matched)` not the number of report words the dictionary recognized? (Hint: how many rows does "creature" have in `nrc`?) How would you count recognized words correctly?
+
+**Your answer:**
+
+
+
+## 14. Evaluated Where?
+
+```{r, eval = exists("train_pnw")}
+m_check <- lm(classA ~ n_words + net + season, data = train_pnw)
+mean((predict(m_check, newdata = train_pnw) >= 0.5) == train_pnw$classA)
+```
+
+A classmate reports this as "how well the model will work on new reports nationwide." What is wrong, and what one change fixes it?
+
+**Your answer:**
+
+
+
+## Before Test 5
+
+You should now be able to do the following without AI:
+
+- explain why raw word counts can mislead when groups have different numbers of documents, and calculate a fair (proportion-based) comparison;
+- distinguish a difference in **topic** (what people write about) from a difference in **tone**;
+- explain what a dictionary-based sentiment score measures, and why its **coverage** matters;
+- explain how negation, sarcasm, removed stop words, and domain-specific words (like "creature") can make word-matching scores wrong, and whether those errors add noise or bias;
+- explain why a model trained on an unrepresentative slice can perform worse elsewhere, with no warning in its output;
+- treat a precise-sounding AI-generated statistic as unverified until you find where it comes from;
+- write a calibrated conclusion that says what text evidence supports and what it does not.
+
+Bigfoot will **not** be on Test 5. The test will ask you to transfer this reasoning to a new empirical problem.
+
+**Evidence Debate 5 is different.** It is a design session for your final project, not a test of this material. Bring your EDB 4 pitch card.

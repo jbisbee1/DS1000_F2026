@@ -20,6 +20,9 @@ evidence_debates/*
 !evidence_debates/EDB_3/**
 !evidence_debates/EDB_4
 !evidence_debates/EDB_4/**
+!evidence_debates/EDB_5
+!evidence_debates/EDB_5/**
+evidence_debates/EDB_5/archive/
 
 # Answer keys (keep private)
 *answer_key*
