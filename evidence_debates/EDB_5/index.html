@@ -409,6 +409,16 @@ async function uploadPhoto(btn){
  const y=window.scrollY;render();window.scrollTo(0,y);
  const m2=$("pmsg");if(m2){m2.textContent="Uploaded. Thank you.";m2.className="good"}
 }
+function builderPrompt(){
+ const want=[S.extDone.app?"an interactive app version, starting from the home screen and control sheet in our spec":"",
+             S.extDone.slides?"a slide-deck version, starting from the slide headlines in our spec":""].filter(Boolean).join(", or ");
+ return `We are Pair ${S.pair} in DS 1000. Below is our Content Spec, drafted at EDB 5. We will also upload a photo of our paper sketch, and our R figures and results.
+
+Our poster comes first. Once it is done, we would like help building ${want}, for the monitors at the poster session.
+
+Please use only the claims, numbers and figures we give you. If something is missing, ask us rather than filling it in. Section 4 is still an expected result from our sketch, not a finding, so please don't present it as a result until we give you our real one.
+
+${specMd()}`}
 function vDone(){return `<h1>Done. Here is the first draft of your Content Spec.</h1>
  <div class="panel paper"><h2>Before you leave</h2><ol class="steps">
  <li><b>Photograph your sheet</b> (whole sheet, straight on, readable) and upload it below.${photoBox()}</li>
@@ -422,7 +432,11 @@ function vDone(){return `<h1>Done. Here is the first draft of your Content Spec.
  <div class="op"><b>Expected figure:</b> ${esc(S.fig.type)}, ${esc(S.fig.y)} by ${esc(S.fig.x)}: ${esc(S.fig.shape)} (confidence ${S.conf}/100)</div></div>
  <div class="panel"><h2>Finished early? Extend your design</h2><p class="hint" style="margin:0 0 8px">Everyone builds the poster. Once it's done, you can also turn it into slides or an interactive app for the monitors. Sketch either version now and it goes into your spec.</p>
  <div class="ext">${[["slides","Slide deck","5–8 slides, one idea each, for a step-by-step walkthrough."],["app","Interactive app","A home screen plus controls a viewer can change, each with a reason."]].map(([k,t,d])=>`<div class="opt2 ${S.extDone[k]?"did":""}"><b>${t}</b>${S.extDone[k]?' <span class="hint">✓ sketched, in your spec</span>':""}<p class="hint" style="margin:4px 0 8px">${d}</p><button type="button" class="${S.extDone[k]?"sec":""}" data-ext="${k}">${S.extDone[k]?"Edit":"Sketch it"}</button></div>`).join("")}</div>
- ${S.extDone.slides||S.extDone.app?'<p class="hint">Download the spec again to include your extension sketches. Photograph the back of your sheet too.</p>':""}</div>
+ ${S.extDone.slides||S.extDone.app?`<p class="hint">Download the spec again to include your extension sketches. Photograph the back of your sheet too.</p>
+ <h2 style="margin-top:14px">For 11/30 or 12/02: a prompt for the Project Builder</h2>
+ <p class="hint" style="margin:0 0 8px">Once your poster is done, paste this into the Project Builder to start the ${S.extDone.app&&S.extDone.slides?"app or slide":S.extDone.app?"app":"slide"} version. It includes your spec, so copy it again if you change anything here.</p>
+ <div class="actions" style="margin-top:0"><button type="button" class="sec" data-prompt>Copy the prompt</button></div>
+ <textarea id="promptBox" readonly style="display:none;min-height:160px;margin-top:8px"></textarea>`:""}</div>
  <div class="panel"><h2>What comes next</h2><table class="tl">
  ${[["11/30","Run your real analysis. Compare the real figure with your sketch. Start the Project Builder with this spec and your photo."],
     ["12/02","Build your poster, plus any extension (slides or an app); mock defense with another pair."],
@@ -451,6 +465,7 @@ $("app").addEventListener("click",async e=>{
  if(t.dataset.copy!==undefined){try{await navigator.clipboard.writeText(specMd());t.textContent="Copied"}catch(x){t.textContent="Copy failed: use Download"}return}
  if(t.dataset.dl!==undefined){const b=new Blob([specMd()],{type:"text/markdown"});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=`content_spec_pair_${S.pair}.md`;document.body.appendChild(a);a.click();a.remove();return}
  if(t.dataset.upload!==undefined){await uploadPhoto(t);return}
+ if(t.dataset.prompt!==undefined){const p=builderPrompt(),box=$("promptBox");box.value=p;try{await navigator.clipboard.writeText(p);t.textContent="Copied"}catch(x){box.style.display="block";box.select();t.textContent="Select the text below and copy it"}return}
  if(t.dataset.gallery!==undefined){openGallery(0);return}
  if(t.dataset.ext){S.ext=t.dataset.ext;S.phase=6;persist();render();return}
  if(t.dataset.back!==undefined){S.phase=5;persist();render();return}
