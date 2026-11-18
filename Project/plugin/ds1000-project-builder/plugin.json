@@ -1,0 +1,21 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "ds1000-project-builder",
+  "version": "1.0.0",
+  "description": "Helps DS 1000 teams build their final-project poster (and optional slides or app) from their own Content Spec, and runs defense drills. It never writes their content.",
+  "author": { "name": "DS 1000, Vanderbilt" },
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "DS 1000 Project Builder",
+        "shortDescription": "Poster, slides or app from your own Content Spec, plus defense drills.",
+        "defaultPrompt": [
+          "Start our Content Spec",
+          "Build our poster from this spec",
+          "Turn our finished poster into slides or an app",
+          "Run a defense drill on our project"
+        ]
+      }
+    }
+  }
+}

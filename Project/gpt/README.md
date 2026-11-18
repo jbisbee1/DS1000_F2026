@@ -4,7 +4,7 @@ This folder holds a custom GPT that helps teams turn their own argument into a p
 
 | File | Where it goes |
 |---|---|
-| `instructions.txt` | Paste into **Configure → Instructions** (about 5,800 characters; the limit is 8,000) |
+| `instructions.txt` | Paste into **Configure → Instructions** (about 6,400 characters; the limit is 8,000) |
 | `content_spec_template.md` | Upload under **Knowledge**. Also give it to students as a handout |
 | `format_recipes.md` | Upload under **Knowledge** |
 | `boundary_examples.md` | Upload under **Knowledge** |

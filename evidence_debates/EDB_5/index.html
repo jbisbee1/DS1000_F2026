@@ -20,6 +20,7 @@ header a{color:#fff;font-size:.8rem}
 #prog div b{display:block;font-size:.85rem;color:#fff}
 #prog div.on{background:var(--gold);color:#1d1c1d}#prog div.on b{color:#1d1c1d}
 #prog div.done{background:#34456b}
+#prog div.can{cursor:pointer}#prog div.can:hover{outline:2px solid var(--gold)}
 #clock{font-variant-numeric:tabular-nums;font-size:1.15rem}
 #dry{display:none;background:#fff3d6;color:#7a5a00;font-size:.8rem;padding:5px 20px}
 main{max-width:1180px;margin:0 auto;padding:18px 18px 80px}
@@ -154,20 +155,22 @@ const EXAMPLES=[
   <div class="p" style="grid-column:1/3;border-width:3px"><b>6 What we could say, and what we couldn't</b>Front-row students earn somewhat higher grades. We could NOT say that moving to the front would raise your grade.</div></div>`,
   note:"Starts from something people already believe, which makes the stakes obvious. Section 6 spans the whole width, because the gap between what people assume and what the data can show is the point of the project."}
 ];
-function openGallery(i){
+function galleryHTML(i){
  const x=EXAMPLES[i];
- $("mbox").innerHTML=`<h2 style="margin-bottom:2px">Example sketches</h2><div class="fict">FICTIONAL EXAMPLES · SKETCHES, NOT DATA · topics deliberately not on the data menu</div>
+ return `<h2 style="margin-bottom:2px">Example sketches</h2><div class="fict">FICTIONAL EXAMPLES · SKETCHES, NOT DATA · topics deliberately not on the data menu</div>
  <div class="extabs">${EXAMPLES.map((e,k)=>`<button type="button" class="${k===i?"on":""}" data-ex="${k}">${k+1}. ${esc(e.name)}</button>`).join("")}</div>
  <div class="sheet"><div class="ttl">${esc(x.title)}</div><div class="clm">${esc(x.claim)}</div>${x.body()}</div>
  <div class="exnote"><b>What works here:</b> ${esc(x.note)}</div>
  <p class="hint">Borrow a layout, not a topic. Your sheet can be messier than these. It just has to be readable and in your own words.</p>`;
- $("modal").classList.add("open");
 }
+function openGallery(i){$("mbox").innerHTML=galleryHTML(i);$("modal").classList.add("open")}
+// standalone gallery: index.html?examples (examples.html forwards here). No session, nothing saved.
+const GALLERY_ONLY=new URLSearchParams(location.search).has("examples");
 
 const QBANK=["What are you trying to learn, in one sentence?","What is one row of your data?","How does that column measure your idea? What does it miss?","Why this comparison rather than another one?","What does your expected figure look like if you're wrong?","What else could produce that pattern?","What would change your conclusion?","What would your evidence not show, even if it comes out as you expect?"];
 
 // ---------------------------------------------------------------- state
-const fresh=()=>({phase:0,sub:"main",pair:"",codes:["","",""],members:[],
+const fresh=()=>({phase:0,maxPhase:0,sub:"main",pair:"",codes:["","",""],members:[],
  claim:"",pitch:"",changed:"",
  title:"",fig:{type:"",x:"",y:"",shape:""},conf:50,panels:Object.fromEntries(PANELS.map(p=>[p.k,""])),
  photos:[],hype:"",sober:"",diff:"",vp:"",visit:{said:"",missed:"",hard:"",asked:""},change:"",ind:[],ii:0,startedAt:null,
@@ -237,10 +240,12 @@ function err(m){const el=$("err");if(el)el.textContent=m||""}
 
 // ---------------------------------------------------------------- views
 function header(){
- $("prog").innerHTML=PHASES.map(([n,t],i)=>`<div class="${i<S.phase?"done":i===S.phase?"on":""}"><b>${i+1}. ${n}</b>${t}</div>`).join("");
+ // phases already reached can be revisited by clicking their tab (not from the private hand-off screens)
+ const can=i=>i!==S.phase&&i<=S.maxPhase&&!(S.phase===4&&S.sub==="ind");
+ $("prog").innerHTML=PHASES.map(([n,t],i)=>`<div class="${i<S.phase?"done":i===S.phase?"on":""} ${can(i)?"can":""}" ${can(i)?`data-jump="${i}" title="Go back to ${n}"`:""}><b>${i+1}. ${n}</b>${t}</div>`).join("");
  $("pairBadge").textContent=S.pair?"Pair "+S.pair:"";
 }
-const goBtn=(label)=>`<div class="actions"><button data-go data-label="${esc(label)}" type="button">${esc(label)}</button><div id="err"></div></div>`;
+const goBtn=(label)=>`<div class="actions">${S.phase>=1&&S.phase<=4&&S.sub!=="ind"?`<button type="button" class="sec" data-prev>Back</button>`:""}<button data-go data-label="${esc(label)}" type="button">${esc(label)}</button><div id="err"></div></div>`;
 const radios=(name,path,obj)=>Object.entries(obj).map(([v,t])=>`<label class="opt"><input type="radio" name="${name}" data-p="${path}" value="${v}" ${getP(path)===v?"checked":""}>${esc(t)}</label>`).join("");
 
 function vSetup(){return `<h1>Set up</h1>
@@ -424,7 +429,8 @@ function vDone(){return `<h1>Done. Here is the first draft of your Content Spec.
  <li><b>Photograph your sheet</b> (whole sheet, straight on, readable) and upload it below.${photoBox()}</li>
  <li><b>Download this spec</b> and put it in your pair's shared folder. Copy it into your shared doc.</li>
  <li><b>On 11/30</b>, give the Project Builder this spec and your photo, then replace Section 4's expected result with your real one.</li></ol>
- <div class="actions"><button type="button" data-dl>Download spec (.md)</button><button type="button" class="sec" data-copy>Copy as text</button></div></div>
+ <div class="actions"><button type="button" data-dl>Download spec (.md)</button><button type="button" class="sec" data-copy>Copy as text</button><button type="button" class="sec" data-prev>Back to Revise</button></div>
+ <p class="hint" style="margin:6px 0 0">You can also click any phase at the top to go back and change something. Your saved answers stay; the individual questions aren't asked again.</p></div>
  <div class="card"><h3>Pair ${esc(S.pair)} · ${S.members.map(m=>esc(m.code)).join(" & ")}</h3>
  <div class="cl">${esc(S.title)}</div><div class="op"><b>Claim:</b> ${esc(S.claim)}</div>
  ${PANELS.map(p=>`<div class="op"><b>${p.t}:</b> ${p.k==="expect"?'<span class="stamp">EXPECTED</span> ':""}${esc(S.panels[p.k])}</div>`).join("")}
@@ -469,8 +475,10 @@ $("app").addEventListener("click",async e=>{
  if(t.dataset.gallery!==undefined){openGallery(0);return}
  if(t.dataset.ext){S.ext=t.dataset.ext;S.phase=6;persist();render();return}
  if(t.dataset.back!==undefined){S.phase=5;persist();render();return}
+ if(t.dataset.prev!==undefined){if(S.phase===5){S.phase=4;S.sub="main"}else if(S.phase>0){S.phase--;S.sub="main"}persist();render();return}
  if(t.dataset.go!==undefined)await advance();
 });
+$("prog").addEventListener("click",e=>{const d=e.target.closest("[data-jump]");if(!d)return;S.phase=+d.dataset.jump;S.sub="main";persist();render()});
 $("modal").addEventListener("click",e=>{const b=e.target.closest("[data-ex]");if(b){openGallery(+b.dataset.ex);return}if(e.target.id==="modal"||e.target.id==="mclose")$("modal").classList.remove("open")});
 document.addEventListener("keydown",e=>{if(e.key==="Escape")$("modal").classList.remove("open")});
 async function advance(){
@@ -507,7 +515,12 @@ async function advance(){
  } else if(S.phase===4&&S.sub==="main"){
   if(!S.claim.trim()||PANELS.some(p=>!S.panels[p.k].trim()))return err("The claim and all six panels need text.");
   if(!S.change.trim())return err("Name the one change you'll make to the sheet.");
-  S.sub="ind";S.ii=0;S.ind=[];
+  // coming back to revise after finishing: keep the individual answers already given, don't ask again
+  const indDone=S.members.length&&S.ind.length===S.members.length&&S.members.every((m,i)=>S.ind[i]&&S.ind[i].explain);
+  if(indDone){
+   if(!await commitStage(4,{claim:S.claim,panels:S.panels,change:S.change,spec_md:specMd()},S.members.map((m,i)=>({code:m.code,data:S.ind[i]}))))return;
+   S.phase=5;
+  } else {S.sub="ind";S.ii=0;S.ind=[];}
  } else if(S.phase===4&&S.sub==="ind"){
   const x=$("iexp").value.trim(),f=$("ifix").value.trim();if(!x||!f)return err("Answer both questions.");
   S.ind[S.ii]={panel:indPanel(S.ii).k,explain:x,fix_for_visited:f};
@@ -526,6 +539,7 @@ async function advance(){
   if(!await commitStage(6,{extension:"app",...S.app}))return;
   S.extDone.app=true;S.phase=5;
  }
+ S.maxPhase=Math.max(S.maxPhase||0,Math.min(S.phase,5));
  persist();render();
 }
 
@@ -535,11 +549,20 @@ function tick(){
  const left=Math.max(0,DEADLINE_MIN*60-Math.floor((Date.now()-S.startedAt)/1000));
  $("clock").textContent=Math.floor(left/60)+":"+String(left%60).padStart(2,"0");
 }
-setInterval(tick,1000);tick();
-if(DRY)$("dry").style.display="block";
-else if(window.supabase&&window.supabase.createClient){try{db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY)}catch(e){}}
-render();
-if(S.phase===0&&!S.pitch.trim())loadPitch();
+if(GALLERY_ONLY){
+ document.title="DS 1000 — EDB 5 example sketches";
+ ["prog","pairBadge","clock"].forEach(id=>$(id).style.display="none");
+ const show=i=>{$("app").innerHTML=`<div class="panel">${galleryHTML(i)}</div>`};
+ $("app").addEventListener("click",e=>{const b=e.target.closest("[data-ex]");if(b)show(+b.dataset.ex)},true);
+ show(0);
+} else {
+ setInterval(tick,1000);tick();
+ if(DRY)$("dry").style.display="block";
+ else if(window.supabase&&window.supabase.createClient){try{db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY)}catch(e){}}
+ S.maxPhase=Math.max(S.maxPhase||0,Math.min(S.phase,5));
+ render();
+ if(S.phase===0&&!S.pitch.trim())loadPitch();
+}
 </script>
 </body>
 </html>
